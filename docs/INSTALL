@@ -1,0 +1,8 @@
+Steps on how to setup the system:
+---------------------------------
+
+1) Install openjdk-8-jdk
+2) Install memcached from apt
+3) Cloning memtier from https://github.com/RedisLabs/memtier_benchmark/
+4) Install prerequisites
+5) Build and install using instrucitons on memtier README

@@ -1,6 +1,8 @@
 package ch.ethz.asl;
 
 import java.util.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RunMW {
 
@@ -9,19 +11,21 @@ public class RunMW {
 	static List<String> mcAddresses = null;
 	static int numThreadsPTP = -1;
 	static boolean readSharded = false;
-
+	
+	private static final Logger logger = LogManager.getLogger(RunMW.class);
+	
 	public static void main(String[] args) throws Exception {
 
 		// -----------------------------------------------------------------------------
 		// Parse and prepare arguments
 		// -----------------------------------------------------------------------------
-
+		
 		parseArguments(args);
 
 		// -----------------------------------------------------------------------------
 		// Start the Middleware
 		// -----------------------------------------------------------------------------
-
+		
 		//new MyMiddleware(myIp, myPort, mcAddresses, numThreadsPTP, readSharded).run();
 
 	}
@@ -35,7 +39,7 @@ public class RunMW {
 
 			if (a.charAt(0) == '-') {
 				if (a.length() < 2) {
-					System.err.println("Error at argument " + a);
+					logger.error("Error at argument " + a);
 					System.exit(1);
 				}
 
@@ -44,7 +48,7 @@ public class RunMW {
 			} else if (options != null) {
 				options.add(a);
 			} else {
-				System.err.println("Illegal parameter usage");
+				logger.error("Illegal parameter usage");
 				System.exit(1);
 			}
 		}
@@ -97,8 +101,7 @@ public class RunMW {
 		System.err.println(
 				"Usage: -l <MyIP> -p <MyListenPort> -t <NumberOfThreadsInPool> -s <readSharded> -m <MemcachedIP:Port> <MemcachedIP2:Port2> ...");
 		if (errorMessage != null) {
-			System.err.println();
-			System.err.println("Error message: " + errorMessage);
+			logger.error("Error message: " + errorMessage);
 		}
 
 	}

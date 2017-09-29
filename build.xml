@@ -1,26 +1,47 @@
  
 <project>
 
+    <property name="jarfile" value="ASL17_Middleware.jar"/>
+    <property name="build.dir" value="bin/classes"/>
+    <property name="src.dir" value="src"/>
+    <!-- Add log4j2 jars -->
+    <path id="classpath">
+        <fileset dir="lib">
+            <include name="log4j-core-2.9.1.jar"/>
+            <include name="log4j-api-2.9.1.jar"/>
+        </fileset>
+    </path>
     <target name="clean">
         <delete dir="bin"/>
     </target>
 
     <target name="compile">
-        <mkdir dir="bin/classes"/>
-        <javac includeantruntime="false" srcdir="src" destdir="bin/classes"/>
+        <mkdir dir="${build.dir}"/>
+        <copy todir="${build.dir}" overwrite="true">
+            <fileset dir="${src.dir}" excludes="**/*.java"/>
+        </copy>
+        <javac includeantruntime="false" srcdir="${src.dir}" destdir="${build.dir}">
+            <classpath refid="classpath"/>
+        </javac>
     </target>
 
-    <target name="jar">
+    <target name="jar" depends="compile">
         <mkdir dir="bin/jar"/>
-        <jar destfile="bin/jar/ASL_KeyValueStore.jar" basedir="bin/classes">
+
+        <manifestclasspath property="manifest.classpath" jarfile="${jarfile}">
+            <classpath refid="classpath"/>
+        </manifestclasspath>
+
+        <jar destfile="bin/jar/${jarfile}" basedir="${build.dir}">
             <manifest>
-                <attribute name="RunMW" value="ch.ethz.asl.RunMW"/>
+                <attribute name="Main-Class" value="ch.ethz.asl.RunMW"/>
+                <attribute name="Class-Path" value="${manifest.classpath}"/>
             </manifest>
         </jar>
     </target>
 
-    <target name="run">
-        <java jar="bin/jar/ASL_KeyValueStore.jar" fork="true"/>
+    <target name="run" depends="jar">
+        <java jar="bin/jar/${jarfile}" fork="true"/>
     </target>
 
 </project>

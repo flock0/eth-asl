@@ -28,7 +28,7 @@ public class RunMW {
 		// Start the Middleware
 		// -----------------------------------------------------------------------------
 		
-		new Thread(new SocketsHandler(myIp, myPort, mcAddresses, numThreadsPTP, readSharded)).run();
+		new Thread(new SocketsHandler(myIp, myPort, mcAddresses, numThreadsPTP, readSharded)).start();
 
 	}
 

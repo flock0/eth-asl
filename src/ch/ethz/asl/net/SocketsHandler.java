@@ -36,9 +36,6 @@ public class SocketsHandler implements Runnable {
 	
 	private final String myIp;
 	private final int myPort;
-	private final List<String> mcAddresses;
-	private final int numThreadsPTP;
-	private final boolean readSharded;
 	private Selector selector = null;
 	private ServerSocketChannel serverSocket = null;
 	
@@ -50,12 +47,9 @@ public class SocketsHandler implements Runnable {
 
 	private static final Logger logger = LogManager.getLogger(SocketsHandler.class);
 	
-	public SocketsHandler(String myIp, int myPort, List<String> mcAddresses, int numThreadsPTP, boolean readSharded) {
+	public SocketsHandler(String myIp, int myPort) {
 		this.myIp = myIp;
 		this.myPort = myPort;
-		this.mcAddresses = mcAddresses;
-		this.numThreadsPTP = numThreadsPTP;
-		this.readSharded = readSharded;
 	}
 	
 	@Override

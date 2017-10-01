@@ -107,4 +107,12 @@ public class RunMW {
 		}
 
 	}
+
+	/***
+	 * Request the system to shutdown gracefully
+	 */
+	public static void shutdown() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not yet implemented");
+	}
 }

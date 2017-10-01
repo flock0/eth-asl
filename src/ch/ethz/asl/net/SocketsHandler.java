@@ -42,7 +42,8 @@ public class SocketsHandler implements Runnable {
 	/***
 	 * Indicates whether the thread should continue to run.
 	 */
-	private volatile boolean shouldRun = true; 
+	private volatile boolean shouldRun = true;
+	private volatile boolean isRunning = false;
 	private BlockingQueue<SelectionKey> channelQueue = new ArrayBlockingQueue<SelectionKey>(MAX_CHANNEL_QUEUE_CAPACITY, false);
 
 	private static final Logger logger = LogManager.getLogger(SocketsHandler.class);
@@ -58,6 +59,7 @@ public class SocketsHandler implements Runnable {
 		 * http://crunchify.com/java-nio-non-blocking-io-with-server-client-example-java-nio-bytebuffer-and-channels-selector-java-nio-vs-io/
 		 */
 		
+		isRunning = true;
 		logger.debug("Opening ServerSocket on {}:{}", myIp, myPort);
 		try {
 			// Selector: multiplexor of SelectableChannel objects
@@ -141,11 +143,14 @@ public class SocketsHandler implements Runnable {
 				logger.catching(ex);
 			}
 			logger.info("Stopping SocketsHandler.");
+			
 		} catch (Exception ex) {
 			// An exception occurred in the network thread.
 			// We can't recover from that. Shutdown!
 			logger.catching(ex);
 			RunMW.shutdown();
+		} finally {
+			isRunning = false;
 		}
 
 	}
@@ -193,6 +198,10 @@ public class SocketsHandler implements Runnable {
 	public void shutdown() {
 		shouldRun = false;
 		logger.debug("Shutdown of SocketsHandler requested.");
+	}
+
+	public boolean isRunning() {
+		return isRunning;
 	}
 
 }

@@ -33,16 +33,16 @@ public class SocketsHandler implements Runnable {
 	 */
 	static final int MAX_CHANNEL_QUEUE_CAPACITY = 4096;
 	
-	final String myIp;
-	final int myPort;
-	final List<String> mcAddresses;
-	final int numThreadsPTP;
-	final boolean readSharded;
+	private final String myIp;
+	private final int myPort;
+	private final List<String> mcAddresses;
+	private final int numThreadsPTP;
+	private final boolean readSharded;
 	private Selector selector = null;
 	
 	
 	private BlockingQueue<SelectionKey> channelQueue = new ArrayBlockingQueue<SelectionKey>(MAX_CHANNEL_QUEUE_CAPACITY, false);
-	
+
 	private static final Logger logger = LogManager.getLogger(SocketsHandler.class);
 	
 	public SocketsHandler(String myIp, int myPort, List<String> mcAddresses, int numThreadsPTP, boolean readSharded) {
@@ -156,6 +156,10 @@ public class SocketsHandler implements Runnable {
 		}
 		
 		
+	}
+	
+	public BlockingQueue<SelectionKey> getChannelQueue() {
+		return channelQueue;
 	}
 
 }

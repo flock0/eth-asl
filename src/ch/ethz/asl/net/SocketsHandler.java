@@ -1,6 +1,8 @@
 package ch.ethz.asl.net;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -39,7 +41,7 @@ public class SocketsHandler implements Runnable {
 	private final int numThreadsPTP;
 	private final boolean readSharded;
 	private Selector selector = null;
-	
+	private ServerSocketChannel serverSocket = null;
 	
 	private BlockingQueue<SelectionKey> channelQueue = new ArrayBlockingQueue<SelectionKey>(MAX_CHANNEL_QUEUE_CAPACITY, false);
 
@@ -65,7 +67,7 @@ public class SocketsHandler implements Runnable {
 			selector = Selector.open(); // selector is open here
 		
 			// ServerSocketChannel: selectable channel for stream-oriented listening sockets
-			ServerSocketChannel serverSocket = ServerSocketChannel.open();
+			serverSocket = ServerSocketChannel.open();
 			InetSocketAddress serverAddr = new InetSocketAddress(myIp, myPort);
 	 
 			// Binds the channel's socket to a local address and configures the socket to listen for connections
@@ -160,6 +162,20 @@ public class SocketsHandler implements Runnable {
 	
 	public BlockingQueue<SelectionKey> getChannelQueue() {
 		return channelQueue;
+	}
+	
+	/***
+	 * Request the system to shutdown the server socket
+	 * and stop accepting new connections
+	 */
+	public void closeServerSocket() {
+		try {
+			logger.debug("Closing server socket...");
+			serverSocket.close();
+		} catch (IOException ex) {
+			// Nothing else we can do here
+			logger.catching(ex);
+		}
 	}
 
 }

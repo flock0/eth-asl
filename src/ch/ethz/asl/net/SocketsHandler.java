@@ -2,7 +2,6 @@ package ch.ethz.asl.net;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -43,6 +42,10 @@ public class SocketsHandler implements Runnable {
 	private Selector selector = null;
 	private ServerSocketChannel serverSocket = null;
 	
+	/***
+	 * Indicates whether the thread should continue to run.
+	 */
+	private volatile boolean shouldRun = true; 
 	private BlockingQueue<SelectionKey> channelQueue = new ArrayBlockingQueue<SelectionKey>(MAX_CHANNEL_QUEUE_CAPACITY, false);
 
 	private static final Logger logger = LogManager.getLogger(SocketsHandler.class);
@@ -83,7 +86,7 @@ public class SocketsHandler implements Runnable {
 	
 			// Infinite loop..
 			// Keep server running
-			while (true) {
+			while (shouldRun) {
 	 
 				// Selects a set of keys whose corresponding channels are ready for I/O operations
 				selector.select();
@@ -132,6 +135,18 @@ public class SocketsHandler implements Runnable {
 					iter.remove();
 				}
 			}
+			
+			// We exited the while-loop as we have been asked to shutdown.
+			assert(shouldRun == false);
+			try {
+				logger.debug("Shutting down sockets.");
+				selector.close();
+				serverSocket.close();
+			} catch (IOException ex) {
+				// Nothing else we can do here
+				logger.catching(ex);
+			}
+			logger.info("Stopping SocketsHandler.");
 		} catch (Exception ex) {
 			// An exception occurred in the network thread.
 			// We can't recover from that. Shutdown!
@@ -176,6 +191,14 @@ public class SocketsHandler implements Runnable {
 			// Nothing else we can do here
 			logger.catching(ex);
 		}
+	}
+	
+	/***
+	 * Indicates to this thread that it should stop executing and shutdown gracefully.
+	 */
+	public void shutdown() {
+		shouldRun = false;
+		logger.debug("Shutdown of SocketsHandler requested.");
 	}
 
 }

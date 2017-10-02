@@ -121,7 +121,6 @@ public class SocketsHandler implements Runnable {
 						
 						// Stop polling on this client connection while it's waiting 
 						// in the queue and is being processed.
-						key.cancel(); 
 						enqueueChannel(key);
 						
 							

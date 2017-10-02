@@ -154,7 +154,7 @@ public class SocketsHandlerTest {
 		sock1 = new Socket("127.0.0.1", 45343);
 		PrintWriter out1 = new PrintWriter(sock1.getOutputStream(), true);
 		out1.println("GET 7484");
-		
+		Thread.sleep(50);
 		// queue should contain element7
 		assertEquals(1, handler.getChannelQueue().size());
 		
@@ -162,7 +162,7 @@ public class SocketsHandlerTest {
 		sock2 = new Socket("127.0.0.1", 45343);
 		PrintWriter out2 = new PrintWriter(sock2.getOutputStream(), true);
 		out2.println("GET 9556");
-		
+		Thread.sleep(50);
 		// queue should contain two elements
 		assertEquals(2, handler.getChannelQueue().size());
 	}

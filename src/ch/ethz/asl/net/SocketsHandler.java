@@ -63,8 +63,9 @@ public class SocketsHandler implements Runnable {
 		logger.debug("Opening ServerSocket on {}:{}", myIp, myPort);
 		try {
 			// Selector: multiplexor of SelectableChannel objects
-			selector = Selector.open(); // selector is open here
-		
+			synchronized(this) {
+				selector = Selector.open(); // selector is open here
+			}
 			// ServerSocketChannel: selectable channel for stream-oriented listening sockets
 			serverSocket = ServerSocketChannel.open();
 			InetSocketAddress serverAddr = new InetSocketAddress(myIp, myPort);
@@ -150,6 +151,7 @@ public class SocketsHandler implements Runnable {
 			RunMW.shutdown();
 		} finally {
 			isRunning = false;
+			
 		}
 
 	}
@@ -196,7 +198,9 @@ public class SocketsHandler implements Runnable {
 	 */
 	public void shutdown() {
 		shouldRun = false;
-		selector.wakeup();
+		synchronized(this) {
+			if(selector != null) selector.wakeup();
+		}
 		logger.debug("Shutdown of SocketsHandler requested.");
 	}
 

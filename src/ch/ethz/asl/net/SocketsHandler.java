@@ -196,6 +196,7 @@ public class SocketsHandler implements Runnable {
 	 */
 	public void shutdown() {
 		shouldRun = false;
+		selector.wakeup();
 		logger.debug("Shutdown of SocketsHandler requested.");
 	}
 

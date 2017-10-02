@@ -134,14 +134,14 @@ public class SocketsHandler implements Runnable {
 			// We exited the while-loop as we have been asked to shutdown.
 			assert(shouldRun == false);
 			try {
-				logger.debug("Shutting down sockets.");
 				selector.close();
 				serverSocket.close();
+				logger.debug("Sockets shutdown.");
 			} catch (IOException ex) {
 				// Nothing else we can do here
 				logger.catching(ex);
 			}
-			logger.info("Stopping SocketsHandler.");
+			logger.info("SocketsHandler stopped.");
 			
 		} catch (Exception ex) {
 			// An exception occurred in the network thread.
@@ -183,8 +183,8 @@ public class SocketsHandler implements Runnable {
 	 */
 	public void closeServerSocket() {
 		try {
-			logger.debug("Closing server socket...");
 			serverSocket.close();
+			logger.debug("Server socket closed.");
 		} catch (IOException ex) {
 			// Nothing else we can do here
 			logger.catching(ex);

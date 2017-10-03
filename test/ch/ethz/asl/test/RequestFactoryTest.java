@@ -1,0 +1,184 @@
+package ch.ethz.asl.test;
+
+import static org.junit.Assert.*;
+
+import java.nio.ByteBuffer;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import ch.ethz.asl.worker.GetRequest;
+import ch.ethz.asl.worker.MultiGetRequest;
+import ch.ethz.asl.worker.Request;
+import ch.ethz.asl.worker.RequestFactory;
+
+public class RequestFactoryTest {
+
+	
+	@Rule
+    public ExpectedException thrown = ExpectedException.none();
+	
+	@Before
+	public void setUp() throws Exception {
+	}
+
+	@After
+	public void tearDown() throws Exception {
+	}
+
+	@Test
+	public void testSingleGet() {
+		String command = "get key-676544\r\n";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		Request req = RequestFactory.createRequest(buff);
+		
+		//req is GetRequest
+		assertTrue(req instanceof GetRequest);
+		GetRequest getReq = (GetRequest)req;
+		assertEquals("key-676544", getReq.getKey());
+		assertEquals(command, getReq.getCommand());
+	}
+	
+	@Test
+	public void testEmptyKeyGet() {
+		String command = "get \r\n";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		
+		Request req = RequestFactory.createRequest(buff);
+		GetRequest getReq = (GetRequest)req;
+		assertEquals("", getReq.getKey());
+		assertEquals(command, getReq.getCommand());
+	}
+	
+	@Test
+	public void testNoKeyGet() {
+		String command = "get \r\n";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		
+		Request req = RequestFactory.createRequest(buff);
+		GetRequest getReq = (GetRequest)req;
+		assertEquals("", getReq.getKey());
+		assertEquals(command, getReq.getCommand());
+	}
+	
+	@Test
+	public void testMaxLengthKeyGet() {
+		String command = "get key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890\r\n";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		Request req = RequestFactory.createRequest(buff);
+		
+		//req is GetRequest
+		assertTrue(req instanceof GetRequest);
+		GetRequest getReq = (GetRequest)req;
+		assertEquals("key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key456789000",
+				getReq.getKey());
+		assertEquals(command, getReq.getCommand());
+	}
+	
+	@Test
+	public void testUnknownCommand() {
+		String command = "BLA blub\r\n";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		
+		thrown.expect(UnsupportedOperationException.class);
+		RequestFactory.createRequest(buff);
+	}
+	
+	@Test
+	public void testThreeMultiGet() {
+		String command = "get blub blab blob\r\n";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		Request req = RequestFactory.createRequest(buff);
+		
+		//req is GetRequest
+		assertTrue(req instanceof MultiGetRequest);
+		MultiGetRequest multiReq = (MultiGetRequest)req;
+		assertEquals("blub", multiReq.getKeys().get(0));
+		assertEquals("blab", multiReq.getKeys().get(1));
+		assertEquals("blob", multiReq.getKeys().get(2));
+		assertEquals(3, multiReq.getKeys().size());
+		assertEquals(command, multiReq.getCommand());
+		
+	}
+	
+	@Test
+	public void testTenMultiGet() {
+		String command = "get blub blab blob bleb blohb blarb blerb balorb burp bopp\r\n";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		Request req = RequestFactory.createRequest(buff);
+		
+		//req is GetRequest
+		assertTrue(req instanceof MultiGetRequest);
+		MultiGetRequest multiReq = (MultiGetRequest)req;
+		assertEquals("blub", multiReq.getKeys().get(0));
+		assertEquals("blab", multiReq.getKeys().get(1));
+		assertEquals("blob", multiReq.getKeys().get(2));
+		assertEquals("bleb", multiReq.getKeys().get(3));
+		assertEquals("blohb", multiReq.getKeys().get(4));
+		assertEquals("blarb", multiReq.getKeys().get(5));
+		assertEquals("blerb", multiReq.getKeys().get(6));
+		assertEquals("balorb", multiReq.getKeys().get(7));
+		assertEquals("burp", multiReq.getKeys().get(8));
+		assertEquals("bopp", multiReq.getKeys().get(9));
+		assertEquals(10, multiReq.getKeys().size());
+		assertEquals(command, multiReq.getCommand());
+		
+	}
+	
+	@Test
+	public void testElevenMultiGet() {
+		String command = "get blub blab blob bleb blohb blarb blerb balorb burp bopp baluhb\r\n";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		Request req = RequestFactory.createRequest(buff);
+		
+		//req is GetRequest
+		assertTrue(req instanceof MultiGetRequest);
+		MultiGetRequest multiReq = (MultiGetRequest)req;
+		assertEquals("blub", multiReq.getKeys().get(0));
+		assertEquals("blab", multiReq.getKeys().get(1));
+		assertEquals("blob", multiReq.getKeys().get(2));
+		assertEquals("bleb", multiReq.getKeys().get(3));
+		assertEquals("blohb", multiReq.getKeys().get(4));
+		assertEquals("blarb", multiReq.getKeys().get(5));
+		assertEquals("blerb", multiReq.getKeys().get(6));
+		assertEquals("balorb", multiReq.getKeys().get(7));
+		assertEquals("burp", multiReq.getKeys().get(8));
+		assertEquals("bopp", multiReq.getKeys().get(9));
+		assertEquals("baluhb", multiReq.getKeys().get(10));
+		assertEquals(10, multiReq.getKeys().size());
+		assertEquals(command, multiReq.getCommand());
+	}
+	
+	@Test
+	public void testTwoCompleteCommands() {
+		String command = "get blub blab blob\r\nget moar\r\n";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		
+		thrown.expect(UnsupportedOperationException.class);
+		RequestFactory.createRequest(buff);
+		
+	}
+	
+	@Test
+	public void testTwoIncompleteCommands() {
+		String command = "get blub blab blob\r\nget a";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		
+		thrown.expect(UnsupportedOperationException.class);
+		RequestFactory.createRequest(buff);
+		
+	}
+}

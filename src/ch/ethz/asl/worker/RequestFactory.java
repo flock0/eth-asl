@@ -66,7 +66,11 @@ public class RequestFactory {
 			}
 
 		} else if (whitespaceSplit[0].equals("set")) {
-			return null; // TODO
+			// Set requests are forwarded unchecked to the memcached servers
+			byte[] setCommand = new byte[messageLength];
+			buffer.get(setCommand);
+			return new SetRequest(setCommand);
+			
 		} else {
 			throw new RequestParsingException(String.format("'%s' command is unknown.", whitespaceSplit[0]));
 		}

@@ -15,6 +15,7 @@ import ch.ethz.asl.worker.MultiGetRequest;
 import ch.ethz.asl.worker.Request;
 import ch.ethz.asl.worker.RequestFactory;
 import ch.ethz.asl.worker.RequestParsingException;
+import ch.ethz.asl.worker.SetRequest;
 
 public class RequestFactoryTest {
 
@@ -171,6 +172,20 @@ public class RequestFactoryTest {
 		
 		thrown.expect(RequestParsingException.class);
 		RequestFactory.createRequest(buff);
+		
+	}
+	
+	@Test
+	public void testSet() throws RequestParsingException {
+		String command = "set key1234 0 1000 12\r\ndatadatadata\r\n";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		Request req = RequestFactory.createRequest(buff);
+		
+		//req is SetRequest
+		assertTrue(req instanceof SetRequest);
+		SetRequest setReq = (SetRequest)req;
+		assertEquals(command, new String(setReq.getCommand()));
 		
 	}
 }

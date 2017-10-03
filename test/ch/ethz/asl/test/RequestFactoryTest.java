@@ -50,22 +50,18 @@ public class RequestFactoryTest {
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
 		
-		Request req = RequestFactory.createRequest(buff);
-		GetRequest getReq = (GetRequest)req;
-		assertEquals("", getReq.getKey());
-		assertEquals(command, getReq.getCommand());
+		thrown.expect(RequestParsingException.class);
+		RequestFactory.createRequest(buff);
 	}
 	
 	@Test
 	public void testNoKeyGet() throws RequestParsingException {
-		String command = "get \r\n";
+		String command = "get\r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
 		
-		Request req = RequestFactory.createRequest(buff);
-		GetRequest getReq = (GetRequest)req;
-		assertEquals("", getReq.getKey());
-		assertEquals(command, getReq.getCommand());
+		thrown.expect(RequestParsingException.class);
+		RequestFactory.createRequest(buff);
 	}
 	
 	@Test

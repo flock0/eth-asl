@@ -14,6 +14,7 @@ import ch.ethz.asl.worker.GetRequest;
 import ch.ethz.asl.worker.MultiGetRequest;
 import ch.ethz.asl.worker.Request;
 import ch.ethz.asl.worker.RequestFactory;
+import ch.ethz.asl.worker.UnknownCommandException;
 
 public class RequestFactoryTest {
 
@@ -68,6 +69,16 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
+	public void testNoNewline() {
+		String command = "get key234";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		
+		thrown.expect(UnknownCommandException.class);
+		RequestFactory.createRequest(buff);
+	}
+	
+	@Test
 	public void testMaxLengthKeyGet() {
 		String command = "get key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890\r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
@@ -88,7 +99,7 @@ public class RequestFactoryTest {
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
 		
-		thrown.expect(UnsupportedOperationException.class);
+		thrown.expect(UnknownCommandException.class);
 		RequestFactory.createRequest(buff);
 	}
 	
@@ -166,7 +177,7 @@ public class RequestFactoryTest {
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
 		
-		thrown.expect(UnsupportedOperationException.class);
+		thrown.expect(UnknownCommandException.class);
 		RequestFactory.createRequest(buff);
 		
 	}
@@ -177,7 +188,7 @@ public class RequestFactoryTest {
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
 		
-		thrown.expect(UnsupportedOperationException.class);
+		thrown.expect(UnknownCommandException.class);
 		RequestFactory.createRequest(buff);
 		
 	}

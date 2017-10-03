@@ -27,6 +27,10 @@ public class RequestFactory {
 		buffer.position(0);
 		byte[] arr = buffer.array();
 		String command = new String(arr).substring(0, messageLength);
+		
+		if(!command.contains("\r\n"))
+			throw new RequestParsingException("Encountered command without \\r\\n line ending.");
+		
 		// Split up commands along \r\n to find the first line.
 		String[] newlineSplit = command.split("\r\n");
 
@@ -47,7 +51,7 @@ public class RequestFactory {
 				String key = whitespaceSplit[1];
 				return new GetRequest(command, key);
 
-			} else if (whitespaceSplit.length <= MAX_MULTIGETS_SIZE) {
+			} else if (whitespaceSplit.length <= MAX_MULTIGETS_SIZE + 1) { //+1 as we count the 'get' as well
 				// We encountered a multiget request
 				List<String> keys = new ArrayList<String>();
 				for (int i = 1; i < whitespaceSplit.length; i++)

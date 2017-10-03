@@ -14,7 +14,7 @@ import ch.ethz.asl.worker.GetRequest;
 import ch.ethz.asl.worker.MultiGetRequest;
 import ch.ethz.asl.worker.Request;
 import ch.ethz.asl.worker.RequestFactory;
-import ch.ethz.asl.worker.UnknownCommandException;
+import ch.ethz.asl.worker.RequestParsingException;
 
 public class RequestFactoryTest {
 
@@ -31,7 +31,7 @@ public class RequestFactoryTest {
 	}
 
 	@Test
-	public void testSingleGet() {
+	public void testSingleGet() throws RequestParsingException {
 		String command = "get key-676544\r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
@@ -45,7 +45,7 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testEmptyKeyGet() {
+	public void testEmptyKeyGet() throws RequestParsingException {
 		String command = "get \r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
@@ -57,7 +57,7 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testNoKeyGet() {
+	public void testNoKeyGet() throws RequestParsingException {
 		String command = "get \r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
@@ -69,17 +69,17 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testNoNewline() {
+	public void testNoNewline() throws RequestParsingException {
 		String command = "get key234";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
 		
-		thrown.expect(UnknownCommandException.class);
+		thrown.expect(RequestParsingException.class);
 		RequestFactory.createRequest(buff);
 	}
 	
 	@Test
-	public void testMaxLengthKeyGet() {
+	public void testMaxLengthKeyGet() throws RequestParsingException {
 		String command = "get key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890\r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
@@ -94,17 +94,17 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testUnknownCommand() {
+	public void testUnknownCommand() throws RequestParsingException {
 		String command = "BLA blub\r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
 		
-		thrown.expect(UnknownCommandException.class);
+		thrown.expect(RequestParsingException.class);
 		RequestFactory.createRequest(buff);
 	}
 	
 	@Test
-	public void testThreeMultiGet() {
+	public void testThreeMultiGet() throws RequestParsingException {
 		String command = "get blub blab blob\r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
@@ -122,7 +122,7 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testTenMultiGet() {
+	public void testTenMultiGet() throws RequestParsingException {
 		String command = "get blub blab blob bleb blohb blarb blerb balorb burp bopp\r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
@@ -147,7 +147,7 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testElevenMultiGet() {
+	public void testElevenMultiGet() throws RequestParsingException {
 		String command = "get blub blab blob bleb blohb blarb blerb balorb burp bopp baluhb\r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
@@ -172,23 +172,23 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testTwoCompleteCommands() {
+	public void testTwoCompleteCommands() throws RequestParsingException {
 		String command = "get blub blab blob\r\nget moar\r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
 		
-		thrown.expect(UnknownCommandException.class);
+		thrown.expect(RequestParsingException.class);
 		RequestFactory.createRequest(buff);
 		
 	}
 	
 	@Test
-	public void testTwoIncompleteCommands() {
+	public void testTwoIncompleteCommands() throws RequestParsingException {
 		String command = "get blub blab blob\r\nget a";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
 		
-		thrown.expect(UnknownCommandException.class);
+		thrown.expect(RequestParsingException.class);
 		RequestFactory.createRequest(buff);
 		
 	}

@@ -4,15 +4,20 @@ import java.util.List;
 
 public class MultiGetRequest implements Request {
 
+	String command;
+	List<String> keys;
+	public MultiGetRequest(String command, List<String> keys) {
+		this.command = command;
+		this.keys = keys;
+	}
+
 	@Override
 	public Object getCommand() {
-		// TODO Auto-generated method stub
-		return null;
+		return command;
 	}
 	
 	public List<String> getKeys() {
-		// TODO Auto-generated method stub
-		return null;
+		return keys;
 	}
 
 	

@@ -119,6 +119,24 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
+	public void testMultiGetWithcommandkeys() throws RequestParsingException {
+		String command = "get set get getset set1\r\n";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		Request req = RequestFactory.createRequest(buff);
+		
+		//req is MultiGetRequest
+		assertTrue(req instanceof MultiGetRequest);
+		MultiGetRequest multiReq = (MultiGetRequest)req;
+		assertEquals("set", multiReq.getKeys().get(0));
+		assertEquals("get", multiReq.getKeys().get(1));
+		assertEquals("getset", multiReq.getKeys().get(2));
+		assertEquals("set1", multiReq.getKeys().get(3));
+		assertEquals(4, multiReq.getKeys().size());
+		assertEquals(command, multiReq.getCommand());
+	}
+	
+	@Test
 	public void testTenMultiGet() throws RequestParsingException {
 		String command = "get blub blab blob bleb blohb blarb blerb balorb burp bopp\r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
@@ -188,4 +206,19 @@ public class RequestFactoryTest {
 		assertEquals(command, new String(setReq.getCommand()));
 		
 	}
+	
+	@Test
+	public void testSetWithgetkeys() throws RequestParsingException {
+		String command = "set get 0 1000 11\r\nget get get\r\n";
+		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
+		buff.position(command.length());
+		Request req = RequestFactory.createRequest(buff);
+		
+		//req is SetRequest
+		assertTrue(req instanceof SetRequest);
+		SetRequest setReq = (SetRequest)req;
+		assertEquals(command, new String(setReq.getCommand()));
+		
+	}
+	
 }

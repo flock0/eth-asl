@@ -59,7 +59,7 @@ public class SocketsHandler implements Runnable {
 		 */
 		
 		isRunning = true;
-		logger.debug("Opening ServerSocket on {}:{}", myIp, myPort);
+		logger.debug("Opening ServerSocket on %s:%d", myIp, myPort);
 		try {
 			// Selector: multiplexor of SelectableChannel objects
 			synchronized(this) {

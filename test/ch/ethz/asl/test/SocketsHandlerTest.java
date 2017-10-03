@@ -21,8 +21,8 @@ public class SocketsHandlerTest {
 
 	Thread thr;
 	SocketsHandler handler;
-	Socket sock1 = null;
-	Socket sock2 = null;
+	Socket sock1;
+	Socket sock2;
 	
 	@Rule
     public ExpectedException thrown= ExpectedException.none();
@@ -31,8 +31,8 @@ public class SocketsHandlerTest {
 	public void setUp() throws Exception {
 		thr = null;
 		handler = null;
-		Socket sock1 = null;
-		Socket sock2 = null;
+		sock1 = null;
+		sock2 = null;
 	}
 
 	@After

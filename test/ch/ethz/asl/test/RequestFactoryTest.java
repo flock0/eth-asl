@@ -84,7 +84,7 @@ public class RequestFactoryTest {
 		//req is GetRequest
 		assertTrue(req instanceof GetRequest);
 		GetRequest getReq = (GetRequest)req;
-		assertEquals("key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key456789000",
+		assertEquals("key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890",
 				getReq.getKey());
 		assertEquals(command, getReq.getCommand());
 	}
@@ -106,7 +106,7 @@ public class RequestFactoryTest {
 		buff.position(command.length());
 		Request req = RequestFactory.createRequest(buff);
 		
-		//req is GetRequest
+		//req is MultiGetRequest
 		assertTrue(req instanceof MultiGetRequest);
 		MultiGetRequest multiReq = (MultiGetRequest)req;
 		assertEquals("blub", multiReq.getKeys().get(0));
@@ -124,7 +124,7 @@ public class RequestFactoryTest {
 		buff.position(command.length());
 		Request req = RequestFactory.createRequest(buff);
 		
-		//req is GetRequest
+		//req is MultiGetRequest
 		assertTrue(req instanceof MultiGetRequest);
 		MultiGetRequest multiReq = (MultiGetRequest)req;
 		assertEquals("blub", multiReq.getKeys().get(0));
@@ -147,24 +147,9 @@ public class RequestFactoryTest {
 		String command = "get blub blab blob bleb blohb blarb blerb balorb burp bopp baluhb\r\n";
 		ByteBuffer buff = ByteBuffer.wrap(command.getBytes());
 		buff.position(command.length());
-		Request req = RequestFactory.createRequest(buff);
 		
-		//req is GetRequest
-		assertTrue(req instanceof MultiGetRequest);
-		MultiGetRequest multiReq = (MultiGetRequest)req;
-		assertEquals("blub", multiReq.getKeys().get(0));
-		assertEquals("blab", multiReq.getKeys().get(1));
-		assertEquals("blob", multiReq.getKeys().get(2));
-		assertEquals("bleb", multiReq.getKeys().get(3));
-		assertEquals("blohb", multiReq.getKeys().get(4));
-		assertEquals("blarb", multiReq.getKeys().get(5));
-		assertEquals("blerb", multiReq.getKeys().get(6));
-		assertEquals("balorb", multiReq.getKeys().get(7));
-		assertEquals("burp", multiReq.getKeys().get(8));
-		assertEquals("bopp", multiReq.getKeys().get(9));
-		assertEquals("baluhb", multiReq.getKeys().get(10));
-		assertEquals(10, multiReq.getKeys().size());
-		assertEquals(command, multiReq.getCommand());
+		thrown.expect(RequestParsingException.class);
+		RequestFactory.createRequest(buff);
 	}
 	
 	@Test

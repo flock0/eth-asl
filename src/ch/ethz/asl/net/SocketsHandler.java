@@ -8,13 +8,14 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ch.ethz.asl.RunMW;
+import ch.ethz.asl.worker.Worker;
 
 /***
  * Thread that handles all network connections
@@ -43,7 +44,7 @@ public class SocketsHandler implements Runnable {
 	 */
 	private volatile boolean shouldRun = true;
 	private volatile boolean isRunning = false;
-	private BlockingQueue<SelectionKey> channelQueue = new ArrayBlockingQueue<SelectionKey>(MAX_CHANNEL_QUEUE_CAPACITY, false);
+	private BlockingQueue<Runnable> channelQueue = new LinkedBlockingQueue<Runnable>();
 
 	private static final Logger logger = LogManager.getLogger(SocketsHandler.class);
 	
@@ -163,18 +164,16 @@ public class SocketsHandler implements Runnable {
 	 */
 	private void enqueueChannel(SelectionKey key) {
 		try {
-			channelQueue.put(key);
+			channelQueue.put(new Worker(key));
 			key.interestOps(0); // Stop the selector from checking this channel temporarily while it's request is being handled.
 		} catch (InterruptedException ex) {
 			// We got interrupted while waiting for a space in the queue to become available.
 			// This could occur when shutting down the system. Nothing else to do here.
 			logger.catching(ex);
-		}
-		
-		
+		}	
 	}
 	
-	public BlockingQueue<SelectionKey> getChannelQueue() {
+	public BlockingQueue<Runnable> getChannelQueue() {
 		return channelQueue;
 	}
 	

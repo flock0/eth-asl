@@ -1,19 +1,27 @@
 package ch.ethz.asl;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import ch.ethz.asl.net.MemcachedSocketHandler;
 import ch.ethz.asl.net.SocketsHandler;
 
 public class RunMW {
 
+	static int POOLTHREAD_KEEP_ALIVE_MS = 5000;
 	static String myIp = null;
 	static int myPort = 0;
 	static List<String> mcAddresses = null;
 	static int numThreadsPTP = -1;
 	static boolean readSharded = false;
 	
+	static ExecutorService threadPool = null;
+	static SocketsHandler sockHandler = null;
 	private static final Logger logger = LogManager.getLogger(RunMW.class);
 	
 	public static void main(String[] args) throws Exception {
@@ -27,8 +35,11 @@ public class RunMW {
 		// -----------------------------------------------------------------------------
 		// Start the Middleware
 		// -----------------------------------------------------------------------------
-		
-		new Thread(new SocketsHandler(myIp, myPort)).start();
+		MemcachedSocketHandler.setMcAddresses(mcAddresses);
+		sockHandler = new SocketsHandler(myIp, myPort);
+		threadPool = new ThreadPoolExecutor(numThreadsPTP, numThreadsPTP, POOLTHREAD_KEEP_ALIVE_MS, TimeUnit.MILLISECONDS, sockHandler.getChannelQueue());
+
+		new Thread(sockHandler).start();
 
 	}
 

@@ -1,5 +1,9 @@
 package ch.ethz.asl.worker;
 
+import java.nio.ByteBuffer;
+
+import ch.ethz.asl.net.MemcachedSocketHandler;
+
 public class GetRequest implements Request {
 
 	String command;
@@ -17,4 +21,10 @@ public class GetRequest implements Request {
 		return command;
 	}
 
+	@Override
+	public void handle(MemcachedSocketHandler memcachedSocketHandler, ByteBuffer clientBuff) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not yet implemented");
+		
+	}
 }

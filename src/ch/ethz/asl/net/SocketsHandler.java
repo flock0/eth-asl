@@ -164,7 +164,7 @@ public class SocketsHandler implements Runnable {
 	 */
 	private void enqueueChannel(SelectionKey key) {
 		try {
-			channelQueue.put(new Worker(key));
+			channelQueue.put(new Worker(key, this));
 			key.interestOps(0); // Stop the selector from checking this channel temporarily while it's request is being handled.
 		} catch (InterruptedException ex) {
 			// We got interrupted while waiting for a space in the queue to become available.
@@ -204,6 +204,10 @@ public class SocketsHandler implements Runnable {
 
 	public boolean isRunning() {
 		return isRunning;
+	}
+	
+	public void wakeupSelector() {
+		selector.wakeup();
 	}
 
 }

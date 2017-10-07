@@ -1,6 +1,9 @@
 package ch.ethz.asl.worker;
 
+import java.nio.ByteBuffer;
 import java.util.List;
+
+import ch.ethz.asl.net.MemcachedSocketHandler;
 
 public class MultiGetRequest implements Request {
 
@@ -18,6 +21,13 @@ public class MultiGetRequest implements Request {
 	
 	public List<String> getKeys() {
 		return keys;
+	}
+
+	@Override
+	public void handle(MemcachedSocketHandler memcachedSocketHandler, ByteBuffer clientBuff) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Not yet implemented");
+		
 	}
 
 	

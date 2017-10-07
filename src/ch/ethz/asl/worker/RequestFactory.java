@@ -23,10 +23,11 @@ public class RequestFactory {
 	 */
 	public static Request createRequest(ByteBuffer buffer) throws RequestParsingException {
 
-		int messageLength = buffer.position();
-		buffer.position(0);
-		byte[] arr = buffer.array();
-		String command = new String(arr).substring(0, messageLength);
+		int messageLength = buffer.remaining();
+		byte[] arr = new byte[messageLength];
+		buffer.get(arr);
+		
+		String command = new String(arr);
 		
 		if(!command.contains("\r\n"))
 			throw new RequestParsingException("Encountered command without \\r\\n line ending.");
@@ -67,9 +68,7 @@ public class RequestFactory {
 
 		} else if (whitespaceSplit[0].equals("set")) {
 			// Set requests are forwarded unchecked to the memcached servers
-			byte[] setCommand = new byte[messageLength];
-			buffer.get(setCommand);
-			return new SetRequest(setCommand);
+			return new SetRequest(arr);
 			
 		} else {
 			throw new RequestParsingException(String.format("'%s' command is unknown.", whitespaceSplit[0]));

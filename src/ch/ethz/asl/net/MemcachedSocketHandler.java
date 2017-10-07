@@ -34,7 +34,7 @@ public class MemcachedSocketHandler {
 				String host = splitAddr[0];
 				int port = Integer.parseInt(splitAddr[1]);
 				SocketChannel channel = SocketChannel.open(new InetSocketAddress(host, port));
-				logger.debug("Connected to %s", addr);
+				logger.debug(String.format("Connected to %s", addr));
 				channels.add(channel);
 			}
 			logger.debug("Connected to all memcached servers.");

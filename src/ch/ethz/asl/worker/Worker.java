@@ -56,8 +56,8 @@ public class Worker implements Runnable {
 			} catch (IOException ex) {
 				logger.catching(ex);
 			}
-    	} while(readReturnCode != 0 || readReturnCode != -1); //TODO Handle overflow of buffer
-		
+    	} while(readReturnCode != 0 && readReturnCode != -1); //TODO Handle overflow of buffer
+    	
 		if(readReturnCode == -1)
 			try {
 				client.close();

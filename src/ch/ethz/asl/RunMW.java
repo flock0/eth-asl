@@ -1,7 +1,9 @@
 package ch.ethz.asl;
 
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -22,7 +24,15 @@ public class RunMW {
 	
 	static ExecutorService threadPool = null;
 	static SocketsHandler sockHandler = null;
+	private static BlockingQueue<Runnable> channelQueue = null;
 	private static final Logger logger = LogManager.getLogger(RunMW.class);
+	
+	
+	/***
+	 * The maximum number of readable channels in the queue.
+	 * This is the de-facto maximum number of concurrent clients.
+	 */
+	static final int MAX_CHANNEL_QUEUE_CAPACITY = 4096;
 	
 	public static void main(String[] args) throws Exception {
 
@@ -36,9 +46,9 @@ public class RunMW {
 		// Start the Middleware
 		// -----------------------------------------------------------------------------
 		MemcachedSocketHandler.setMcAddresses(mcAddresses);
-		sockHandler = new SocketsHandler(myIp, myPort);
-		threadPool = new ThreadPoolExecutor(numThreadsPTP, numThreadsPTP, POOLTHREAD_KEEP_ALIVE_MS, TimeUnit.MILLISECONDS, sockHandler.getChannelQueue());
-
+		channelQueue = new LinkedBlockingQueue<Runnable>();
+		threadPool = new ThreadPoolExecutor(numThreadsPTP, numThreadsPTP, POOLTHREAD_KEEP_ALIVE_MS, TimeUnit.MILLISECONDS, channelQueue);
+		sockHandler = new SocketsHandler(myIp, myPort, threadPool);
 		new Thread(sockHandler).start();
 
 	}

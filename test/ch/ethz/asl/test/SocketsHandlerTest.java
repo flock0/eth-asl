@@ -8,6 +8,11 @@ import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -23,6 +28,8 @@ public class SocketsHandlerTest {
 	SocketsHandler handler;
 	Socket sock1;
 	Socket sock2;
+	ExecutorService threadPool;
+	BlockingQueue<Runnable> channelQueue = null;
 	
 	@Rule
     public ExpectedException thrown= ExpectedException.none();
@@ -33,14 +40,18 @@ public class SocketsHandlerTest {
 		handler = null;
 		sock1 = null;
 		sock2 = null;
+		channelQueue = new LinkedBlockingQueue<Runnable>();
+		threadPool = new ThreadPoolExecutor(1, 1, 5000, TimeUnit.MILLISECONDS, channelQueue);
 	}
 
 	@After
 	public void tearDown() throws Exception {
+		threadPool.shutdownNow();
 		if(sock1 != null)
 			sock1.close();
 		if(sock2 != null)
 			sock2.close();
+		threadPool.awaitTermination(2000, TimeUnit.MILLISECONDS);
 		if(thr != null && handler != null) {
 			if(thr.isAlive()) {
 				handler.shutdown();
@@ -53,7 +64,7 @@ public class SocketsHandlerTest {
 
 	@Test
 	public void testRun() throws UnknownHostException, IOException, InterruptedException {
-		handler = new SocketsHandler("127.0.0.1", 42171);
+		handler = new SocketsHandler("127.0.0.1", 42171, threadPool);
 		thr = new Thread(handler);
 		thr.start();
 		Thread.sleep(100);
@@ -68,7 +79,7 @@ public class SocketsHandlerTest {
 	public void testRunOnNetworkInterface() throws UnknownHostException, IOException, InterruptedException {
 		InetAddress IP=InetAddress.getLocalHost();
 		System.out.println("IP of my system is := "+IP.getHostAddress());
-		handler = new SocketsHandler(IP.getHostAddress(), 42171);
+		handler = new SocketsHandler(IP.getHostAddress(), 42171, threadPool);
 		thr = new Thread(handler);
 		thr.start();
 		Thread.sleep(50);
@@ -82,7 +93,7 @@ public class SocketsHandlerTest {
 	@Test
 	public void testCloseServerSocket() throws UnknownHostException, IOException, InterruptedException {
 		// create and start thread
-		handler = new SocketsHandler("127.0.0.1", 45343);
+		handler = new SocketsHandler("127.0.0.1", 45343, threadPool);
 		thr = new Thread(handler);
 		thr.start();
 		Thread.sleep(100);
@@ -111,7 +122,7 @@ public class SocketsHandlerTest {
 	@Test
 	public void testShutdown() throws UnknownHostException, IOException, InterruptedException {
 		// create and start thread
-		handler = new SocketsHandler("127.0.0.1", 45343);
+		handler = new SocketsHandler("127.0.0.1", 45343, threadPool);
 		thr = new Thread(handler);
 		thr.start();
 		Thread.sleep(100);
@@ -135,18 +146,18 @@ public class SocketsHandlerTest {
 	@Test
 	public void testQueueEmpty() {
 		// create and start thread
-		handler = new SocketsHandler("127.0.0.1", 32595);
+		handler = new SocketsHandler("127.0.0.1", 32595, threadPool);
 		thr = new Thread(handler);
 		thr.start();
 		
 		// queue should be empty
-		assertEquals(0, handler.getChannelQueue().size());
+		assertEquals(0, channelQueue.size());
 	}
 	
 	@Test
 	public void testQueuedCorrectly() throws UnknownHostException, IOException, InterruptedException {
 		// create and start thread
-		handler = new SocketsHandler("127.0.0.1", 45343);
+		handler = new SocketsHandler("127.0.0.1", 45343, threadPool);
 		thr = new Thread(handler);
 		thr.start();
 		Thread.sleep(50);
@@ -156,7 +167,7 @@ public class SocketsHandlerTest {
 		out1.println("GET 7484");
 		Thread.sleep(50);
 		// queue should contain element7
-		assertEquals(1, handler.getChannelQueue().size());
+		assertEquals(1, channelQueue.size());
 		
 		// connect again and write to socket
 		sock2 = new Socket("127.0.0.1", 45343);
@@ -164,6 +175,6 @@ public class SocketsHandlerTest {
 		out2.println("GET 9556");
 		Thread.sleep(50);
 		// queue should contain two elements
-		assertEquals(2, handler.getChannelQueue().size());
+		assertEquals(2, channelQueue.size());
 	}
 }

@@ -45,6 +45,7 @@ public class Worker implements Runnable {
     }
 
     public void run(){
+    	logger.debug("Processing request on worker thread");
     	ByteBuffer clientBuff = clientBuffer.get();
     	SocketChannel client = (SocketChannel)key.channel();
     	
@@ -65,10 +66,10 @@ public class Worker implements Runnable {
 			}
 		else {
 			clientBuff.flip();
-			Request req;
 			try {
-				req = RequestFactory.createRequest(clientBuff);
-				req.handle(sockets.get(), clientBuff);
+				Request req = RequestFactory.createRequest(clientBuff);
+				clientBuff.clear();
+				req.handle(sockets.get(), client, clientBuff);
 			} catch (RequestParsingException ex) {
 				//Couldn't parse 
 				logger.catching(ex);

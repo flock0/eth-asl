@@ -8,8 +8,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,11 +27,7 @@ public class SocketsHandler implements Runnable {
 	 */
 	static final int MAX_REQUEST_LENGTH_BYTES = 1536; 
 	
-	/***
-	 * The maximum number of readable channels in the queue.
-	 * This is the de-facto maximum number of concurrent clients.
-	 */
-	static final int MAX_CHANNEL_QUEUE_CAPACITY = 4096;
+	
 	
 	private final String myIp;
 	private final int myPort;
@@ -44,13 +39,17 @@ public class SocketsHandler implements Runnable {
 	 */
 	private volatile boolean shouldRun = true;
 	private volatile boolean isRunning = false;
-	private BlockingQueue<Runnable> channelQueue = new LinkedBlockingQueue<Runnable>();
+
+
+
+	private ExecutorService threadPool;
 
 	private static final Logger logger = LogManager.getLogger(SocketsHandler.class);
 	
-	public SocketsHandler(String myIp, int myPort) {
+	public SocketsHandler(String myIp, int myPort, ExecutorService threadPool) {
 		this.myIp = myIp;
 		this.myPort = myPort;
+		this.threadPool = threadPool;
 	}
 	
 	@Override
@@ -60,7 +59,7 @@ public class SocketsHandler implements Runnable {
 		 */
 		
 		isRunning = true;
-		logger.debug("Opening ServerSocket on %s:%d", myIp, myPort);
+		logger.debug(String.format("Opening ServerSocket on %s:%d", myIp, myPort));
 		try {
 			// Selector: multiplexor of SelectableChannel objects
 			synchronized(this) {
@@ -163,18 +162,8 @@ public class SocketsHandler implements Runnable {
 	 * @param key A key to the underlying channel
 	 */
 	private void enqueueChannel(SelectionKey key) {
-		try {
-			channelQueue.put(new Worker(key, this));
-			key.interestOps(0); // Stop the selector from checking this channel temporarily while it's request is being handled.
-		} catch (InterruptedException ex) {
-			// We got interrupted while waiting for a space in the queue to become available.
-			// This could occur when shutting down the system. Nothing else to do here.
-			logger.catching(ex);
-		}	
-	}
-	
-	public BlockingQueue<Runnable> getChannelQueue() {
-		return channelQueue;
+		threadPool.submit(new Worker(key, this));
+		key.interestOps(0); // Stop the selector from checking this channel temporarily while it's request is being handled.	
 	}
 	
 	/***

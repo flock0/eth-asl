@@ -3,6 +3,7 @@ package ch.ethz.asl.worker;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -13,10 +14,9 @@ import ch.ethz.asl.net.MemcachedSocketHandler;
 public class SetRequest implements Request {
 
 	private static final Logger logger = LogManager.getLogger(SetRequest.class);
-	
+	private static ByteBuffer successBuffer = ByteBuffer.wrap(new String("STORED\r\n").getBytes());
 	byte[] command;
 	ByteBuffer commandBuffer;
-	int commandLength;
 	
 	public SetRequest(byte[] command) {
 		this.command = command;
@@ -34,41 +34,50 @@ public class SetRequest implements Request {
 		
 		//TODO Forward set command to all memcached servers
 		memcachedSocketHandler.sendToAll(commandBuffer);
-		for(SocketChannel serverChannel : memcachedSocketHandler.getChannels()) {
-			do {
-				serverChannel.write(commandBuffer);
-			} while(commandBuffer.hasRemaining());
-			
-			commandBuffer.position(0); // We send the same message to all memcached servers, hence a simple reset of the position.
-		}
+		
+		
 		
 		//TODO Wait for responses of all memcached servers
 		List<String> responses = memcachedSocketHandler.waitForAllResponses();
-		for(SocketChannel serverChannel : memcachedSocketHandler.getChannels()) {
-		
-		}
 
 		List<String> errors = getErrors(responses);
 		if(errors.isEmpty())
-			sendSuccessToClient(client, clientBuff);
+			sendSuccessToClient(client);
 		else
-			sendSingleErrorMessage(errors);
-			
-		
-		// TODO Auto-generated method stub. Remove code below
-		logger.debug("set request");
-		String answer = "STORED\r\n";
-		byte[] answerBytes = answer.getBytes();
-		buff.put(answerBytes);
-		buff.flip();
-		int sentBytes = 0;
-		try {
-			do {	
-					sentBytes += client.write(buff);	
-			} while(sentBytes < answerBytes.length);
-		} catch (IOException ex) {
-			logger.catching(ex);
-		}
+			sendSingleErrorMessage(client, errors);
 	}
 
+	private List<String> getErrors(List<String> responses) {
+		List<String> errors = new ArrayList<String>();
+		for(String respo : responses) {
+			if(respo.equals("ERROR\r\n") ||
+			   respo.startsWith("CLIENT_ERROR ") ||
+			   respo.startsWith("SERVER_ERROR ")) {
+				logger.error(String.format("Memcached server responded with error. Will forward to the client: %s", respo));
+				errors.add(respo);
+			}
+			else if(!respo.equals("STORED\r\n")) {
+				logger.error(String.format("Memcached server responded unexpectedly. Will forward to the client: %s", respo));
+				errors.add(respo);
+			}
+		}
+		
+		return errors;
+		
+	}
+
+	private void sendSuccessToClient(SocketChannel client) throws IOException {
+		successBuffer.clear();
+		do {
+			client.write(successBuffer);
+		} while(successBuffer.hasRemaining());
+		
+	}
+	
+	private void sendSingleErrorMessage(SocketChannel client, List<String> errors) throws IOException {
+		ByteBuffer errorBuffer = ByteBuffer.wrap(errors.get(0).getBytes());
+		do {
+			client.write(errorBuffer);
+		} while(errorBuffer.hasRemaining());
+	}
 }

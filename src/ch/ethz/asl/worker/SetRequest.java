@@ -31,20 +31,30 @@ public class SetRequest implements Request {
 	@Override
 	public void handle(MemcachedSocketHandler memcachedSocketHandler, SocketChannel client, ByteBuffer clientBuff) {
 		
+		List<String> errors = null;
+		try {
+			//Forward set command to all memcached servers
+			memcachedSocketHandler.sendToAll(commandBuffer);
+			
+			//Wait for responses of all memcached servers
+			List<String> responses = memcachedSocketHandler.waitForAllResponses();
+			errors = getErrors(responses);
+		} catch (IOException ex) {
+			logger.catching(ex);
+			if(errors == null)
+				errors = new ArrayList<String>();
+			errors.add(String.format("SERVER_ERROR Exception in middleware: %s\r\n", ex.getMessage()));
+		}
 		
-		//TODO Forward set command to all memcached servers
-		memcachedSocketHandler.sendToAll(commandBuffer);
-		
-		
-		
-		//TODO Wait for responses of all memcached servers
-		List<String> responses = memcachedSocketHandler.waitForAllResponses();
-
-		List<String> errors = getErrors(responses);
-		if(errors.isEmpty())
-			sendSuccessToClient(client);
-		else
-			sendSingleErrorMessage(client, errors);
+		// If an error occured, forward one of the error messages
+		try {
+			if(errors.isEmpty())
+				sendSuccessToClient(client);
+			else
+				sendSingleErrorMessage(client, errors.get(0));
+		} catch (IOException ex) {
+			logger.catching(ex);
+		}
 	}
 
 	private List<String> getErrors(List<String> responses) {
@@ -74,8 +84,8 @@ public class SetRequest implements Request {
 		
 	}
 	
-	private void sendSingleErrorMessage(SocketChannel client, List<String> errors) throws IOException {
-		ByteBuffer errorBuffer = ByteBuffer.wrap(errors.get(0).getBytes());
+	private void sendSingleErrorMessage(SocketChannel client, String errorMessage) throws IOException {
+		ByteBuffer errorBuffer = ByteBuffer.wrap(errorMessage.getBytes());
 		do {
 			client.write(errorBuffer);
 		} while(errorBuffer.hasRemaining());

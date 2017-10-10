@@ -77,7 +77,7 @@ public class SetRequest implements Request {
 	}
 
 	private void sendSuccessToClient(SocketChannel client) throws IOException {
-		successBuffer.clear();
+		successBuffer.position(0);
 		do {
 			client.write(successBuffer);
 		} while(successBuffer.hasRemaining());

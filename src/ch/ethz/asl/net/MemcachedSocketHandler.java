@@ -75,7 +75,7 @@ public class MemcachedSocketHandler {
 				} catch (IOException ex) {
 					logger.catching(ex);
 				}
-	    	} while(readReturnCode != 0 && readReturnCode != -1); //TODO Handle overflow of buffer
+	    	} while(readReturnCode != -1 && !receivedValidResponse(buffer)); //TODO Handle overflow of buffer
 	    	
 	    	if(readReturnCode == -1)
 				try {
@@ -105,4 +105,40 @@ public class MemcachedSocketHandler {
 		
 	}
 	
+	private boolean receivedValidResponse(ByteBuffer buffer) {
+		/* The following answers are expected:
+		 * ERROR\r\n
+		 * CLIENT_ERROR <custom text>\r\n
+		 * SERVER_ERROR <custom text>\r\n
+		 * STORED\r\n
+		 * VALUE...END\r\n
+		 */
+		
+		boolean isValid = false;
+		int oldPosition = buffer.position();
+		
+		byte[] msgArr = new byte[oldPosition];
+		buffer.position(0);
+		buffer.get(msgArr);
+		String msg = new String(msgArr);
+		if(msg.equals("ERROR\r\n") || msg.equals("STORED\r\n")) {
+			isValid = true;
+		} 
+		else if(msg.startsWith("CLIENT_ERROR ") || msg.startsWith("SERVER_ERROR ")) {
+			if(msg.endsWith("\r\n")) {
+				isValid = true;
+			} else {
+				isValid = false;
+			}
+		} 
+		else if(msg.endsWith("END\r\n")) {
+			isValid = true;
+		}
+		else {
+			isValid = false;
+		}			
+				
+		buffer.position(oldPosition);
+		return isValid;
+	}
 }

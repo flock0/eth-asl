@@ -45,7 +45,7 @@ public class RequestFactory {
 			byte[] commandArr = new byte[messageLength];
 			buffer.get(commandArr);
 			
-			String command = new String(command);
+			String command = new String(commandArr);
 			
 			// Split up commands along \r\n to find the first line.
 			String[] newlineSplit = command.split("\r\n");
@@ -88,7 +88,7 @@ public class RequestFactory {
 			byte[] commandArr = new byte[messageLength];
 			buffer.get(commandArr);
 			
-			String command = new String(command);
+			String command = new String(commandArr);
 			
 			if(command.endsWith("\r\n")) {
 				int firstNewlinePos = command.indexOf("\r\n");

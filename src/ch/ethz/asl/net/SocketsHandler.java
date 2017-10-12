@@ -139,31 +139,30 @@ public class SocketsHandler implements Runnable {
 							if(readReturnCode == -1) {
 								// Reached end-of-stream
 								evictClientBuffer(key);
+								client.close();
+							}
+							else {
+								// TODO Check if the request is valid
+								Request req;
+								try {
+									req = RequestFactory.tryCreateRequest(buffer);
+									// If valid, forward the request to the workers. Create request and copy out of ByteBuffer
+									enqueueChannel(client, req);
+									
+									
+								} catch(FaultyRequestException ex) {
+									// TODO If not valid and never will be, send an error message to the client
+									buffer.clear();
+									sendClientError(client, ex.getMessage());
+								} catch(IncompleteRequestException ex) {
+									// If the request is incomplete, continue reading
+								}
 							}
 						} catch(ClosedChannelException ex) {
 							logger.catching(ex);
 							evictClientBuffer(key);
 						}
-						
-						// TODO Check if the request is valid
-						Request req;
-						try {
-							req = RequestFactory.tryCreateRequest(buffer);
-							// If valid, forward the request to the workers. Create request and copy out of ByteBuffer
-							enqueueChannel(client, req);
-							
-							
-						} catch(FaultyRequestException ex) {
-							// TODO If not valid and never will be, send an error message to the client
-							buffer.clear();
-							sendClientError(client, ex.getMessage());
-						} catch(IncompleteRequestException ex) {
-							// If the request is incomplete, continue reading
-						}
-						
-						
-						
-						
+
 						// It is not needed to change interestOps here, as the client should wait after a valid request
 						// TODO Still we should have a check whether we are reading from a channel that is currently being processed.
 						//      Maybe a HashMap of Key to a volatile bool flag

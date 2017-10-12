@@ -149,7 +149,7 @@ public class SocketsHandler implements Runnable {
 						try {
 							req = RequestFactory.tryCreateRequest(buffer);
 							// If valid, forward the request to the workers. Create request and copy out of ByteBuffer
-							enqueueChannel(key, req);
+							enqueueChannel(client, req);
 							
 							
 						} catch(FaultyRequestException ex) {
@@ -207,11 +207,11 @@ public class SocketsHandler implements Runnable {
 	 * Adds the channel to the request queue and
 	 * stops the selector from checking this channel.
 	 * Assume that the given channel is valid and has data to read
-	 * @param key A key to the underlying channel
+	 * @param client The channel to the client
 	 * @param req The successfully parsed Request object
 	 */
-	private void enqueueChannel(SelectionKey key, Request req) {
-		threadPool.submit(new Worker(key, req));
+	private void enqueueChannel(SocketChannel client, Request req) {
+		threadPool.submit(new Worker(client, req));
 	
 	}
 	

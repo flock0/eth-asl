@@ -113,7 +113,7 @@ public class RequestFactory {
 						}
 						else {
 							int nextNewlinePos = firstNewlinePos + 2 + datablockSize;
-							if(nextNewlinePos != command.length() - 2) {
+							if(nextNewlinePos != commandArr.length - 2) {
 								throw new FaultyRequestException("Number of bytes in set request doesn't match real datablock size");
 							} else {
 								req = new SetRequest(commandArr);

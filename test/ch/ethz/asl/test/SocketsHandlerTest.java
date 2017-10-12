@@ -100,7 +100,7 @@ public class SocketsHandlerTest {
 		//try connecting to socket
 		sock1 = new Socket("127.0.0.1", 45343);
 		PrintWriter out1 = new PrintWriter(sock1.getOutputStream(), true);
-		out1.println("Command");
+		out1.println("get ab\r");
 		
 		//closeServerSocket
 		handler.closeServerSocket();

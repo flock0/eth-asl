@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import ch.ethz.asl.worker.GetRequest;
+import ch.ethz.asl.worker.IncompleteRequestException;
 import ch.ethz.asl.worker.MultiGetRequest;
 import ch.ethz.asl.worker.Request;
 import ch.ethz.asl.worker.RequestFactory;
@@ -32,12 +33,12 @@ public class RequestFactoryTest {
 	}
 
 	@Test
-	public void testSingleGet() throws FaultyRequestException {
+	public void testSingleGet() throws FaultyRequestException, IncompleteRequestException {
 		String command = "get key-676544\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
-		Request req = RequestFactory.createRequest(buff);
+		
+		Request req = RequestFactory.tryCreateRequest(buff);
 		
 		//req is GetRequest
 		assertTrue(req instanceof GetRequest);
@@ -47,45 +48,45 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testEmptyKeyGet() throws FaultyRequestException {
+	public void testEmptyKeyGet() throws FaultyRequestException, IncompleteRequestException {
 		String command = "get \r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
 		
-		thrown.expect(FaultyRequestException.class);
-		RequestFactory.createRequest(buff);
+		
+		thrown.expect(IncompleteRequestException.class);
+		RequestFactory.tryCreateRequest(buff);
 	}
 	
 	@Test
-	public void testNoKeyGet() throws FaultyRequestException {
+	public void testNoKeyGet() throws FaultyRequestException, IncompleteRequestException {
 		String command = "get\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
 		
-		thrown.expect(FaultyRequestException.class);
-		RequestFactory.createRequest(buff);
+		
+		thrown.expect(IncompleteRequestException.class);
+		RequestFactory.tryCreateRequest(buff);
 	}
 	
 	@Test
-	public void testNoNewline() throws FaultyRequestException {
+	public void testNoNewline() throws FaultyRequestException, IncompleteRequestException {
 		String command = "get key234";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
 		
-		thrown.expect(FaultyRequestException.class);
-		RequestFactory.createRequest(buff);
+		
+		thrown.expect(IncompleteRequestException.class);
+		RequestFactory.tryCreateRequest(buff);
 	}
 	
 	@Test
-	public void testMaxLengthKeyGet() throws FaultyRequestException {
+	public void testMaxLengthKeyGet() throws FaultyRequestException, IncompleteRequestException {
 		String command = "get key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
-		Request req = RequestFactory.createRequest(buff);
+		
+		Request req = RequestFactory.tryCreateRequest(buff);
 		
 		//req is GetRequest
 		assertTrue(req instanceof GetRequest);
@@ -96,23 +97,23 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testUnknownCommand() throws FaultyRequestException {
+	public void testUnknownCommand() throws FaultyRequestException, IncompleteRequestException {
 		String command = "BLA blub\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
+		
 		
 		thrown.expect(FaultyRequestException.class);
-		RequestFactory.createRequest(buff);
+		RequestFactory.tryCreateRequest(buff);
 	}
 	
 	@Test
-	public void testThreeMultiGet() throws FaultyRequestException {
+	public void testThreeMultiGet() throws FaultyRequestException, IncompleteRequestException {
 		String command = "get blub blab blob\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
-		Request req = RequestFactory.createRequest(buff);
+		
+		Request req = RequestFactory.tryCreateRequest(buff);
 		
 		//req is MultiGetRequest
 		assertTrue(req instanceof MultiGetRequest);
@@ -126,12 +127,12 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testMultiGetWithcommandkeys() throws FaultyRequestException {
+	public void testMultiGetWithcommandkeys() throws FaultyRequestException, IncompleteRequestException {
 		String command = "get set get getset set1\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
-		Request req = RequestFactory.createRequest(buff);
+		
+		Request req = RequestFactory.tryCreateRequest(buff);
 		
 		//req is MultiGetRequest
 		assertTrue(req instanceof MultiGetRequest);
@@ -145,12 +146,12 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testTenMultiGet() throws FaultyRequestException {
+	public void testTenMultiGet() throws FaultyRequestException, IncompleteRequestException {
 		String command = "get blub blab blob bleb blohb blarb blerb balorb burp bopp\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
-		Request req = RequestFactory.createRequest(buff);
+		
+		Request req = RequestFactory.tryCreateRequest(buff);
 		
 		//req is MultiGetRequest
 		assertTrue(req instanceof MultiGetRequest);
@@ -171,47 +172,47 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testElevenMultiGet() throws FaultyRequestException {
+	public void testElevenMultiGet() throws FaultyRequestException, IncompleteRequestException {
 		String command = "get blub blab blob bleb blohb blarb blerb balorb burp bopp baluhb\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
+		
 		
 		thrown.expect(FaultyRequestException.class);
-		RequestFactory.createRequest(buff);
+		RequestFactory.tryCreateRequest(buff);
 	}
 	
 	@Test
-	public void testTwoCompleteCommands() throws FaultyRequestException {
+	public void testTwoCompleteCommands() throws FaultyRequestException, IncompleteRequestException {
 		String command = "get blub blab blob\r\nget moar\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
+		
 		
 		thrown.expect(FaultyRequestException.class);
-		RequestFactory.createRequest(buff);
+		RequestFactory.tryCreateRequest(buff);
 		
 	}
 	
 	@Test
-	public void testTwoIncompleteCommands() throws FaultyRequestException {
+	public void testTwoIncompleteCommands() throws FaultyRequestException, IncompleteRequestException {
 		String command = "get blub blab blob\r\nget a";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
+		
 		
 		thrown.expect(FaultyRequestException.class);
-		RequestFactory.createRequest(buff);
+		RequestFactory.tryCreateRequest(buff);
 		
 	}
 	
 	@Test
-	public void testSet() throws FaultyRequestException {
+	public void testSet() throws FaultyRequestException, IncompleteRequestException {
 		String command = "set key1234 0 1000 12\r\ndatadatadata\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
-		Request req = RequestFactory.createRequest(buff);
+		
+		Request req = RequestFactory.tryCreateRequest(buff);
 		
 		//req is SetRequest
 		assertTrue(req instanceof SetRequest);
@@ -221,12 +222,12 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testSetWithgetkeys() throws FaultyRequestException {
+	public void testSetWithgetkeys() throws FaultyRequestException, IncompleteRequestException {
 		String command = "set get 0 1000 11\r\nget get get\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
-		buff.flip();
-		Request req = RequestFactory.createRequest(buff);
+		
+		Request req = RequestFactory.tryCreateRequest(buff);
 		
 		//req is SetRequest
 		assertTrue(req instanceof SetRequest);

@@ -21,13 +21,6 @@ import ch.ethz.asl.worker.Worker;
  * @author Florian Chlan
  */
 public class SocketsHandler implements Runnable {
-
-	/***
-	 * The maximum request size. Should at least hold a SET-request with a value of up to 1024B
-	 */
-	static final int MAX_REQUEST_LENGTH_BYTES = 1536; 
-	
-	
 	
 	private final String myIp;
 	private final int myPort;

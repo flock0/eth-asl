@@ -7,7 +7,9 @@ package ch.ethz.asl.worker;
  *
  */
 public class IncompleteRequestException extends Exception {
-	
+
+	private static final long serialVersionUID = -2580321434258375168L;
+
 	public IncompleteRequestException(String message) {
 		super(message);
 	}

@@ -17,6 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ch.ethz.asl.RunMW;
+import ch.ethz.asl.worker.FaultyRequestException;
 import ch.ethz.asl.worker.Request;
 import ch.ethz.asl.worker.RequestFactory;
 import ch.ethz.asl.worker.Worker;
@@ -145,21 +146,29 @@ public class SocketsHandler implements Runnable {
 						// TODO Check if the request is valid
 						Request req;
 						try {
-							req = RequestFactory.createRequest(buffer);
+							req = RequestFactory.tryCreateRequest(buffer);
 							// If valid, forward the request to the workers. Create request and copy out of ByteBuffer
-							enqueueChannel(key, buffer);
+							enqueueChannel(key, req);
+							// Clear byte buffer
+							buffer.clear();
+							
 						} catch(FaultyRequestException ex) {
 							// TODO If not and never will be, send an error message to the client
+							
+							sendClientError(ex.getMessage());
+							
+							// Clear byte buffer
+							buffer.clear();
 						} catch(IncompleteRequestException ex) {
-							// TODO If not and might be in the future, continue reading
+							// If the request is incomplete, continue reading
 						}
 						
 						
-						// TODO Clear byte buffer
+						
+						
 						// It is not needed to change interestOps here, as the client should wait after a valid request
-						// Just make sure the ByteBuffer is cleared
 						// TODO Still we should have a check whether we are reading from a channel that is currently being processed.
-						//      Maybe a HashMap of Key to bool with a simple volatile flag.
+						//      Maybe a HashMap of Key to a volatile bool flag
 						
 					}
 					iter.remove();
@@ -235,4 +244,7 @@ public class SocketsHandler implements Runnable {
 		selector.wakeup();
 	}
 
+	private void evictClientBuffer(SelectionKey key) {
+		clientBuffers.remove(key);
+	}
 }

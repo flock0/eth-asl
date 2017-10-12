@@ -14,7 +14,7 @@ import ch.ethz.asl.worker.GetRequest;
 import ch.ethz.asl.worker.MultiGetRequest;
 import ch.ethz.asl.worker.Request;
 import ch.ethz.asl.worker.RequestFactory;
-import ch.ethz.asl.worker.RequestParsingException;
+import ch.ethz.asl.worker.FaultyRequestException;
 import ch.ethz.asl.worker.SetRequest;
 
 public class RequestFactoryTest {
@@ -32,7 +32,7 @@ public class RequestFactoryTest {
 	}
 
 	@Test
-	public void testSingleGet() throws RequestParsingException {
+	public void testSingleGet() throws FaultyRequestException {
 		String command = "get key-676544\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
@@ -47,40 +47,40 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testEmptyKeyGet() throws RequestParsingException {
+	public void testEmptyKeyGet() throws FaultyRequestException {
 		String command = "get \r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		buff.flip();
 		
-		thrown.expect(RequestParsingException.class);
+		thrown.expect(FaultyRequestException.class);
 		RequestFactory.createRequest(buff);
 	}
 	
 	@Test
-	public void testNoKeyGet() throws RequestParsingException {
+	public void testNoKeyGet() throws FaultyRequestException {
 		String command = "get\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		buff.flip();
 		
-		thrown.expect(RequestParsingException.class);
+		thrown.expect(FaultyRequestException.class);
 		RequestFactory.createRequest(buff);
 	}
 	
 	@Test
-	public void testNoNewline() throws RequestParsingException {
+	public void testNoNewline() throws FaultyRequestException {
 		String command = "get key234";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		buff.flip();
 		
-		thrown.expect(RequestParsingException.class);
+		thrown.expect(FaultyRequestException.class);
 		RequestFactory.createRequest(buff);
 	}
 	
 	@Test
-	public void testMaxLengthKeyGet() throws RequestParsingException {
+	public void testMaxLengthKeyGet() throws FaultyRequestException {
 		String command = "get key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890key4567890\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
@@ -96,18 +96,18 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testUnknownCommand() throws RequestParsingException {
+	public void testUnknownCommand() throws FaultyRequestException {
 		String command = "BLA blub\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		buff.flip();
 		
-		thrown.expect(RequestParsingException.class);
+		thrown.expect(FaultyRequestException.class);
 		RequestFactory.createRequest(buff);
 	}
 	
 	@Test
-	public void testThreeMultiGet() throws RequestParsingException {
+	public void testThreeMultiGet() throws FaultyRequestException {
 		String command = "get blub blab blob\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
@@ -126,7 +126,7 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testMultiGetWithcommandkeys() throws RequestParsingException {
+	public void testMultiGetWithcommandkeys() throws FaultyRequestException {
 		String command = "get set get getset set1\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
@@ -145,7 +145,7 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testTenMultiGet() throws RequestParsingException {
+	public void testTenMultiGet() throws FaultyRequestException {
 		String command = "get blub blab blob bleb blohb blarb blerb balorb burp bopp\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
@@ -171,42 +171,42 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testElevenMultiGet() throws RequestParsingException {
+	public void testElevenMultiGet() throws FaultyRequestException {
 		String command = "get blub blab blob bleb blohb blarb blerb balorb burp bopp baluhb\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		buff.flip();
 		
-		thrown.expect(RequestParsingException.class);
+		thrown.expect(FaultyRequestException.class);
 		RequestFactory.createRequest(buff);
 	}
 	
 	@Test
-	public void testTwoCompleteCommands() throws RequestParsingException {
+	public void testTwoCompleteCommands() throws FaultyRequestException {
 		String command = "get blub blab blob\r\nget moar\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		buff.flip();
 		
-		thrown.expect(RequestParsingException.class);
+		thrown.expect(FaultyRequestException.class);
 		RequestFactory.createRequest(buff);
 		
 	}
 	
 	@Test
-	public void testTwoIncompleteCommands() throws RequestParsingException {
+	public void testTwoIncompleteCommands() throws FaultyRequestException {
 		String command = "get blub blab blob\r\nget a";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		buff.flip();
 		
-		thrown.expect(RequestParsingException.class);
+		thrown.expect(FaultyRequestException.class);
 		RequestFactory.createRequest(buff);
 		
 	}
 	
 	@Test
-	public void testSet() throws RequestParsingException {
+	public void testSet() throws FaultyRequestException {
 		String command = "set key1234 0 1000 12\r\ndatadatadata\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
@@ -221,7 +221,7 @@ public class RequestFactoryTest {
 	}
 	
 	@Test
-	public void testSetWithgetkeys() throws RequestParsingException {
+	public void testSetWithgetkeys() throws FaultyRequestException {
 		String command = "set get 0 1000 11\r\nget get get\r\n";
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());

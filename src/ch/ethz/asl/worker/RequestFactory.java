@@ -87,7 +87,12 @@ public class RequestFactory {
 			}
 		}
 		else if(commandStart.equals("set")) {
+			// Get the whole request so far
+			buffer.position(0);
+			byte[] commandArr = new byte[messageLength];
+			buffer.get(commandArr);
 			
+			String command = new String(command);
 		}
 		else {
 			throw new FaultyRequestException("Encountered neither get, nor set request.");

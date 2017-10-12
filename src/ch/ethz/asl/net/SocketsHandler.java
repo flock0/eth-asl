@@ -2,10 +2,13 @@ package ch.ethz.asl.net;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -14,6 +17,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ch.ethz.asl.RunMW;
+import ch.ethz.asl.worker.Request;
+import ch.ethz.asl.worker.RequestFactory;
 import ch.ethz.asl.worker.Worker;
 
 /***
@@ -26,7 +31,7 @@ public class SocketsHandler implements Runnable {
 	private final int myPort;
 	private Selector selector = null;
 	private ServerSocketChannel serverSocket = null;
-	
+	private HashMap<SelectionKey, ByteBuffer> clientBuffers;
 	/***
 	 * Indicates whether the thread should continue to run.
 	 */
@@ -54,6 +59,8 @@ public class SocketsHandler implements Runnable {
 		isRunning = true;
 		logger.debug(String.format("Opening ServerSocket on %s:%d", myIp, myPort));
 		try {
+			
+			clientBuffers = new HashMap<>();
 			// Selector: multiplexor of SelectableChannel objects
 			synchronized(this) {
 				selector = Selector.open(); // selector is open here
@@ -72,7 +79,7 @@ public class SocketsHandler implements Runnable {
 			serverSocket.register(selector, ops, null);
 
 			logger.info("ServerSocket opened. Listening for incoming connections...");
-	
+			
 			// Infinite loop..
 			// Keep server running
 			while (shouldRun) {
@@ -98,6 +105,10 @@ public class SocketsHandler implements Runnable {
 							// Operation-set bit for read operations
 							client.register(selector, SelectionKey.OP_READ);
 							logger.debug("New connection accepted: " + client.getLocalAddress());
+							
+							// Initialize a ByteBuffer for the new client
+							clientBuffers.put(key, ByteBuffer.allocate(Request.MAX_SIZE));
+							
 						} catch(Exception ex) {
 							// Exception occured in a specific server socket.
 							// Close it and continue!
@@ -108,16 +119,47 @@ public class SocketsHandler implements Runnable {
 						// Tests whether this key's channel is ready for reading
 					} else if (key.isValid() && key.isReadable()) {
 						
-						// Here we only figured out whether a client has data to read.
-						// The parsing of the message will not be done in the network thread.
-						// We will do this in the workers.
+						// Make sure there's space in the buffer
+						ByteBuffer buffer = clientBuffers.get(key);
+						if(!buffer.hasRemaining()) {
+							logger.debug("Request buffer is full, but there's more to read!");
+							throw new Exception("Request buffer is full, but there's more to read!");
+						}
 						
-						// Stop polling on this client connection while it's waiting 
-						// in the queue and is being processed.
-						enqueueChannel(key);
+						// Read from the client into the client-specific buffer
+						SocketChannel client = (SocketChannel)key.channel();
 						
+						try  {
+							int readReturnCode = client.read(buffer);
 							
+							// If the connection is closed, or we get an end-of-stream, get rid of the ByteBuffer.
+							if(readReturnCode == -1) {
+								// Reached end-of-stream
+								evictClientBuffer(key);
+							}
+						} catch(ClosedChannelException ex) {
+							logger.catching(ex);
+							evictClientBuffer(key);
+						}
 						
+						// TODO Check if the request is valid
+						Request req;
+						try {
+							req = RequestFactory.createRequest(buffer);
+							// If valid, forward the request to the workers. Create request and copy out of ByteBuffer
+							enqueueChannel(key, buffer);
+						} catch(FaultyRequestException ex) {
+							// TODO If not and never will be, send an error message to the client
+						} catch(IncompleteRequestException ex) {
+							// TODO If not and might be in the future, continue reading
+						}
+						
+						
+						// TODO Clear byte buffer
+						// It is not needed to change interestOps here, as the client should wait after a valid request
+						// Just make sure the ByteBuffer is cleared
+						// TODO Still we should have a check whether we are reading from a channel that is currently being processed.
+						//      Maybe a HashMap of Key to bool with a simple volatile flag.
 						
 					}
 					iter.remove();
@@ -153,10 +195,11 @@ public class SocketsHandler implements Runnable {
 	 * stops the selector from checking this channel.
 	 * Assume that the given channel is valid and has data to read
 	 * @param key A key to the underlying channel
+	 * @param req The successfully parsed Request object
 	 */
-	private void enqueueChannel(SelectionKey key) {
-		threadPool.submit(new Worker(key, this));
-		key.interestOps(0); // Stop the selector from checking this channel temporarily while it's request is being handled.	
+	private void enqueueChannel(SelectionKey key, Request req) {
+		threadPool.submit(new Worker(key, req));
+	
 	}
 	
 	/***

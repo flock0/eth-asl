@@ -10,6 +10,8 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import ch.ethz.asl.RunMW;
+
 public class MemcachedSocketHandler {
 	
 	private static final int SERVER_BUFFER_MAX_BYTES_SIZE = 3000; //Maximum size of the answer to a request
@@ -46,6 +48,7 @@ public class MemcachedSocketHandler {
 			logger.debug("Connected to all memcached servers.");
 		} catch(IOException ex) {
 			logger.catching(ex);
+			RunMW.shutdown();
 		}
 	}
 
@@ -79,8 +82,9 @@ public class MemcachedSocketHandler {
 	    	
 	    	if(readReturnCode == -1)
 				try {
+					logger.error(String.format("Lost connection to memcached server ", i));
 					server.close();
-					reconnectServer(i);
+					RunMW.shutdown();
 				} catch (IOException ex) {
 					logger.catching(ex);
 				}

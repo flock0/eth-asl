@@ -1,15 +1,11 @@
 package ch.ethz.asl.worker;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ch.ethz.asl.net.MemcachedSocketHandler;
-import ch.ethz.asl.net.SocketsHandler;
 
 public class Worker implements Runnable {
 	

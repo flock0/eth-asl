@@ -29,7 +29,7 @@ public class SetRequest implements Request {
 	}
 
 	@Override
-	public void handle(MemcachedSocketHandler memcachedSocketHandler, SocketChannel client, ByteBuffer clientBuff) {
+	public void handle(MemcachedSocketHandler memcachedSocketHandler, SocketChannel client) {
 		
 		List<String> errors = null;
 		try {

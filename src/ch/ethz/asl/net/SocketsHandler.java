@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 
 import ch.ethz.asl.RunMW;
 import ch.ethz.asl.worker.FaultyRequestException;
+import ch.ethz.asl.worker.IncompleteRequestException;
 import ch.ethz.asl.worker.Request;
 import ch.ethz.asl.worker.RequestFactory;
 import ch.ethz.asl.worker.Worker;
@@ -149,16 +150,12 @@ public class SocketsHandler implements Runnable {
 							req = RequestFactory.tryCreateRequest(buffer);
 							// If valid, forward the request to the workers. Create request and copy out of ByteBuffer
 							enqueueChannel(key, req);
-							// Clear byte buffer
-							buffer.clear();
+							
 							
 						} catch(FaultyRequestException ex) {
-							// TODO If not and never will be, send an error message to the client
-							
-							sendClientError(ex.getMessage());
-							
-							// Clear byte buffer
+							// TODO If not valid and never will be, send an error message to the client
 							buffer.clear();
+							sendClientError(client, ex.getMessage());
 						} catch(IncompleteRequestException ex) {
 							// If the request is incomplete, continue reading
 						}
@@ -197,6 +194,13 @@ public class SocketsHandler implements Runnable {
 			
 		}
 
+	}
+
+	private void sendClientError(SocketChannel client, String errorMessage) throws IOException {
+		ByteBuffer errorBuffer = ByteBuffer.wrap(("CLIENT_ERROR" + errorMessage + "\r\n").getBytes());
+		do {
+			client.write(errorBuffer);
+		} while(errorBuffer.hasRemaining());
 	}
 
 	/***

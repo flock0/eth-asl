@@ -108,9 +108,6 @@ public class SocketsHandler implements Runnable {
 							client.register(selector, SelectionKey.OP_READ);
 							logger.debug("New connection accepted: " + client.getLocalAddress());
 							
-							// Initialize a ByteBuffer for the new client
-							clientBuffers.put(key, ByteBuffer.allocate(Request.MAX_SIZE));
-							
 						} catch(Exception ex) {
 							// Exception occured in a specific server socket.
 							// Close it and continue!
@@ -121,7 +118,11 @@ public class SocketsHandler implements Runnable {
 						// Tests whether this key's channel is ready for reading
 					} else if (key.isValid() && key.isReadable()) {
 						
+						// Initialize a ByteBuffer for the new client
+						if(!clientBuffers.containsKey(key))
+							clientBuffers.put(key, ByteBuffer.allocate(Request.MAX_SIZE));
 						// Make sure there's space in the buffer
+						
 						ByteBuffer buffer = clientBuffers.get(key);
 						if(!buffer.hasRemaining()) {
 							logger.debug("Request buffer is full, but there's more to read!");

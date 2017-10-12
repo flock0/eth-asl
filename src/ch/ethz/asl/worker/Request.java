@@ -12,6 +12,11 @@ public interface Request {
 	 */
 	static final int MAX_SIZE = 3000;
 	
+	/***
+	 * Maximum size  of datablocks in set commands is 1024 bytes.
+	 */
+	static final int MAX_DATABLOCK_SIZE = 1024;
+	
 	public Object getCommand();
 
 	public void handle(MemcachedSocketHandler memcachedSocketHandler, SocketChannel client, ByteBuffer clientBuff);

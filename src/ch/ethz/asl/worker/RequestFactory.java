@@ -25,9 +25,11 @@ public class RequestFactory {
 	 */
 	public static Request tryCreateRequest(ByteBuffer buffer) throws FaultyRequestException, IncompleteRequestException {
 
+		Request req = null;
 		int oldPosition = buffer.position();
 		int messageLength = oldPosition;
 		buffer.position(0);
+		
 		
 		if(messageLength < 7)
 			// the shortest request is 'get a\r\n'
@@ -65,7 +67,7 @@ public class RequestFactory {
 				else if(whitespaceSplit.length == 2){
 					// We encountered a simple get command
 					String key = whitespaceSplit[1];
-					return new GetRequest(command, key);
+					req = new GetRequest(command, key);
 				}
 				else {
 					// We encountered a multiget request
@@ -73,17 +75,11 @@ public class RequestFactory {
 					for (int i = 1; i < whitespaceSplit.length; i++)
 						keys.add(whitespaceSplit[i]);
 
-					return new MultiGetRequest(command, keys);
+					req = new MultiGetRequest(command, keys);
 				}
 			}
 			else { // command doesn't end with \r\n
-				if(whitespaceSplit.length > MAX_MULTIGETS_SIZE + 1) {
-					throw new FaultyRequestException(
-							String.format("Encountered more than %d requested keys in a get request", MAX_MULTIGETS_SIZE));
-				}
-				else {
-					throw new IncompleteRequestException("Found possible incomplete get-request.");
-				}
+				throw new IncompleteRequestException("Found possible incomplete get-request.");
 			}
 		}
 		else if(commandStart.equals("set")) {
@@ -93,13 +89,47 @@ public class RequestFactory {
 			buffer.get(commandArr);
 			
 			String command = new String(command);
+			
+			if(command.endsWith("\r\n")) {
+				int firstNewlinePos = command.indexOf("\r\n");
+				if (firstNewlinePos == command.length() - 2) { // Is there only one \r\n?
+					throw new IncompleteRequestException("Encountered a set request with only one newline. There should be two lines.");
+				}
+				else {
+					String[] whitespaceSplit = command.substring(0, firstNewlinePos).split(" ");
+					if(whitespaceSplit.length != 5) { // A valid set-request should look like: 'set <key> <flags> <expires> <bytes>\r\n...'
+						throw new FaultyRequestException("First line of set request contained more than 5 tokens.");
+					}
+					else {
+						int datablockSize;
+						try {
+							datablockSize = Integer.parseInt(whitespaceSplit[4]);
+						} catch(NumberFormatException ex) {
+							throw new FaultyRequestException("Encountered set request without valid size of the datablock");
+						}
+						if(datablockSize > Request.MAX_DATABLOCK_SIZE) {
+							throw new FaultyRequestException(String.format("Encountered set request with a too large datablock of %d bytes", Request.MAX_DATABLOCK_SIZE));
+							
+						}
+						else {
+							int nextNewlinePos = firstNewlinePos + 2 + datablockSize;
+							if(nextNewlinePos != command.length() - 2) {
+								throw new FaultyRequestException("Number of bytes in set request doesn't match real datablock size");
+							} else {
+								req = new SetRequest(commandArr);
+							}
+							
+						}
+					}
+				}
+			}
 		}
 		else {
 			throw new FaultyRequestException("Encountered neither get, nor set request.");
 		}
 		
-		//TODO proper setting of buffer position, depending on return value or exception.
-		buffer.position(messageLength);
-		return isValid;
+		
+		buffer.clear();
+		return req;
 	}
 }

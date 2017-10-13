@@ -67,7 +67,7 @@ public class RequestFactory {
 				else if(whitespaceSplit.length == 2){
 					// We encountered a simple get command
 					String key = whitespaceSplit[1];
-					req = new GetRequest(command, key);
+					req = new GetRequest(buffer, key);
 				}
 				else {
 					// We encountered a multiget request

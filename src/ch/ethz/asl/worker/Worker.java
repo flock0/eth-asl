@@ -11,8 +11,6 @@ public class Worker implements Runnable {
 	
     private SocketChannel client;
 	private Request request;
-    
-	private static final Logger logger = LogManager.getLogger(Worker.class);
 	
     private static final ThreadLocal<MemcachedSocketHandler> sockets = 
            new ThreadLocal<MemcachedSocketHandler>(){

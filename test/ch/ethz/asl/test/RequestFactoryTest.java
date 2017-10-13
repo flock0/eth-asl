@@ -38,7 +38,7 @@ public class RequestFactoryTest {
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		
-		Request req = RequestFactory.tryCreateRequest(buff);
+		Request req = RequestFactory.tryParseClientRequest(buff);
 		
 		//req is GetRequest
 		assertTrue(req instanceof GetRequest);
@@ -55,7 +55,7 @@ public class RequestFactoryTest {
 		
 		
 		thrown.expect(IncompleteRequestException.class);
-		RequestFactory.tryCreateRequest(buff);
+		RequestFactory.tryParseClientRequest(buff);
 	}
 	
 	@Test
@@ -66,7 +66,7 @@ public class RequestFactoryTest {
 		
 		
 		thrown.expect(IncompleteRequestException.class);
-		RequestFactory.tryCreateRequest(buff);
+		RequestFactory.tryParseClientRequest(buff);
 	}
 	
 	@Test
@@ -77,7 +77,7 @@ public class RequestFactoryTest {
 		
 		
 		thrown.expect(IncompleteRequestException.class);
-		RequestFactory.tryCreateRequest(buff);
+		RequestFactory.tryParseClientRequest(buff);
 	}
 	
 	@Test
@@ -86,7 +86,7 @@ public class RequestFactoryTest {
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		
-		Request req = RequestFactory.tryCreateRequest(buff);
+		Request req = RequestFactory.tryParseClientRequest(buff);
 		
 		//req is GetRequest
 		assertTrue(req instanceof GetRequest);
@@ -104,7 +104,7 @@ public class RequestFactoryTest {
 		
 		
 		thrown.expect(FaultyRequestException.class);
-		RequestFactory.tryCreateRequest(buff);
+		RequestFactory.tryParseClientRequest(buff);
 	}
 	
 	@Test
@@ -113,7 +113,7 @@ public class RequestFactoryTest {
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		
-		Request req = RequestFactory.tryCreateRequest(buff);
+		Request req = RequestFactory.tryParseClientRequest(buff);
 		
 		//req is MultiGetRequest
 		assertTrue(req instanceof MultiGetRequest);
@@ -132,7 +132,7 @@ public class RequestFactoryTest {
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		
-		Request req = RequestFactory.tryCreateRequest(buff);
+		Request req = RequestFactory.tryParseClientRequest(buff);
 		
 		//req is MultiGetRequest
 		assertTrue(req instanceof MultiGetRequest);
@@ -151,7 +151,7 @@ public class RequestFactoryTest {
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		
-		Request req = RequestFactory.tryCreateRequest(buff);
+		Request req = RequestFactory.tryParseClientRequest(buff);
 		
 		//req is MultiGetRequest
 		assertTrue(req instanceof MultiGetRequest);
@@ -179,7 +179,7 @@ public class RequestFactoryTest {
 		
 		
 		thrown.expect(FaultyRequestException.class);
-		RequestFactory.tryCreateRequest(buff);
+		RequestFactory.tryParseClientRequest(buff);
 	}
 	
 	@Test
@@ -190,7 +190,7 @@ public class RequestFactoryTest {
 		
 		
 		thrown.expect(FaultyRequestException.class);
-		RequestFactory.tryCreateRequest(buff);
+		RequestFactory.tryParseClientRequest(buff);
 		
 	}
 	
@@ -202,7 +202,7 @@ public class RequestFactoryTest {
 		
 		
 		thrown.expect(FaultyRequestException.class);
-		RequestFactory.tryCreateRequest(buff);
+		RequestFactory.tryParseClientRequest(buff);
 		
 	}
 	
@@ -212,7 +212,7 @@ public class RequestFactoryTest {
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		
-		Request req = RequestFactory.tryCreateRequest(buff);
+		Request req = RequestFactory.tryParseClientRequest(buff);
 		
 		//req is SetRequest
 		assertTrue(req instanceof SetRequest);
@@ -227,7 +227,7 @@ public class RequestFactoryTest {
 		ByteBuffer buff = ByteBuffer.allocate(3000);
 		buff.put(command.getBytes());
 		
-		Request req = RequestFactory.tryCreateRequest(buff);
+		Request req = RequestFactory.tryParseClientRequest(buff);
 		
 		//req is SetRequest
 		assertTrue(req instanceof SetRequest);

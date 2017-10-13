@@ -145,7 +145,7 @@ public class ClientsSocketsHandler implements Runnable {
 								// TODO Check if the request is valid
 								Request req;
 								try {
-									req = RequestFactory.tryCreateRequest(buffer);
+									req = RequestFactory.tryParseClientRequest(buffer);
 									// If valid, forward the request to the workers. Create request and copy out of ByteBuffer
 									enqueueChannel(client, req);
 									

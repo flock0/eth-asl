@@ -23,7 +23,7 @@ public class RequestFactory {
 	 * @throws IncompleteRequestException
 	 * 			   If the command is invalid, but possibly only incomplete
 	 */
-	public static Request tryCreateRequest(ByteBuffer buffer) throws FaultyRequestException, IncompleteRequestException {
+	public static Request tryParseClientRequest(ByteBuffer buffer) throws FaultyRequestException, IncompleteRequestException {
 
 		Request req = null;
 		int oldPosition = buffer.position();

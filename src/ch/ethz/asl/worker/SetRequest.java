@@ -61,6 +61,7 @@ public class SetRequest implements Request {
 		List<String> errors = new ArrayList<String>();
 		for(String respo : responses) {
 			if(respo.equals("ERROR\r\n") ||
+			   respo.equals("NOT_STORED\r\n") || 
 			   respo.startsWith("CLIENT_ERROR ") ||
 			   respo.startsWith("SERVER_ERROR ")) {
 				logger.error(String.format("Memcached server responded with error. Will forward to the client: %s", respo));

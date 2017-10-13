@@ -115,6 +115,7 @@ public class MemcachedSocketHandler {
 		 * CLIENT_ERROR <custom text>\r\n
 		 * SERVER_ERROR <custom text>\r\n
 		 * STORED\r\n
+		 * NOT_STORED\r\n
 		 * VALUE...END\r\n
 		 */
 		
@@ -125,7 +126,7 @@ public class MemcachedSocketHandler {
 		buffer.position(0);
 		buffer.get(msgArr);
 		String msg = new String(msgArr);
-		if(msg.equals("ERROR\r\n") || msg.equals("STORED\r\n")) {
+		if(msg.equals("ERROR\r\n") || msg.equals("STORED\r\n") || msg.equals("NOT_STORED\r\n")) {
 			isValid = true;
 		} 
 		else if(msg.startsWith("CLIENT_ERROR ") || msg.startsWith("SERVER_ERROR ")) {

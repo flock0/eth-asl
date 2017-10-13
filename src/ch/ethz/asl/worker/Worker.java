@@ -31,7 +31,6 @@ public class Worker implements Runnable {
     }
 
     public void run(){
-    	logger.debug(String.format("Processing %s on worker thread", request));
     	request.handle(sockets.get(), client);
     }
 }

@@ -15,17 +15,19 @@ public class SetRequest implements Request {
 
 	private static final Logger logger = LogManager.getLogger(SetRequest.class);
 	private static ByteBuffer successBuffer = ByteBuffer.wrap(new String("STORED\r\n").getBytes());
-	byte[] command;
 	ByteBuffer commandBuffer;
 	
-	public SetRequest(byte[] command) {
-		this.command = command;
-		this.commandBuffer = ByteBuffer.wrap(command);
+	public SetRequest(ByteBuffer commandBuffer) {
+		this.commandBuffer = commandBuffer;
 	}
 
 	@Override
 	public byte[] getCommand() {
-		return command;
+		int messageLength = commandBuffer.remaining();
+		byte[] arr = new byte[messageLength];
+		commandBuffer.get(arr);
+		commandBuffer.position(0);
+		return arr;
 	}
 
 	@Override
@@ -35,7 +37,7 @@ public class SetRequest implements Request {
 		try {
 			//Forward set command to all memcached servers
 			memcachedSocketHandler.sendToAll(commandBuffer);
-			
+			commandBuffer.clear();
 			//Wait for responses of all memcached servers
 			List<String> responses = memcachedSocketHandler.waitForAllResponses();
 			errors = getErrors(responses);

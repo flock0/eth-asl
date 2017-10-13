@@ -11,7 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ch.ethz.asl.net.MemcachedSocketHandler;
-import ch.ethz.asl.net.SocketsHandler;
+import ch.ethz.asl.net.ClientsSocketsHandler;
 
 public class RunMW {
 
@@ -23,7 +23,7 @@ public class RunMW {
 	static boolean readSharded = false;
 	
 	static ExecutorService threadPool = null;
-	static SocketsHandler sockHandler = null;
+	static ClientsSocketsHandler sockHandler = null;
 	private static BlockingQueue<Runnable> channelQueue = null;
 	private static final Logger logger = LogManager.getLogger(RunMW.class);
 	
@@ -48,7 +48,7 @@ public class RunMW {
 		MemcachedSocketHandler.setMcAddresses(mcAddresses);
 		channelQueue = new LinkedBlockingQueue<Runnable>();
 		threadPool = new ThreadPoolExecutor(numThreadsPTP, numThreadsPTP, POOLTHREAD_KEEP_ALIVE_MS, TimeUnit.MILLISECONDS, channelQueue);
-		sockHandler = new SocketsHandler(myIp, myPort, threadPool);
+		sockHandler = new ClientsSocketsHandler(myIp, myPort, threadPool);
 		new Thread(sockHandler).start();
 
 	}

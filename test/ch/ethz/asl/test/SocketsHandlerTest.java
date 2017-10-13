@@ -20,12 +20,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import ch.ethz.asl.net.SocketsHandler;
+import ch.ethz.asl.net.ClientsSocketsHandler;
 
 public class SocketsHandlerTest {
 
 	Thread thr;
-	SocketsHandler handler;
+	ClientsSocketsHandler handler;
 	Socket sock1;
 	Socket sock2;
 	ExecutorService threadPool;
@@ -64,7 +64,7 @@ public class SocketsHandlerTest {
 
 	@Test
 	public void testRun() throws UnknownHostException, IOException, InterruptedException {
-		handler = new SocketsHandler("127.0.0.1", 42171, threadPool);
+		handler = new ClientsSocketsHandler("127.0.0.1", 42171, threadPool);
 		thr = new Thread(handler);
 		thr.start();
 		Thread.sleep(100);
@@ -79,7 +79,7 @@ public class SocketsHandlerTest {
 	public void testRunOnNetworkInterface() throws UnknownHostException, IOException, InterruptedException {
 		InetAddress IP=InetAddress.getLocalHost();
 		System.out.println("IP of my system is := "+IP.getHostAddress());
-		handler = new SocketsHandler(IP.getHostAddress(), 42171, threadPool);
+		handler = new ClientsSocketsHandler(IP.getHostAddress(), 42171, threadPool);
 		thr = new Thread(handler);
 		thr.start();
 		Thread.sleep(50);
@@ -93,7 +93,7 @@ public class SocketsHandlerTest {
 	@Test
 	public void testCloseServerSocket() throws UnknownHostException, IOException, InterruptedException {
 		// create and start thread
-		handler = new SocketsHandler("127.0.0.1", 45343, threadPool);
+		handler = new ClientsSocketsHandler("127.0.0.1", 45343, threadPool);
 		thr = new Thread(handler);
 		thr.start();
 		Thread.sleep(100);
@@ -122,7 +122,7 @@ public class SocketsHandlerTest {
 	@Test
 	public void testShutdown() throws UnknownHostException, IOException, InterruptedException {
 		// create and start thread
-		handler = new SocketsHandler("127.0.0.1", 45343, threadPool);
+		handler = new ClientsSocketsHandler("127.0.0.1", 45343, threadPool);
 		thr = new Thread(handler);
 		thr.start();
 		Thread.sleep(100);
@@ -146,7 +146,7 @@ public class SocketsHandlerTest {
 	@Test
 	public void testQueueEmpty() {
 		// create and start thread
-		handler = new SocketsHandler("127.0.0.1", 32595, threadPool);
+		handler = new ClientsSocketsHandler("127.0.0.1", 32595, threadPool);
 		thr = new Thread(handler);
 		thr.start();
 		
@@ -157,7 +157,7 @@ public class SocketsHandlerTest {
 	@Test
 	public void testQueuedCorrectly() throws UnknownHostException, IOException, InterruptedException {
 		// create and start thread
-		handler = new SocketsHandler("127.0.0.1", 45343, threadPool);
+		handler = new ClientsSocketsHandler("127.0.0.1", 45343, threadPool);
 		thr = new Thread(handler);
 		thr.start();
 		Thread.sleep(50);

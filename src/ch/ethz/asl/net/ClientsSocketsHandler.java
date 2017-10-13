@@ -27,7 +27,7 @@ import ch.ethz.asl.worker.Worker;
  * Thread that handles all network connections
  * @author Florian Chlan
  */
-public class SocketsHandler implements Runnable {
+public class ClientsSocketsHandler implements Runnable {
 	
 	private final String myIp;
 	private final int myPort;
@@ -44,9 +44,9 @@ public class SocketsHandler implements Runnable {
 
 	private ExecutorService threadPool;
 
-	private static final Logger logger = LogManager.getLogger(SocketsHandler.class);
+	private static final Logger logger = LogManager.getLogger(ClientsSocketsHandler.class);
 	
-	public SocketsHandler(String myIp, int myPort, ExecutorService threadPool) {
+	public ClientsSocketsHandler(String myIp, int myPort, ExecutorService threadPool) {
 		this.myIp = myIp;
 		this.myPort = myPort;
 		this.threadPool = threadPool;

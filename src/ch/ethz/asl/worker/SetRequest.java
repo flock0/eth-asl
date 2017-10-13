@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -39,8 +40,9 @@ public class SetRequest implements Request {
 			memcachedSocketHandler.sendToAll(commandBuffer);
 			commandBuffer.clear();
 			//Wait for responses of all memcached servers
-			List<String> responses = memcachedSocketHandler.waitForAllResponses();
+			List<String> responses = memcachedSocketHandler.waitForAllStringResponses();
 			errors = getErrors(responses);
+			
 		} catch (IOException ex) {
 			logger.catching(ex);
 			if(errors == null)

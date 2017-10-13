@@ -20,7 +20,7 @@ public class RunMW {
 	static int myPort = 0;
 	static List<String> mcAddresses = null;
 	static int numThreadsPTP = -1;
-	static boolean readSharded = false;
+	public static boolean readSharded = false;
 	
 	static ExecutorService threadPool = null;
 	static ClientsSocketsHandler sockHandler = null;

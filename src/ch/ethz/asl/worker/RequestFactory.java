@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import ch.ethz.asl.RunMW;
+
 public class RequestFactory {
 
 	/***
@@ -75,7 +77,10 @@ public class RequestFactory {
 					for (int i = 1; i < whitespaceSplit.length; i++)
 						keys.add(whitespaceSplit[i]);
 
-					req = new MultiGetRequest(command, keys);
+					if(RunMW.readSharded)
+						throw new UnsupportedOperationException("Not yet implemented");
+					else
+						req = new NonShardedMultiGetRequest(buffer, keys);
 				}
 			}
 			else { // command doesn't end with \r\n

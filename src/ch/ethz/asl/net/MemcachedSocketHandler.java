@@ -15,7 +15,7 @@ import ch.ethz.asl.RunMW;
 
 public class MemcachedSocketHandler {
 	
-	private static final int SERVER_BUFFER_MAX_BYTES_SIZE = 3000; //Maximum size of the answer to a request
+	private static final int SERVER_BUFFER_MAX_BYTES_SIZE = 11000; //Maximum size of the answer to a request
 	
 	private static final Logger logger = LogManager.getLogger(MemcachedSocketHandler.class);
 	
@@ -74,8 +74,7 @@ public class MemcachedSocketHandler {
 		} while(commandBuffer.hasRemaining());
 	}
 	
-	public List<String> waitForAllResponses() {
-		List<String> responses = new ArrayList<String>();
+	public HashMap<Integer, ByteBuffer> waitForAllResponses() {
 		
 		for(int i = 0; i < channels.size(); i++) {
 			SocketChannel server = channels.get(i);
@@ -101,16 +100,28 @@ public class MemcachedSocketHandler {
 				}
 			else {
 				buffer.flip();
-				int messageLength = buffer.remaining();
-				byte[] arr = new byte[messageLength];
-				buffer.get(arr);
-				
-				String response = new String(arr);
-				responses.add(response);
 			}
 		}
 		
+		return serverBuffers;
+	}
+	
+	public List<String> waitForAllStringResponses() {
+		
+		List<String> responses = new ArrayList<>();
+		HashMap<Integer, ByteBuffer> responseBuffers = waitForAllResponses();
+		for(int i = 0; i < numServers; i++) {
+			ByteBuffer buffer = responseBuffers.get(i);
+			int messageLength = buffer.remaining();
+			byte[] arr = new byte[messageLength];
+			buffer.get(arr);
+			
+			String response = new String(arr);
+			responses.add(response);
+		}
+		
 		return responses;
+		
 	}
 	
 	public ByteBuffer waitForSingleResponse(int targetServerIndex) {
@@ -188,5 +199,19 @@ public class MemcachedSocketHandler {
 
 	public int findTargetServer(String key) {
 		return key.hashCode() % numServers;  
+	}
+
+
+	public int findTargetServer(List<String> keys) {
+		StringBuilder bld = new StringBuilder();
+		for(String key : keys) {
+			bld.append(key);
+		}
+		return bld.toString().hashCode() % numServers;
+	}
+
+
+	public static int getNumServers() {
+		return numServers;
 	}
 }

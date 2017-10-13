@@ -1,35 +1,28 @@
 package ch.ethz.asl.worker;
 
-import java.nio.channels.SocketChannel;
+import java.nio.ByteBuffer;
 import java.util.List;
 
-import ch.ethz.asl.net.MemcachedSocketHandler;
+public abstract class MultiGetRequest implements Request {
 
-public class MultiGetRequest implements Request {
-
-	String command;
+	ByteBuffer commandBuffer;
 	List<String> keys;
-	public MultiGetRequest(String command, List<String> keys) {
-		this.command = command;
+	public MultiGetRequest(ByteBuffer commandBuffer, List<String> keys) {
+		this.commandBuffer = commandBuffer;
 		this.keys = keys;
 	}
 
 	@Override
 	public Object getCommand() {
-		return command;
+		int messageLength = commandBuffer.remaining();
+		byte[] arr = new byte[messageLength];
+		commandBuffer.get(arr);
+		commandBuffer.position(0);
+		return arr;
 	}
 	
 	public List<String> getKeys() {
 		return keys;
 	}
-
-	@Override
-	public void handle(MemcachedSocketHandler memcachedSocketHandler, SocketChannel client) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Not yet implemented");
-		
-	}
-
-	
 
 }

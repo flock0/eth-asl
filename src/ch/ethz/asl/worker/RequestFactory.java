@@ -2,7 +2,6 @@ package ch.ethz.asl.worker;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import ch.ethz.asl.RunMW;

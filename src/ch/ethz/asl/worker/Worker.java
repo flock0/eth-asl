@@ -2,9 +2,6 @@ package ch.ethz.asl.worker;
 
 import java.nio.channels.SocketChannel;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import ch.ethz.asl.net.MemcachedSocketHandler;
 
 public class Worker implements Runnable {

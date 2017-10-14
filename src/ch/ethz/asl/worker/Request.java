@@ -7,9 +7,9 @@ import ch.ethz.asl.net.MemcachedSocketHandler;
 public interface Request {
 	
 	/***
-	 * Maximum size of a get command is 2513 bytes.
+	 * Maximum size of a request or answer is around 10200 bytes.
 	 */
-	static final int MAX_SIZE = 3000;
+	static final int MAX_MESSAGE_SIZE = 11000;
 	
 	/***
 	 * Maximum size  of datablocks in set commands is 1024 bytes.

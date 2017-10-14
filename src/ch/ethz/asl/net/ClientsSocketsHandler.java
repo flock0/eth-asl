@@ -120,7 +120,7 @@ public class ClientsSocketsHandler implements Runnable {
 						
 						// Initialize a ByteBuffer for the new client
 						if(!clientBuffers.containsKey(key))
-							clientBuffers.put(key, ByteBuffer.allocate(Request.MAX_SIZE));
+							clientBuffers.put(key, ByteBuffer.allocate(Request.MAX_MESSAGE_SIZE));
 						// Make sure there's space in the buffer
 						
 						ByteBuffer buffer = clientBuffers.get(key);

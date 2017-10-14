@@ -2,6 +2,7 @@ package ch.ethz.asl.worker;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import ch.ethz.asl.RunMW;
@@ -136,5 +137,17 @@ public class RequestFactory {
 		
 		buffer.flip();
 		return req;
+	}
+
+	public static ByteBuffer constructMultiGetRequest(List<String> assignedKeys, ByteBuffer buffer) {
+		StringBuilder bld = new StringBuilder("get");
+		for(String key : assignedKeys) {
+			bld.append(" ");
+			bld.append(key);
+		}
+		bld.append("\r\n");
+		buffer.put(bld.toString().getBytes());
+		
+		return buffer;
 	}
 }

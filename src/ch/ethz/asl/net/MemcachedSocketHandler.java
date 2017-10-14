@@ -214,4 +214,9 @@ public class MemcachedSocketHandler {
 	public static int getNumServers() {
 		return numServers;
 	}
+
+
+	public HashMap<Integer, ByteBuffer> getServerBuffers() {
+		return serverBuffers;
+	}
 }

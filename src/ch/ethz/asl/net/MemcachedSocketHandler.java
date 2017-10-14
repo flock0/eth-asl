@@ -198,7 +198,7 @@ public class MemcachedSocketHandler {
 	}
 
 	public int findTargetServer(String key) {
-		return key.hashCode() % numServers;  
+		return Math.floorMod(key.hashCode(), numServers);  
 	}
 
 
@@ -207,7 +207,7 @@ public class MemcachedSocketHandler {
 		for(String key : keys) {
 			bld.append(key);
 		}
-		return bld.toString().hashCode() % numServers;
+		return Math.floorMod(bld.toString().hashCode(), numServers);
 	}
 
 

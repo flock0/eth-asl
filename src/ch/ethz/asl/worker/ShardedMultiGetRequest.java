@@ -55,7 +55,6 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 				// If this is the first iteration, we save this buffer and append the answers from the other servers to it
 				if(firstIteration) {
 					finalResponseBuffer = responseBuffer;
-					firstIteration = false;
 				}
 				
 				
@@ -66,12 +65,19 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 						// One of the servers encountered an error.
 						// We forward the error message and abort this request
 						errorOccured = true;
-						
 					}
-					else if(!firstIteration){
-						// If no error occured, gather responses, concat answer to final answer
-						addResponseToFinalResponseBuffer(responseBuffer, finalResponseBuffer);
-					}	
+					else {
+						if(firstIteration){
+							firstIteration = false;
+							finalResponseBuffer.position(finalResponseBuffer.limit());
+							finalResponseBuffer.limit(finalResponseBuffer.capacity());
+						}
+						else {
+							// If no error occured, gather responses, concat answer to final answer
+							
+							addResponseToFinalResponseBuffer(responseBuffer, finalResponseBuffer);
+						}
+					}
 				}
 			}
 			

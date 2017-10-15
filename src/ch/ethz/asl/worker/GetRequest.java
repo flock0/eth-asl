@@ -13,10 +13,10 @@ public class GetRequest implements Request {
 
 	private static final Logger logger = LogManager.getLogger(GetRequest.class);
 	
-	ByteBuffer commandBuffer;
+	ByteBuffer readBuffer;
 	String key;
-	public GetRequest(ByteBuffer commandBuffer, String key) {
-		this.commandBuffer = commandBuffer;
+	public GetRequest(ByteBuffer readBuffer, String key) {
+		this.readBuffer = readBuffer;
 		this.key = key;
 	}
 
@@ -25,10 +25,10 @@ public class GetRequest implements Request {
 	}
 
 	public Object getCommand() {
-		int messageLength = commandBuffer.remaining();
+		int messageLength = readBuffer.remaining();
 		byte[] arr = new byte[messageLength];
-		commandBuffer.get(arr);
-		commandBuffer.position(0);
+		readBuffer.get(arr);
+		readBuffer.position(0);
 		return arr;
 	}
 
@@ -39,8 +39,8 @@ public class GetRequest implements Request {
 		
 		// TODO Send getrequest to designated server
 		try {
-			memcachedSocketHandler.sendToSingleServer(commandBuffer, targetServerIndex);
-			commandBuffer.clear();
+			memcachedSocketHandler.sendToSingleServer(readBuffer, targetServerIndex);
+			readBuffer.clear();
 			
 			// TODO read from designated server
 			ByteBuffer response = memcachedSocketHandler.waitForSingleResponse(targetServerIndex);

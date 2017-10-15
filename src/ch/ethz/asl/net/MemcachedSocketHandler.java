@@ -118,6 +118,7 @@ public class MemcachedSocketHandler {
 			
 			String response = new String(arr);
 			responses.add(response);
+			buffer.clear();
 		}
 		
 		return responses;

@@ -33,7 +33,7 @@ public class ClientsSocketsHandler implements Runnable {
 	private final int myPort;
 	private Selector selector = null;
 	private ServerSocketChannel serverSocket = null;
-	private HashMap<SelectionKey, ByteBuffer> clientBuffers;
+	private HashMap<SelectionKey, ByteBuffer> clientReadBuffers;
 	/***
 	 * Indicates whether the thread should continue to run.
 	 */
@@ -62,7 +62,7 @@ public class ClientsSocketsHandler implements Runnable {
 		logger.debug(String.format("Opening ServerSocket on %s:%d", myIp, myPort));
 		try {
 			
-			clientBuffers = new HashMap<>();
+			clientReadBuffers = new HashMap<>();
 			// Selector: multiplexor of SelectableChannel objects
 			synchronized(this) {
 				selector = Selector.open(); // selector is open here
@@ -119,12 +119,14 @@ public class ClientsSocketsHandler implements Runnable {
 					} else if (key.isValid() && key.isReadable()) {
 						
 						// Initialize a ByteBuffer for the new client
-						if(!clientBuffers.containsKey(key))
-							clientBuffers.put(key, ByteBuffer.allocate(Request.MAX_MESSAGE_SIZE));
+						if(!clientReadBuffers.containsKey(key)) {
+							clientReadBuffers.put(key, ByteBuffer.allocate(Request.MAX_REQUEST_SIZE));
+						}
+						
 						// Make sure there's space in the buffer
 						
-						ByteBuffer buffer = clientBuffers.get(key);
-						if(!buffer.hasRemaining()) {
+						ByteBuffer readBuffer = clientReadBuffers.get(key);
+						if(!readBuffer.hasRemaining()) {
 							logger.debug("Request buffer is full, but there's more to read!");
 							throw new Exception("Request buffer is full, but there's more to read!");
 						}
@@ -133,7 +135,7 @@ public class ClientsSocketsHandler implements Runnable {
 						SocketChannel client = (SocketChannel)key.channel();
 						
 						try  {
-							int readReturnCode = client.read(buffer);
+							int readReturnCode = client.read(readBuffer);
 							
 							// If the connection is closed, or we get an end-of-stream, get rid of the ByteBuffer.
 							if(readReturnCode == -1) {
@@ -145,14 +147,14 @@ public class ClientsSocketsHandler implements Runnable {
 								// TODO Check if the request is valid
 								Request req;
 								try {
-									req = RequestFactory.tryParseClientRequest(buffer);
+									req = RequestFactory.tryParseClientRequest(readBuffer);
 									// If valid, forward the request to the workers. Create request and copy out of ByteBuffer
 									enqueueChannel(client, req);
 									
 									
 								} catch(FaultyRequestException ex) {
 									// TODO If not valid and never will be, send an error message to the client
-									buffer.clear();
+									readBuffer.clear();
 									sendClientError(client, ex.getMessage());
 								} catch(IncompleteRequestException ex) {
 									// If the request is incomplete, continue reading
@@ -249,6 +251,6 @@ public class ClientsSocketsHandler implements Runnable {
 	}
 
 	private void evictClientBuffer(SelectionKey key) {
-		clientBuffers.remove(key);
+		clientReadBuffers.remove(key);
 	}
 }

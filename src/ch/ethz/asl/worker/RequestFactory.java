@@ -16,7 +16,7 @@ public class RequestFactory {
 	/***
 	 * Parses commands from the client and creates Request objects
 	 * 
-	 * @param buffer
+	 * @param readBuffer
 	 *            Contains the command to parse. Its position must be set to the
 	 *            last byte of the read request
 	 * @return A Request object with the parsed request
@@ -25,12 +25,12 @@ public class RequestFactory {
 	 * @throws IncompleteRequestException
 	 * 			   If the command is invalid, but possibly only incomplete
 	 */
-	public static Request tryParseClientRequest(ByteBuffer buffer) throws FaultyRequestException, IncompleteRequestException {
+	public static Request tryParseClientRequest(ByteBuffer readBuffer) throws FaultyRequestException, IncompleteRequestException {
 
 		Request req = null;
-		int oldPosition = buffer.position();
+		int oldPosition = readBuffer.position();
 		int messageLength = oldPosition;
-		buffer.position(0);
+		readBuffer.position(0);
 		
 		
 		if(messageLength < 7)
@@ -38,14 +38,14 @@ public class RequestFactory {
 			throw new IncompleteRequestException("Requests can't be shorter than 7 bytes");
 		
 		byte[] commandStartArr = new byte[3];
-		buffer.get(commandStartArr);
+		readBuffer.get(commandStartArr);
 		
 		String commandStart = new String(commandStartArr);
 		if(commandStart.equals("get")) {
 			// Get the whole request so far
-			buffer.position(0);
+			readBuffer.position(0);
 			byte[] commandArr = new byte[messageLength];
-			buffer.get(commandArr);
+			readBuffer.get(commandArr);
 			
 			String command = new String(commandArr);
 			
@@ -69,7 +69,7 @@ public class RequestFactory {
 				else if(whitespaceSplit.length == 2){
 					// We encountered a simple get command
 					String key = whitespaceSplit[1];
-					req = new GetRequest(buffer, key);
+					req = new GetRequest(readBuffer, key);
 				}
 				else {
 					// We encountered a multiget request
@@ -78,9 +78,9 @@ public class RequestFactory {
 						keys.add(whitespaceSplit[i]);
 
 					if(RunMW.readSharded)
-						throw new UnsupportedOperationException("Not yet implemented");
+						req = new ShardedMultiGetRequest(readBuffer, keys);
 					else
-						req = new NonShardedMultiGetRequest(buffer, keys);
+						req = new NonShardedMultiGetRequest(readBuffer, keys);
 				}
 			}
 			else { // command doesn't end with \r\n
@@ -89,9 +89,9 @@ public class RequestFactory {
 		}
 		else if(commandStart.equals("set")) {
 			// Get the whole request so far
-			buffer.position(0);
+			readBuffer.position(0);
 			byte[] commandArr = new byte[messageLength];
-			buffer.get(commandArr);
+			readBuffer.get(commandArr);
 			
 			String command = new String(commandArr);
 			
@@ -121,7 +121,7 @@ public class RequestFactory {
 							if(nextNewlinePos != commandArr.length - 2) {
 								throw new FaultyRequestException("Number of bytes in set request doesn't match real datablock size");
 							} else {
-								req = new SetRequest(buffer);
+								req = new SetRequest(readBuffer);
 							}
 							
 						}
@@ -134,7 +134,7 @@ public class RequestFactory {
 		}
 		
 		
-		buffer.flip();
+		readBuffer.flip();
 		return req;
 	}
 

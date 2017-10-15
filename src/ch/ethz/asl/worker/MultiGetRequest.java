@@ -5,19 +5,19 @@ import java.util.List;
 
 public abstract class MultiGetRequest implements Request {
 
-	ByteBuffer commandBuffer;
+	ByteBuffer readBuffer;
 	List<String> keys;
-	public MultiGetRequest(ByteBuffer commandBuffer, List<String> keys) {
-		this.commandBuffer = commandBuffer;
+	public MultiGetRequest(ByteBuffer readBuffer, List<String> keys) {
+		this.readBuffer = readBuffer;
 		this.keys = keys;
 	}
 
 	@Override
 	public Object getCommand() {
-		int messageLength = commandBuffer.remaining();
+		int messageLength = readBuffer.remaining();
 		byte[] arr = new byte[messageLength];
-		commandBuffer.get(arr);
-		commandBuffer.position(0);
+		readBuffer.get(arr);
+		readBuffer.position(0);
 		return arr;
 	}
 	

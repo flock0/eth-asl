@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,11 +16,10 @@ import ch.ethz.asl.net.MemcachedSocketHandler;
 public class ShardedMultiGetRequest extends MultiGetRequest {
 
 	private static final Logger logger = LogManager.getLogger(ShardedMultiGetRequest.class);
-	private static byte[] ENDbytes = new String("END\r\n").getBytes();
 	
-	public ShardedMultiGetRequest(ByteBuffer commandBuffer, List<String> keys) {
-		super(commandBuffer, keys);
-		commandBuffer.clear(); // As we construct our own get requests, we don't need the commandBuffer and can clear it already.
+	public ShardedMultiGetRequest(ByteBuffer readBuffer, List<String> keys) {
+		super(readBuffer, keys);
+		readBuffer.clear(); // As we construct our own get requests, we don't need the commandBuffer and can clear it already.
 	}
 
 	@Override
@@ -28,50 +28,66 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		int startingServerIndex = memcachedSocketHandler.findTargetServer(keys);
 		HashMap<Integer, List<String>> splits = splitKeys(keys, startingServerIndex, MemcachedSocketHandler.getNumServers());
 		
+		List<Integer> sortedServerIndices = new ArrayList<Integer>(splits.keySet());
+		Collections.sort(sortedServerIndices);
+		
 		try {
 			// Construct separate multigets			
 			HashMap<Integer, ByteBuffer> serverBuffers = memcachedSocketHandler.getServerBuffers();
-			for(int serverIndex : splits.keySet()) {
+			for(int serverIndex : sortedServerIndices) {
 				ByteBuffer buffer = RequestFactory.constructMultiGetRequest(splits.get(serverIndex), serverBuffers.get(serverIndex));
 				
 				// Send multigets to the servers
 				memcachedSocketHandler.sendToSingleServer(buffer, serverIndex);
 			}
 		
+			
 		
 			boolean errorOccured = false;
-			for(int serverIndex : splits.keySet()) {
+			boolean firstIteration = true;
+			ByteBuffer finalResponseBuffer = null; // We use the serverBuffer from the first server to store the final response
+			String error = null;
+			for(int serverIndex : sortedServerIndices) {
 				// Wait for answers from those servers we sent stuff to!
 				ByteBuffer responseBuffer = memcachedSocketHandler.waitForSingleResponse(serverIndex);
+				
+				// If this is the first iteration, we save this buffer and append the answers from the other servers to it
+				if(firstIteration) {
+					finalResponseBuffer = responseBuffer;
+					firstIteration = false;
+				}
+				
+				
 				if(!errorOccured) {
 					// No error occured yet. We will continue to parse and add responses.
-					String error = getError(responseBuffer);
+					error = getError(responseBuffer);
 					if(responseContainsError(error)) {
 						// One of the servers encountered an error.
 						// We forward the error message and abort this request
 						errorOccured = true;
-						sendErrorMessage(client, error);
+						
 					}
-					else {
+					else if(!firstIteration){
 						// If no error occured, gather responses, concat answer to final answer
-						addResponseToFinalResponseBuffer(responseBuffer, commandBuffer);
+						addResponseToFinalResponseBuffer(responseBuffer, finalResponseBuffer);
 					}	
 				}
 			}
 			
 			if(!errorOccured) {
-				finalizeResponse(commandBuffer);
+				// Reset all serverBuffers but the one holding the final response for the next request
+				for(ByteBuffer buffer : serverBuffers.values())
+					if(buffer != finalResponseBuffer)
+						buffer.clear();
+				sendFinalResponse(client, finalResponseBuffer);
+				finalResponseBuffer.clear(); // This one we can only clear after sending response
 			}
-			
-			sendFinalResponse(client, commandBuffer);
-			// Reset all serverBuffers for the next request
-			for(ByteBuffer buffer : serverBuffers.values()) {
-				buffer.clear();
+			else {
+				// Reset all serverBuffers for the next request
+				for(ByteBuffer buffer : serverBuffers.values())
+					buffer.clear();
+				sendErrorMessage(client, error);
 			}
-			
-			// After sending out the final response, this buffer will again be used
-			// for reading requests from the client.
-			commandBuffer.clear();
 			
 		} catch (IOException ex) {
 			logger.catching(ex);
@@ -85,15 +101,11 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		} while(buffer.hasRemaining());
 	}
 
-	private void finalizeResponse(ByteBuffer commandBuffer) {
-		commandBuffer.put(ENDbytes);
-	}
-
 	private void addResponseToFinalResponseBuffer(ByteBuffer responseBuffer, ByteBuffer commandBuffer) {
-		// Add the whole answer to the final response.
-		commandBuffer.put(responseBuffer);
-		//Still we have to get rid of the last END\r\n of each individual response. END\r\n is 5 bytes long.
+		// We have to get rid of the last END\r\n of each individual response. END\r\n is 5 bytes long.
 		commandBuffer.position(commandBuffer.position() - 5);
+		// Add the whole answer to the final response.
+		commandBuffer.put(responseBuffer);		
 	}
 
 	private void sendErrorMessage(SocketChannel client, String error) throws IOException {

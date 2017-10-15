@@ -9,7 +9,7 @@ public interface Request {
 	/***
 	 * Maximum size of a request or answer is around 10200 bytes.
 	 */
-	static final int MAX_MESSAGE_SIZE = 11000;
+	static final int MAX_REQUEST_SIZE = 3000;
 	
 	/***
 	 * Maximum size  of datablocks in set commands is 1024 bytes.

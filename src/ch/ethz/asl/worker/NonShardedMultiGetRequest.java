@@ -14,8 +14,8 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 
 	private static final Logger logger = LogManager.getLogger(NonShardedMultiGetRequest.class);
 	
-	public NonShardedMultiGetRequest(ByteBuffer commandBuffer, List<String> keys) {
-		super(commandBuffer, keys);
+	public NonShardedMultiGetRequest(ByteBuffer readBuffer, List<String> keys) {
+		super(readBuffer, keys);
 	}
 
 	@Override
@@ -25,8 +25,8 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 		
 		// TODO Send getrequest to designated server
 		try {
-			memcachedSocketHandler.sendToSingleServer(commandBuffer, targetServerIndex);
-			commandBuffer.clear();
+			memcachedSocketHandler.sendToSingleServer(readBuffer, targetServerIndex);
+			readBuffer.clear();
 			
 			// TODO read from designated server
 			ByteBuffer response = memcachedSocketHandler.waitForSingleResponse(targetServerIndex);

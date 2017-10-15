@@ -39,6 +39,7 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 				
 				// Send multigets to the servers
 				memcachedSocketHandler.sendToSingleServer(buffer, serverIndex);
+				buffer.clear();
 			}
 		
 			
@@ -75,19 +76,15 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 			}
 			
 			if(!errorOccured) {
-				// Reset all serverBuffers but the one holding the final response for the next request
-				for(ByteBuffer buffer : serverBuffers.values())
-					if(buffer != finalResponseBuffer)
-						buffer.clear();
 				sendFinalResponse(client, finalResponseBuffer);
-				finalResponseBuffer.clear(); // This one we can only clear after sending response
 			}
 			else {
-				// Reset all serverBuffers for the next request
-				for(ByteBuffer buffer : serverBuffers.values())
-					buffer.clear();
 				sendErrorMessage(client, error);
 			}
+			
+			// Reset all serverBuffers for the next request
+			for(ByteBuffer buffer : serverBuffers.values())
+				buffer.clear();
 			
 		} catch (IOException ex) {
 			logger.catching(ex);
@@ -101,11 +98,11 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		} while(buffer.hasRemaining());
 	}
 
-	private void addResponseToFinalResponseBuffer(ByteBuffer responseBuffer, ByteBuffer commandBuffer) {
+	private void addResponseToFinalResponseBuffer(ByteBuffer responseBuffer, ByteBuffer finalResponseBuffer) {
 		// We have to get rid of the last END\r\n of each individual response. END\r\n is 5 bytes long.
-		commandBuffer.position(commandBuffer.position() - 5);
+		finalResponseBuffer.position(finalResponseBuffer.position() - 5);
 		// Add the whole answer to the final response.
-		commandBuffer.put(responseBuffer);		
+		finalResponseBuffer.put(responseBuffer);		
 	}
 
 	private void sendErrorMessage(SocketChannel client, String error) throws IOException {

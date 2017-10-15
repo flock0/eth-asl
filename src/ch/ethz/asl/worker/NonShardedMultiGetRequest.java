@@ -33,6 +33,7 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 			
 			// TODO Forward answerbuffer to client
 			sendResponseToClient(client, response);
+			response.clear();
 		} catch (IOException ex) {
 			logger.catching(ex);
 		}

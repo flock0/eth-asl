@@ -79,7 +79,7 @@ public class MemcachedSocketHandler {
 		for(int i = 0; i < channels.size(); i++) {
 			SocketChannel server = channels.get(i);
 			ByteBuffer buffer = serverBuffers.get(i);
-			buffer.clear();
+			
 			
 	    	int readReturnCode = -2; //Initially set to some unused code
 	    	do {
@@ -128,7 +128,7 @@ public class MemcachedSocketHandler {
 	public ByteBuffer waitForSingleResponse(int targetServerIndex) {
 		SocketChannel server = channels.get(targetServerIndex);
 		ByteBuffer buffer = serverBuffers.get(targetServerIndex);
-		buffer.clear();
+		
 		
     	int readReturnCode = -2; //Initially set to some unused code
     	do {
@@ -193,8 +193,7 @@ public class MemcachedSocketHandler {
 		else {
 			isValid = false;
 		}			
-				
-		buffer.position(oldPosition);
+
 		return isValid;
 	}
 

@@ -146,7 +146,7 @@ public class RequestFactory {
 		}
 		bld.append("\r\n");
 		buffer.put(bld.toString().getBytes());
-		
+		buffer.flip();
 		return buffer;
 	}
 }

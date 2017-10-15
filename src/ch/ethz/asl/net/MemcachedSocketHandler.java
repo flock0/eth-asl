@@ -229,4 +229,11 @@ public class MemcachedSocketHandler {
 			}
 		}
 	}
+
+
+	@Override
+	protected void finalize() throws Throwable {
+		shutdown();
+		super.finalize();
+	}
 }

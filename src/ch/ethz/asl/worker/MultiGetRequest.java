@@ -13,7 +13,7 @@ public abstract class MultiGetRequest implements Request {
 	}
 
 	@Override
-	public Object getCommand() {
+	public byte[] getCommand() {
 		int messageLength = readBuffer.remaining();
 		byte[] arr = new byte[messageLength];
 		readBuffer.get(arr);

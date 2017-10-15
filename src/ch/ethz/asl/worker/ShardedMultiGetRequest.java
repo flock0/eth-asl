@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,23 +20,39 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 	
 	public ShardedMultiGetRequest(ByteBuffer readBuffer, List<String> keys) {
 		super(readBuffer, keys);
-		readBuffer.clear(); // As we construct our own get requests, we don't need the commandBuffer and can clear it already.
 	}
 
 	@Override
 	public void handle(MemcachedSocketHandler memcachedSocketHandler, SocketChannel client) {
 		// TODO Split up keys to available servers
+		readBuffer.clear();
 		int startingServerIndex = memcachedSocketHandler.findTargetServer(keys);
-		HashMap<Integer, List<String>> splits = splitKeys(keys, startingServerIndex, MemcachedSocketHandler.getNumServers());
+		int numServers = MemcachedSocketHandler.getNumServers();
 		
-		List<Integer> sortedServerIndices = new ArrayList<Integer>(splits.keySet());
-		Collections.sort(sortedServerIndices);
+		List<Integer> answerAssemblyOrder = new ArrayList<Integer>();
+		HashMap<Integer, List<String>> keySplits = new HashMap<>();
+		int maxKeysPerServer = (int) Math.ceil((double)keys.size() / numServers);
+		
+		int currentServer = startingServerIndex;
+		int keyPerServerCount = 0;
+		for(String key : keys) {
+			if(!keySplits.containsKey(currentServer)) {
+				answerAssemblyOrder.add(currentServer);
+				keySplits.put(currentServer, new ArrayList<>());
+			}
+			keySplits.get(currentServer).add(key);
+			
+			if(++keyPerServerCount == maxKeysPerServer) {
+				currentServer = (currentServer + 1) % numServers;
+				keyPerServerCount = 0;
+			}
+		}
 		
 		try {
 			// Construct separate multigets			
 			HashMap<Integer, ByteBuffer> serverBuffers = memcachedSocketHandler.getServerBuffers();
-			for(int serverIndex : sortedServerIndices) {
-				ByteBuffer buffer = RequestFactory.constructMultiGetRequest(splits.get(serverIndex), serverBuffers.get(serverIndex));
+			for(int serverIndex : answerAssemblyOrder) {
+				ByteBuffer buffer = RequestFactory.constructMultiGetRequest(keySplits.get(serverIndex), serverBuffers.get(serverIndex));
 				
 				// Send multigets to the servers
 				memcachedSocketHandler.sendToSingleServer(buffer, serverIndex);
@@ -48,7 +65,7 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 			boolean firstIteration = true;
 			ByteBuffer finalResponseBuffer = null; // We use the serverBuffer from the first server to store the final response
 			String error = null;
-			for(int serverIndex : sortedServerIndices) {
+			for(int serverIndex : answerAssemblyOrder) {
 				// Wait for answers from those servers we sent stuff to!
 				ByteBuffer responseBuffer = memcachedSocketHandler.waitForSingleResponse(serverIndex);
 				
@@ -56,7 +73,6 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 				if(firstIteration) {
 					finalResponseBuffer = responseBuffer;
 				}
-				
 				
 				if(!errorOccured) {
 					// No error occured yet. We will continue to parse and add responses.
@@ -144,27 +160,6 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		
 		buffer.flip();
 		return error;
-	}
-
-	private HashMap<Integer, List<String>> splitKeys(List<String> keys, int startingServerIndex, int numServers) {
-		
-		HashMap<Integer, List<String>> keySplits = new HashMap<>();
-		int maxKeysPerServer = (int) Math.ceil((double)keys.size() / numServers);
-		
-		int currentServer = startingServerIndex;
-		int keyPerServerCount = 0;
-		for(String key : keys) {
-			if(!keySplits.containsKey(currentServer))
-				keySplits.put(currentServer, new ArrayList<>());
-			keySplits.get(currentServer).add(key);
-			
-			if(++keyPerServerCount == maxKeysPerServer) {
-				currentServer = (currentServer + 1) % numServers;
-				keyPerServerCount = 0;
-			}
-		}
-		
-		return keySplits;
 	}
 
 }

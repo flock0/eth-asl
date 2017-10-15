@@ -23,8 +23,6 @@ public class MemcachedSocketHandler {
 	private static int numServers;
 	private HashMap<Integer, SocketChannel> channels = new HashMap<>();
 	private HashMap<Integer, ByteBuffer> serverBuffers = new HashMap<>();
-	
-	 
 
 
 	public static void setMcAddresses(List<String> mcAddresses) {
@@ -48,7 +46,7 @@ public class MemcachedSocketHandler {
 				channels.put(i, channel);
 				serverBuffers.put(i, ByteBuffer.allocate(SERVER_BUFFER_MAX_BYTES_SIZE));
 			}
-			logger.debug("Connected to all memcached servers.");
+			logger.debug(String.format("Thread %s connected to all memcached servers.", Thread.currentThread().getName()));
 		} catch(IOException ex) {
 			logger.catching(ex);
 			RunMW.shutdown();
@@ -92,7 +90,7 @@ public class MemcachedSocketHandler {
 	    	
 	    	if(readReturnCode == -1)
 				try {
-					logger.error(String.format("Lost connection to memcached server ", i));
+					logger.error(String.format("Thread %s lost connection to memcached server ", Thread.currentThread().getName(), i));
 					server.close();
 					RunMW.shutdown();
 				} catch (IOException ex) {
@@ -141,7 +139,7 @@ public class MemcachedSocketHandler {
     	
     	if(readReturnCode == -1)
 			try {
-				logger.error(String.format("Lost connection to memcached server ", targetServerIndex));
+				logger.error(String.format("Thread %s lost connection to memcached server ", Thread.currentThread().getName(), targetServerIndex));
 				server.close();
 				RunMW.shutdown();
 				return null;
@@ -218,5 +216,17 @@ public class MemcachedSocketHandler {
 
 	public HashMap<Integer, ByteBuffer> getServerBuffers() {
 		return serverBuffers;
+	}
+
+
+	public void shutdown() {
+		logger.debug(String.format("Shutting down memcached sockets in thread %s", Thread.currentThread().getName()));
+		for(int i = 0; i < numServers; i++) {
+			try {
+				channels.get(i).close();
+			} catch (IOException ex) {
+				logger.catching(ex);
+			}
+		}
 	}
 }

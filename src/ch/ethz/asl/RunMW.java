@@ -151,8 +151,10 @@ public class RunMW {
 		
 		try {
 			boolean isTerminated = threadPool.awaitTermination(THREADPOOL_AWAIT_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-			if(isTerminated)
-				logger.error("Couldn't terminate threadpool fast enough.");
+			if(isTerminated) {
+				List<Runnable> droppedTasks = threadPool.shutdownNow();
+            	logger.info("Thread pool was abruptly shut down. " + droppedTasks.size() + " requests will not be executed.");
+			}
 			else
 				logger.debug("threadpool has been terminated.");
 		} catch (InterruptedException ex) {

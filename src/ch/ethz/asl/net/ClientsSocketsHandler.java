@@ -235,6 +235,7 @@ public class ClientsSocketsHandler implements Runnable {
 	 * Indicates to this thread that it should stop executing and shutdown gracefully.
 	 */
 	public void shutdown() {
+		closeServerSocket();
 		shouldRun = false;
 		synchronized(this) {
 			if(selector != null) selector.wakeup();
@@ -244,10 +245,6 @@ public class ClientsSocketsHandler implements Runnable {
 
 	public boolean isRunning() {
 		return isRunning;
-	}
-	
-	public void wakeupSelector() {
-		selector.wakeup();
 	}
 
 	private void evictClientBuffer(SelectionKey key) {

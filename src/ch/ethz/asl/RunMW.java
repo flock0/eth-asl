@@ -16,6 +16,7 @@ import ch.ethz.asl.net.ClientsSocketsHandler;
 public class RunMW {
 
 	static int POOLTHREAD_KEEP_ALIVE_MS = 5000;
+	static int THREADPOOL_AWAIT_TERMINATION_TIMEOUT_MS = 2000;
 	static String myIp = null;
 	static int myPort = 0;
 	static List<String> mcAddresses = null;
@@ -36,6 +37,17 @@ public class RunMW {
 	
 	public static void main(String[] args) throws Exception {
 
+		// -----------------------------------------------------------------------------
+		// Add shutdown hook
+		// -----------------------------------------------------------------------------
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+            public void run() {
+				logger.info("Caught shutdown signal.");
+                RunMW.shutdown();
+            }   
+		});
+		
 		// -----------------------------------------------------------------------------
 		// Parse and prepare arguments
 		// -----------------------------------------------------------------------------
@@ -133,7 +145,20 @@ public class RunMW {
 	 * Request the system to shutdown gracefully
 	 */
 	public static void shutdown() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Not yet implemented");
+		logger.info("Shutting down middleware...");
+		sockHandler.shutdown();
+		threadPool.shutdown();
+		
+		try {
+			boolean isTerminated = threadPool.awaitTermination(THREADPOOL_AWAIT_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+			if(isTerminated)
+				logger.error("Couldn't terminate threadpool fast enough.");
+			else
+				logger.debug("threadpool has been terminated.");
+		} catch (InterruptedException ex) {
+			logger.catching(ex);
+		}
+		
+		logger.info("Shutdown completed");
 	}
 }

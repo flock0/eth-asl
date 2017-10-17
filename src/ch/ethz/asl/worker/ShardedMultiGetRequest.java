@@ -48,9 +48,10 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		}
 		
 		
-		// Construct separate multigets			
+		// Construct separate multigets
+		HashMap<Integer, ByteBuffer> serverBuffers = null;
 		try {
-			HashMap<Integer, ByteBuffer> serverBuffers = memcachedSocketHandler.getServerBuffers();
+			serverBuffers = memcachedSocketHandler.getServerBuffers();
 			for(int serverIndex : answerAssemblyOrder) {
 				ByteBuffer buffer = RequestFactory.constructMultiGetRequest(keySplits.get(serverIndex), serverBuffers.get(serverIndex));
 				
@@ -58,73 +59,73 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 				memcachedSocketHandler.sendToSingleServer(buffer, serverIndex);
 				buffer.clear();
 			}
-		
-			
-		
-			boolean errorOccured = false;
-			boolean firstIteration = true;
-			ByteBuffer finalResponseBuffer = null; // We use the serverBuffer from the first server to store the final response
-			String error = null;
-			for(int serverIndex : answerAssemblyOrder) {
-				// Wait for answers from those servers we sent stuff to!
-				ByteBuffer responseBuffer = memcachedSocketHandler.waitForSingleResponse(serverIndex);
-				
-				// If this is the first iteration, we save this buffer and append the answers from the other servers to it
-				if(firstIteration) {
-					finalResponseBuffer = responseBuffer;
-				}
-				
-				if(!errorOccured) {
-					// No error occured yet. We will continue to parse and add responses.
-					error = getError(responseBuffer);
-					if(responseContainsError(error)) {
-						// One of the servers encountered an error.
-						// We forward the error message and abort this request
-						errorOccured = true;
-					}
-					else {
-						if(firstIteration){
-							firstIteration = false;
-							finalResponseBuffer.position(finalResponseBuffer.limit());
-							finalResponseBuffer.limit(finalResponseBuffer.capacity());
-						}
-						else {
-							// If no error occured, gather responses, concat answer to final answer
-							
-							addResponseToFinalResponseBuffer(responseBuffer, finalResponseBuffer);
-						}
-					}
-				}
-			}
-			
-			try {
-				if(!errorOccured) {
-					sendFinalResponse(client, finalResponseBuffer);
-				}
-				else {
-					sendErrorMessage(client, error);
-				}
-				
-				// Reset all serverBuffers for the next request
-				for(ByteBuffer buffer : serverBuffers.values())
-					buffer.clear();
-				
-			} catch (IOException ex) {
-				logger.error(String.format("%s couldn't handle MultiGetRequest. Will close client connection: %s", Thread.currentThread().getName(), ex.getMessage()));
-				try {
-					client.close();
-				} catch (IOException ex2) {
-					// Nothing we can do here
-					logger.catching(ex2);
-				}
-			}
-
 		} catch (IOException ex) {
 			logger.error(String.format("%s encountered an error when sending to a memcached server: %s", Thread.currentThread().getName(), ex.getMessage()));
 			logger.catching(ex);
 			RunMW.shutdown();
 		}
 		
+			
+		
+		boolean errorOccured = false;
+		boolean firstIteration = true;
+		ByteBuffer finalResponseBuffer = null; // We use the serverBuffer from the first server to store the final response
+		String error = null;
+		for(int serverIndex : answerAssemblyOrder) {
+			
+			// Wait for answers from those servers we sent stuff to!
+			ByteBuffer responseBuffer = memcachedSocketHandler.waitForSingleResponse(serverIndex);
+			
+			// If this is the first iteration, we save this buffer and append the answers from the other servers to it
+			if(firstIteration) {
+				finalResponseBuffer = responseBuffer;
+			}
+			
+			if(!errorOccured) {
+				// No error occured yet. We will continue to parse and add responses.
+				error = getError(responseBuffer);
+				if(responseContainsError(error)) {
+					// One of the servers encountered an error.
+					// We forward the error message and abort this request
+					errorOccured = true;
+				}
+				else {
+					if(firstIteration){
+						firstIteration = false;
+						finalResponseBuffer.position(finalResponseBuffer.limit());
+						finalResponseBuffer.limit(finalResponseBuffer.capacity());
+					}
+					else {
+						// If no error occured, gather responses, concat answer to final answer
+						
+						addResponseToFinalResponseBuffer(responseBuffer, finalResponseBuffer);
+					}
+				}
+			}
+			
+		}
+		
+		try {
+			if(!errorOccured) {
+				sendFinalResponse(client, finalResponseBuffer);
+			}
+			else {
+				sendErrorMessage(client, error);
+			}
+			
+		} catch (IOException ex) {
+			logger.error(String.format("%s couldn't handle MultiGetRequest. Will close client connection: %s", Thread.currentThread().getName(), ex.getMessage()));
+			try {
+				client.close();
+			} catch (IOException ex2) {
+				// Nothing we can do here
+				logger.catching(ex2);
+			}
+		} finally {
+			// Reset all serverBuffers for the next request
+			for(ByteBuffer buffer : serverBuffers.values())
+				buffer.clear();
+		}
 		
 	}
 

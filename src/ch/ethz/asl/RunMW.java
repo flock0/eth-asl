@@ -160,7 +160,7 @@ public class RunMW {
 		} catch (InterruptedException ex) {
 			logger.catching(ex);
 		}
-		
+		sockHandler.closeClientSockets();
 		logger.info("Shutdown completed");
 	}
 }

@@ -4,11 +4,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -43,6 +45,7 @@ public class ClientsSocketsHandler implements Runnable {
 
 
 	private ExecutorService threadPool;
+	private Set<SelectableChannel> clientsToClose;
 
 	private static final Logger logger = LogManager.getLogger(ClientsSocketsHandler.class);
 	
@@ -177,6 +180,8 @@ public class ClientsSocketsHandler implements Runnable {
 			// We exited the while-loop as we have been asked to shutdown.
 			assert(shouldRun == false);
 			try {
+				clientsToClose = new HashSet<SelectableChannel>();
+				selector.keys().forEach(key -> clientsToClose.add(key.channel()));
 				selector.close();
 				serverSocket.close();
 				logger.debug("Sockets shutdown.");
@@ -249,5 +254,15 @@ public class ClientsSocketsHandler implements Runnable {
 
 	private void evictClientBuffer(SelectionKey key) {
 		clientReadBuffers.remove(key);
+	}
+
+	public void closeClientSockets() {
+		clientsToClose.forEach(client -> {
+			try {
+				client.close();
+			} catch (IOException ex) {
+				logger.catching(ex);
+			}
+		});
 	}
 }

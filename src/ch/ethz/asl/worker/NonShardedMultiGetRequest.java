@@ -35,7 +35,13 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 			sendResponseToClient(client, response);
 			response.clear();
 		} catch (IOException ex) {
-			logger.catching(ex);
+			logger.error(String.format("%s couldn't handle MultiGetRequest. Will close client connection: %s", Thread.currentThread().getName(), ex.getMessage()));
+			try {
+				client.close();
+			} catch (IOException ex2) {
+				// Nothing we can do here
+				logger.catching(ex2);
+			}
 		}
 
 	}

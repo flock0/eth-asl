@@ -43,10 +43,12 @@ public class SetRequest implements Request {
 			errors = getErrors(responses);
 			
 		} catch (IOException ex) {
-			logger.catching(ex);
+			String errMsg = String.format("SERVER_ERROR Exception in middleware: %s\r\n", ex.getMessage());
+			logger.error(errMsg);
 			if(errors == null)
 				errors = new ArrayList<String>();
-			errors.add(String.format("SERVER_ERROR Exception in middleware: %s\r\n", ex.getMessage()));
+			errors.add(errMsg);
+			//TODO Not sure if we should abort here.
 		}
 		
 		// If an error occured, forward one of the error messages
@@ -56,7 +58,13 @@ public class SetRequest implements Request {
 			else
 				sendSingleErrorMessage(client, errors.get(0));
 		} catch (IOException ex) {
-			logger.catching(ex);
+			logger.error(String.format("%s couldn't send SetRequest response to client. Will close client connection: %s", Thread.currentThread().getName(), ex.getMessage()));
+			try {
+				client.close();
+			} catch (IOException ex2) {
+				// Nothing we can do here
+				logger.catching(ex2);
+			}
 		}
 	}
 

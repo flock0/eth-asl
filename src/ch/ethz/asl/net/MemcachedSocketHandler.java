@@ -146,13 +146,6 @@ public class MemcachedSocketHandler {
 		return buffer;
 	}
 	
-	private void reconnectServer(int index) {
-		// TODO Remove socket channel on that index, try to reconnect and insert it into the right index position again
-		// TODO If it still fails to connect, throw another exception
-		throw new UnsupportedOperationException("Not yet implemented");
-		
-	}
-	
 	private boolean receivedValidResponse(ByteBuffer buffer) {
 		/* The following answers are expected:
 		 * ERROR\r\n

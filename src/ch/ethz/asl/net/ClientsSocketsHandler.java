@@ -164,8 +164,9 @@ public class ClientsSocketsHandler implements Runnable {
 									// If the request is incomplete, continue reading
 								}
 							}
-						} catch(ClosedChannelException ex) {
-							logger.error("Tried to read from client, but the socket is already closed.");
+						} catch(IOException ex) {
+							logger.info("Encountered exception when communicating with client. Closing connection.");
+							client.close();
 							evictClientBuffer(key);
 						}
 
@@ -196,6 +197,7 @@ public class ClientsSocketsHandler implements Runnable {
 			// An exception occurred in the network thread.
 			// We can't recover from that. Shutdown!
 			logger.error("Exception occured in network thread: " + ex.getMessage());
+			logger.catching(ex);
 			RunMW.shutdown();
 		} finally {
 			isRunning = false;

@@ -74,34 +74,30 @@ public class MemcachedSocketHandler {
 	}
 	
 	public HashMap<Integer, ByteBuffer> waitForAllResponses() {
-		
-		for(int i = 0; i < channels.size(); i++) {
-			SocketChannel server = channels.get(i);
-			ByteBuffer buffer = serverBuffers.get(i);
-			
-			
-	    	int readReturnCode = -2; //Initially set to some unused code
-	    	do {
-	    		try {
+		try {
+			for(int i = 0; i < channels.size(); i++) {
+				SocketChannel server = channels.get(i);
+				ByteBuffer buffer = serverBuffers.get(i);
+				
+				
+		    	int readReturnCode = -2; //Initially set to some unused code
+		    	do {
 					readReturnCode = server.read(buffer);
-				} catch (IOException ex) {
-					logger.catching(ex);
-				}
-	    	} while(readReturnCode != -1 && !receivedValidResponse(buffer)); //TODO Handle overflow of buffer
-	    	
-	    	if(readReturnCode == -1)
-				try {
+		    	} while(readReturnCode != -1 && !receivedValidResponse(buffer)); //TODO Handle overflow of buffer
+		    	
+		    	if(readReturnCode == -1) {
 					logger.error(String.format("%s lost connection to memcached server ", Thread.currentThread().getName(), i));
 					server.close();
 					RunMW.shutdown();
-				} catch (IOException ex) {
-					logger.catching(ex);
+		    	}
+				else {
+					buffer.flip();
 				}
-			else {
-				buffer.flip();
 			}
+		} catch (IOException ex) {
+			logger.error(String.format("%s encountered exception when reading from memcached servers", Thread.currentThread().getName()));
+			RunMW.shutdown();
 		}
-		
 		return serverBuffers;
 	}
 	
@@ -125,30 +121,28 @@ public class MemcachedSocketHandler {
 	}
 	
 	public ByteBuffer waitForSingleResponse(int targetServerIndex) {
+		
 		SocketChannel server = channels.get(targetServerIndex);
 		ByteBuffer buffer = serverBuffers.get(targetServerIndex);
 		
-		
-    	int readReturnCode = -2; //Initially set to some unused code
-    	do {
-    		try {
+		try {
+	    	int readReturnCode = -2; //Initially set to some unused code
+	    	do {
 				readReturnCode = server.read(buffer);
-			} catch (IOException ex) {
-				logger.catching(ex);
-			}
-    	} while(readReturnCode != -1 && !receivedValidResponse(buffer)); //TODO Handle overflow of buffer
-    	
-    	if(readReturnCode == -1)
-			try {
+	    	} while(readReturnCode != -1 && !receivedValidResponse(buffer)); //TODO Handle overflow of buffer
+	    	
+	    	if(readReturnCode == -1) {
 				logger.error(String.format("%s lost connection to memcached server ", Thread.currentThread().getName(), targetServerIndex));
 				server.close();
 				RunMW.shutdown();
 				return null;
-			} catch (IOException ex) {
-				logger.catching(ex);
 			}
-	
-		buffer.flip();
+				
+			buffer.flip();
+		} catch (IOException ex) {
+			logger.error(String.format("%s encountered exception when reading from memcached servers", Thread.currentThread().getName()));
+			RunMW.shutdown();
+		}
 		return buffer;
 	}
 	

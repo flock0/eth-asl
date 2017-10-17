@@ -114,7 +114,8 @@ public class ClientsSocketsHandler implements Runnable {
 						} catch(Exception ex) {
 							// Exception occured in a specific server socket.
 							// Close it and continue!
-							logger.catching(ex);
+							logger.error("Exception occured during accepting of "
+									+ "new client onnection with the following message: " + ex.getMessage());
 							client.close();
 						}
 	 
@@ -164,7 +165,7 @@ public class ClientsSocketsHandler implements Runnable {
 								}
 							}
 						} catch(ClosedChannelException ex) {
-							logger.catching(ex);
+							logger.error("Tried to read from client, but the socket is already closed.");
 							evictClientBuffer(key);
 						}
 
@@ -187,14 +188,14 @@ public class ClientsSocketsHandler implements Runnable {
 				logger.debug("Sockets shutdown.");
 			} catch (IOException ex) {
 				// Nothing else we can do here
-				logger.catching(ex);
+				logger.error("Error occured during sockets and selector shutdown");
 			}
 			logger.info("SocketsHandler stopped.");
 			
 		} catch (Exception ex) {
 			// An exception occurred in the network thread.
 			// We can't recover from that. Shutdown!
-			logger.catching(ex);
+			logger.error("Exception occured in network thread: " + ex.getMessage());
 			RunMW.shutdown();
 		} finally {
 			isRunning = false;

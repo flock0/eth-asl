@@ -42,12 +42,13 @@ public class MemcachedSocketHandler {
 				String host = splitAddr[0];
 				int port = Integer.parseInt(splitAddr[1]);
 				SocketChannel channel = SocketChannel.open(new InetSocketAddress(host, port));
-				logger.debug(String.format("Connected to %s", addr));
+				logger.debug(String.format("%s connected to %s.", Thread.currentThread().getName(), addr));
 				channels.put(i, channel);
 				serverBuffers.put(i, ByteBuffer.allocate(SERVER_BUFFER_MAX_BYTES_SIZE));
 			}
-			logger.debug(String.format("Thread %s connected to all memcached servers.", Thread.currentThread().getName()));
+			logger.debug(String.format("%s connected to all memcached servers.", Thread.currentThread().getName()));
 		} catch(IOException ex) {
+			logger.error(String.format("%s couldn't connect to a memcached server:", Thread.currentThread().getName()));
 			logger.catching(ex);
 			RunMW.shutdown();
 		}
@@ -90,7 +91,7 @@ public class MemcachedSocketHandler {
 	    	
 	    	if(readReturnCode == -1)
 				try {
-					logger.error(String.format("Thread %s lost connection to memcached server ", Thread.currentThread().getName(), i));
+					logger.error(String.format("%s lost connection to memcached server ", Thread.currentThread().getName(), i));
 					server.close();
 					RunMW.shutdown();
 				} catch (IOException ex) {
@@ -139,7 +140,7 @@ public class MemcachedSocketHandler {
     	
     	if(readReturnCode == -1)
 			try {
-				logger.error(String.format("Thread %s lost connection to memcached server ", Thread.currentThread().getName(), targetServerIndex));
+				logger.error(String.format("%s lost connection to memcached server ", Thread.currentThread().getName(), targetServerIndex));
 				server.close();
 				RunMW.shutdown();
 				return null;
@@ -220,7 +221,7 @@ public class MemcachedSocketHandler {
 
 
 	public void shutdown() {
-		logger.debug(String.format("Shutting down memcached sockets in thread %s", Thread.currentThread().getName()));
+		logger.debug(String.format("Shutting down memcached sockets in %s", Thread.currentThread().getName()));
 		for(int i = 0; i < numServers; i++) {
 			try {
 				channels.get(i).close();

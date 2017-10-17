@@ -42,7 +42,6 @@ public class GetRequest implements Request {
 		
 		try {
 			memcachedSocketHandler.sendToSingleServer(readBuffer, targetServerIndex);
-			readBuffer.clear();
 		} catch (IOException ex) {
 			logger.error(String.format("%s encountered an error when sending GetRequest to memcached server: %s", Thread.currentThread().getName(), ex.getMessage()));
 			logger.catching(ex);

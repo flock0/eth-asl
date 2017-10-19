@@ -167,24 +167,27 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 	private String getError(ByteBuffer buffer) {
 		
 		int messageLength = buffer.remaining();
-		byte[] msgArr = new byte[messageLength];
-		buffer.get(msgArr);
-		String respo = new String(msgArr);
 		String error = null;
 		
-		if(respo.equals("ERROR\r\n") ||
-		   respo.startsWith("CLIENT_ERROR ") ||
-		   respo.startsWith("SERVER_ERROR ")) {
-			logger.error(String.format("Memcached server responded with error. Will forward to the client: %s", respo));
-			error = respo;
+		char firstChar = (char)buffer.get(0);
+		char secondChar = (char)buffer.get(1);
+		if((firstChar == 'E' && secondChar == 'R') ||
+		   firstChar == 'C' ||
+		   firstChar == 'S') {
+			error = new String(buffer.array(), 0, messageLength);
+			logger.error(String.format("Memcached server responded with error. Will forward to the client: %s", error));
 		}
-		else if(!respo.endsWith("END\r\n")) {
-			logger.error(String.format("Memcached server responded unexpectedly. Will forward to the client: %s", respo));
-			error = respo;
+		else if(!responseEndsWithEND(buffer, messageLength)) {
+			error = new String(buffer.array(), 0, messageLength);
+			logger.error(String.format("Memcached server responded unexpectedly. Will forward to the client: %s", error));
 		}
 		
-		buffer.flip();
+		buffer.rewind();
 		return error;
+	}
+
+	private boolean responseEndsWithEND(ByteBuffer buffer, int messageLength) {
+		return (char)buffer.get(messageLength-5) == 'E' && (char)buffer.get(messageLength-4) == 'N' && (char)buffer.get(messageLength-3) == 'D' && (char)buffer.get(messageLength-2) == '\r' && (char)buffer.get(messageLength-1) == '\n';
 	}
 
 }

@@ -7,9 +7,8 @@ public abstract class MultiGetRequest implements Request {
 
 	ByteBuffer readBuffer;
 	List<String> keys;
-	public MultiGetRequest(ByteBuffer readBuffer, List<String> keys) {
+	public MultiGetRequest(ByteBuffer readBuffer) {
 		this.readBuffer = readBuffer;
-		this.keys = keys;
 	}
 
 	@Override
@@ -23,6 +22,10 @@ public abstract class MultiGetRequest implements Request {
 	
 	public List<String> getKeys() {
 		return keys;
+	}
+	
+	private parseMessage() {
+		
 	}
 
 }

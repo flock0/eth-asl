@@ -17,8 +17,8 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 
 	private static final Logger logger = LogManager.getLogger(ShardedMultiGetRequest.class);
 	
-	public ShardedMultiGetRequest(ByteBuffer readBuffer, List<String> keys) {
-		super(readBuffer, keys);
+	public ShardedMultiGetRequest(ByteBuffer readBuffer) {
+		super(readBuffer);
 	}
 
 	@Override

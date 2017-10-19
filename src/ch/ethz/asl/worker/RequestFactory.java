@@ -30,24 +30,56 @@ public class RequestFactory {
 		Request req = null;
 		int oldPosition = readBuffer.position();
 		int messageLength = oldPosition;
-		readBuffer.position(0);
+		readBuffer.rewind();
 		
 		
-		if(messageLength < 7)
+		if(messageLength < 4)
 			// the shortest request is 'get a\r\n'
-			throw new IncompleteRequestException("Requests can't be shorter than 7 bytes");
+			throw new IncompleteRequestException("Request too short");
 		
-		byte[] commandStartArr = new byte[3];
-		readBuffer.get(commandStartArr);
-		
-		String commandStart = new String(commandStartArr);
 		if(startsWithGet(readBuffer)) {
-			// Get the whole request so far
-			readBuffer.position(0);
-			byte[] commandArr = new byte[messageLength];
-			readBuffer.get(commandArr);
 			
-			String command = new String(commandArr);
+			readBuffer.position(4);
+		    boolean requestIsValid = false;
+		    int whitespaceCount = 0;
+		    int newlinePos = -1;
+		    boolean newlineFound = false;
+		    while(!newlineFound && readBuffer.hasRemaining()) {
+		    	
+		    	char currentChar = (char)readBuffer.get();
+		    	char nextChar = (char)readBuffer.get();
+			    if(currentChar == '\r' && nextChar == '\n') {
+				    newlineFound = true;
+		            newlinePos = readBuffer.position();
+		            break;
+			    }
+			    else {
+			    	readBuffer.position(readBuffer.position() - 1);
+		            if(currentChar == ' ') {
+		                whitespaceCount++;
+		                if(whitespaceCount > 9)
+		                	throw new FaultyRequestException(
+									String.format("Encountered more than %d keys in a get request", MAX_MULTIGETS_SIZE));
+		            }
+			    }
+		    }
+			
+		    if(!newlineFound) {
+		    	throw new IncompleteRequestException("Encountered incomplete get request");
+		    }
+		    else if(readBuffer.hasRemaining()) { //if(newlineFound
+		    	throw new FaultyRequestException("Encountered more text after get request and newline");
+		    } else {
+		    	if(whitespaceCount == 0) {
+		    		req = new GetRequest(readBuffer);
+		    	}
+		    	else {
+		    		if(RunMW.readSharded)
+						req = new ShardedMultiGetRequest(readBuffer);
+					else
+						req = new NonShardedMultiGetRequest(readBuffer);
+		    	}
+		    }
 			
 			// Split up commands along \r\n to find the first line.
 			String[] newlineSplit = command.split("\r\n");
@@ -139,11 +171,11 @@ public class RequestFactory {
 	}
 
 	private static boolean startsWithGet(ByteBuffer readBuffer) {
-		return (char)readBuffer.get(0) == 'g' && (char)readBuffer.get(1) == 'e' && (char)readBuffer.get(2) == 't';
+		return (char)readBuffer.get(0) == 'g' && (char)readBuffer.get(1) == 'e' && (char)readBuffer.get(2) == 't' && (char)readBuffer.get(3) == ' ';
 	}
 	
 	private static boolean startsWithSet(ByteBuffer readBuffer) {
-		return (char)readBuffer.get(0) == 's' && (char)readBuffer.get(1) == 'e' && (char)readBuffer.get(2) == 't';
+		return (char)readBuffer.get(0) == 's' && (char)readBuffer.get(1) == 'e' && (char)readBuffer.get(2) == 't' && (char)readBuffer.get(3) == ' ';
 	}
 
 	public static ByteBuffer constructMultiGetRequest(List<String> assignedKeys, ByteBuffer buffer) {

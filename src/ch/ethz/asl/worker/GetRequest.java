@@ -16,9 +16,8 @@ public class GetRequest implements Request {
 	
 	ByteBuffer readBuffer;
 	String key;
-	public GetRequest(ByteBuffer readBuffer, String key) {
+	public GetRequest(ByteBuffer readBuffer) {
 		this.readBuffer = readBuffer;
-		this.key = key;
 	}
 
 	public String getKey() {
@@ -35,6 +34,9 @@ public class GetRequest implements Request {
 
 	@Override
 	public void handle(MemcachedSocketHandler memcachedSocketHandler, SocketChannel client) {
+		
+		parseMessage();
+		
 		// TODO Hash key to find server to handle
 		int targetServerIndex = memcachedSocketHandler.findTargetServer(key);
 		
@@ -69,6 +71,11 @@ public class GetRequest implements Request {
 		} finally {
 			if(response != null) response.clear();
 		}
+	}
+
+	private void parseMessage() {
+		// They key appears after the "get ". The readBuffer will be at the limit position after the \r\n.
+		this.key = new String(readBuffer.array(), 4, readBuffer.position() - 1 - 4); 
 	}
 
 	private void sendResponseToClient(SocketChannel client, ByteBuffer response) throws IOException {

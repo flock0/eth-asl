@@ -75,7 +75,7 @@ public class GetRequest implements Request {
 
 	private void parseMessage() {
 		// They key appears after the "get ". The readBuffer will be at the limit position after the \r\n.
-		this.key = new String(readBuffer.array(), 4, readBuffer.limit() - 1 - 4); 
+		this.key = new String(readBuffer.array(), 4, readBuffer.limit() - 2 - 4); 
 	}
 
 	private void sendResponseToClient(SocketChannel client, ByteBuffer response) throws IOException {

@@ -160,7 +160,8 @@ public class ClientsSocketsHandler implements Runnable {
 									readBuffer.clear();
 									sendClientError(client, ex.getMessage());
 								} catch(IncompleteRequestException ex) {
-									// If the request is incomplete, continue reading
+									// If the request is incomplete, continue reading from the last position
+									readBuffer.limit(readBuffer.capacity());
 								}
 							}
 						} catch(IOException ex) {

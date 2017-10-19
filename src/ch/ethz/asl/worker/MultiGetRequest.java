@@ -1,6 +1,7 @@
 package ch.ethz.asl.worker;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class MultiGetRequest implements Request {
@@ -22,7 +23,16 @@ public abstract class MultiGetRequest implements Request {
 	}
 	
 	public void parseMessage() {
-		this.keysString = new String(readBuffer.array(), 4, readBuffer.limit() - 1 - 4);
+		this.keysString = new String(readBuffer.array(), 4, readBuffer.limit() - 2 - 4);
+	}
+
+	public List<String> getKeys() {
+		parseMessage();
+		List<String> res = new ArrayList<String>();
+		for(String key : keysString.split(" ")) {
+			res.add(key);
+		}
+		return res;
 	}
 
 }

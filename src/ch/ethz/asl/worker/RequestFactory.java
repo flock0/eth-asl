@@ -30,7 +30,7 @@ public class RequestFactory {
 		Request req = null;
 		int oldPosition = readBuffer.position();
 		int messageLength = oldPosition;
-		readBuffer.rewind();
+		readBuffer.flip();
 		
 		
 		if(messageLength < 4)
@@ -81,43 +81,6 @@ public class RequestFactory {
 		    	}
 		    }
 			
-			// Split up commands along \r\n to find the first line.
-			String[] newlineSplit = command.split("\r\n");
-
-			// Split lines along whitespaces to disect the commands.
-			String[] whitespaceSplit = newlineSplit[0].split(" ");
-			
-			if (newlineSplit.length > 1)
-				throw new FaultyRequestException("Multiple lines not allowed in 'get' command.");
-			
-			if(command.endsWith("\r\n")) {
-				if(whitespaceSplit.length < 2) {
-					throw new FaultyRequestException("No key found in 'get' command.");
-				}
-				else if(whitespaceSplit.length > MAX_MULTIGETS_SIZE + 1) {
-					throw new FaultyRequestException(
-							String.format("Encountered more than %d requested keys in a get request", MAX_MULTIGETS_SIZE));
-				}
-				else if(whitespaceSplit.length == 2){
-					// We encountered a simple get command
-					String key = whitespaceSplit[1];
-					req = new GetRequest(readBuffer, key);
-				}
-				else {
-					// We encountered a multiget request
-					List<String> keys = new ArrayList<String>();
-					for (int i = 1; i < whitespaceSplit.length; i++)
-						keys.add(whitespaceSplit[i]);
-
-					if(RunMW.readSharded)
-						req = new ShardedMultiGetRequest(readBuffer, keys);
-					else
-						req = new NonShardedMultiGetRequest(readBuffer, keys);
-				}
-			}
-			else { // command doesn't end with \r\n
-				throw new IncompleteRequestException("Found possible incomplete get-request.");
-			}
 		}
 		else if(startsWithSet(readBuffer)) {
 			// Get the whole request so far

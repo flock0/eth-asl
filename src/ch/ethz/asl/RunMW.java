@@ -27,7 +27,7 @@ public class RunMW {
 	static ClientsSocketsHandler sockHandler = null;
 	private static BlockingQueue<Runnable> channelQueue = null;
 	private static final Logger logger = LogManager.getLogger(RunMW.class);
-	
+	private static volatile boolean shutdownRequested = false;
 	
 	/***
 	 * The maximum number of readable channels in the queue.
@@ -144,23 +144,26 @@ public class RunMW {
 	/***
 	 * Request the system to shutdown gracefully
 	 */
-	public static void shutdown() {
-		logger.info("Shutting down middleware...");
-		sockHandler.shutdown();
-		threadPool.shutdown();
-		
-		try {
-			boolean isTerminated = threadPool.awaitTermination(THREADPOOL_AWAIT_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-			if(!isTerminated) {
-				List<Runnable> droppedTasks = threadPool.shutdownNow();
-            	logger.info("Thread pool was abruptly shut down. " + droppedTasks.size() + " requests will not be executed.");
+	public static synchronized void shutdown() {
+		if(!shutdownRequested) {
+			shutdownRequested = true;
+			logger.info("Shutting down middleware...");
+			sockHandler.shutdown();
+			threadPool.shutdown();
+			
+			try {
+				boolean isTerminated = threadPool.awaitTermination(THREADPOOL_AWAIT_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+				if(!isTerminated) {
+					List<Runnable> droppedTasks = threadPool.shutdownNow();
+	            	logger.info("Thread pool was abruptly shut down. " + droppedTasks.size() + " requests will not be executed.");
+				}
+				else
+					logger.debug("Threadpool has been terminated.");
+			} catch (InterruptedException ex) {
+				logger.catching(ex);
 			}
-			else
-				logger.debug("Threadpool has been terminated.");
-		} catch (InterruptedException ex) {
-			logger.catching(ex);
+			sockHandler.closeClientSockets();
+			logger.info("Shutdown completed");
 		}
-		sockHandler.closeClientSockets();
-		logger.info("Shutdown completed");
 	}
 }

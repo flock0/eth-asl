@@ -48,8 +48,7 @@ public class MemcachedSocketHandler {
 			}
 			logger.debug(String.format("%s connected to all memcached servers.", Thread.currentThread().getName()));
 		} catch(IOException ex) {
-			logger.error(String.format("%s couldn't connect to a memcached server:", Thread.currentThread().getName()));
-			logger.catching(ex);
+			logger.error(String.format("%s couldn't connect to all memcached server", Thread.currentThread().getName()));
 			RunMW.shutdown();
 		}
 	}

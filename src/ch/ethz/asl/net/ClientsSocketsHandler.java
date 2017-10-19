@@ -196,7 +196,6 @@ public class ClientsSocketsHandler implements Runnable {
 			// An exception occurred in the network thread.
 			// We can't recover from that. Shutdown!
 			logger.error("Exception occured in network thread: " + ex.getMessage());
-			logger.catching(ex);
 			RunMW.shutdown();
 		} finally {
 			isRunning = false;
@@ -259,12 +258,13 @@ public class ClientsSocketsHandler implements Runnable {
 	}
 
 	public void closeClientSockets() {
-		clientsToClose.forEach(client -> {
-			try {
-				client.close();
-			} catch (IOException ex) {
-				logger.catching(ex);
-			}
-		});
+		if(clientsToClose != null)
+			clientsToClose.forEach(client -> {
+				try {
+					client.close();
+				} catch (IOException ex) {
+					logger.catching(ex);
+				}
+			});
 	}
 }

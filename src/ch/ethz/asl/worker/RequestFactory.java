@@ -41,7 +41,7 @@ public class RequestFactory {
 		readBuffer.get(commandStartArr);
 		
 		String commandStart = new String(commandStartArr);
-		if(commandStart.equals("get")) {
+		if(startsWithGet(readBuffer)) {
 			// Get the whole request so far
 			readBuffer.position(0);
 			byte[] commandArr = new byte[messageLength];
@@ -87,7 +87,7 @@ public class RequestFactory {
 				throw new IncompleteRequestException("Found possible incomplete get-request.");
 			}
 		}
-		else if(commandStart.equals("set")) {
+		else if(startsWithSet(readBuffer)) {
 			// Get the whole request so far
 			readBuffer.position(0);
 			byte[] commandArr = new byte[messageLength];
@@ -136,6 +136,14 @@ public class RequestFactory {
 		
 		readBuffer.flip();
 		return req;
+	}
+
+	private static boolean startsWithGet(ByteBuffer readBuffer) {
+		return (char)readBuffer.get(0) == 'g' && (char)readBuffer.get(1) == 'e' && (char)readBuffer.get(2) == 't';
+	}
+	
+	private static boolean startsWithSet(ByteBuffer readBuffer) {
+		return (char)readBuffer.get(0) == 's' && (char)readBuffer.get(1) == 'e' && (char)readBuffer.get(2) == 't';
 	}
 
 	public static ByteBuffer constructMultiGetRequest(List<String> assignedKeys, ByteBuffer buffer) {

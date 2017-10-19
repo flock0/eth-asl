@@ -6,7 +6,8 @@ import java.util.List;
 public abstract class MultiGetRequest implements Request {
 
 	ByteBuffer readBuffer;
-	List<String> keys;
+	String keysString;
+	
 	public MultiGetRequest(ByteBuffer readBuffer) {
 		this.readBuffer = readBuffer;
 	}
@@ -20,12 +21,8 @@ public abstract class MultiGetRequest implements Request {
 		return arr;
 	}
 	
-	public List<String> getKeys() {
-		return keys;
-	}
-	
-	private parseMessage() {
-		
+	public void parseMessage() {
+		this.keysString = new String(readBuffer.array(), 4, readBuffer.limit() - 1 - 4);
 	}
 
 }

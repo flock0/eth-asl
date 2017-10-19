@@ -16,21 +16,26 @@ import ch.ethz.asl.net.MemcachedSocketHandler;
 public class ShardedMultiGetRequest extends MultiGetRequest {
 
 	private static final Logger logger = LogManager.getLogger(ShardedMultiGetRequest.class);
-	
+	 
+	String[] keys;
 	public ShardedMultiGetRequest(ByteBuffer readBuffer) {
 		super(readBuffer);
 	}
 
 	@Override
 	public void handle(MemcachedSocketHandler memcachedSocketHandler, SocketChannel client) {
+		
+		parseMessage();
+		this.keys = splitUpKeys(keysString);
+		
 		// TODO Split up keys to available servers
 		readBuffer.clear();
-		int startingServerIndex = memcachedSocketHandler.findTargetServer(keys);
+		int startingServerIndex = memcachedSocketHandler.findTargetServer(keysString);
 		int numServers = MemcachedSocketHandler.getNumServers();
 		
 		List<Integer> answerAssemblyOrder = new ArrayList<Integer>();
 		HashMap<Integer, List<String>> keySplits = new HashMap<>();
-		int maxKeysPerServer = (int) Math.ceil((double)keys.size() / numServers);
+		int maxKeysPerServer = (int) Math.ceil((double)keys.length / numServers);
 		
 		int currentServer = startingServerIndex;
 		int keyPerServerCount = 0;
@@ -127,6 +132,10 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 				buffer.clear();
 		}
 		
+	}
+
+	private String[] splitUpKeys(String keysString) {
+		return keysString.split(" ");
 	}
 
 	private void sendFinalResponse(SocketChannel client, ByteBuffer buffer) throws IOException {

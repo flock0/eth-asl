@@ -21,8 +21,11 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 
 	@Override
 	public void handle(MemcachedSocketHandler memcachedSocketHandler, SocketChannel client) {
+		
+		parseMessage();
+		
 		// TODO Hash key to find server to handle
-		int targetServerIndex = memcachedSocketHandler.findTargetServer(keys);
+		int targetServerIndex = memcachedSocketHandler.findTargetServer(keysString);
 		
 		// TODO Send getrequest to designated server
 		try {

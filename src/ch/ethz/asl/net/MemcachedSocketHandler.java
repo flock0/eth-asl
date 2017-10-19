@@ -155,31 +155,29 @@ public class MemcachedSocketHandler {
 		 * VALUE...END\r\n
 		 */
 		
-		boolean isValid = false;
-		int oldPosition = buffer.position();
+		int messageLength = buffer.position();
 		
-		byte[] msgArr = new byte[oldPosition];
-		buffer.position(0);
-		buffer.get(msgArr);
-		String msg = new String(msgArr);
-		if(msg.equals("ERROR\r\n") || msg.equals("STORED\r\n") || msg.equals("NOT_STORED\r\n")) {
-			isValid = true;
-		} 
-		else if(msg.startsWith("CLIENT_ERROR ") || msg.startsWith("SERVER_ERROR ")) {
-			if(msg.endsWith("\r\n")) {
-				isValid = true;
-			} else {
-				isValid = false;
-			}
-		} 
-		else if(msg.endsWith("END\r\n")) {
-			isValid = true;
-		}
+		if(!endsWithNewline(buffer, messageLength))
+			return false;
 		else {
-			isValid = false;
-		}			
-
-		return isValid;
+			//createStr from 0-5
+			if((msg.equals("ERROR") || msg.equals("STORED")) && messageLength == 7)
+				return true;
+			else if(msg.equals("VALUE") && endsWithEND(buffer, messageLength))
+				return true;
+			else {
+				//create string from 0-10
+				if(msg.equals("NOT_STORED") && messageLength == 12)
+					return true;
+				else {
+					//create string from 0-13
+					if(msg.equals("CLIENT_ERROR ") || msg.equals("SERVER_ERROR "))
+						return true;
+					else
+						return false;
+				}
+			}
+		}
 	}
 
 	public int findTargetServer(String key) {

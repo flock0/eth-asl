@@ -160,17 +160,17 @@ public class MemcachedSocketHandler {
 		if(!endsWithNewline(buffer, messageLength))
 			return false;
 		else {
-			//createStr from 0-5
+			String msg = new String(buffer.array(), 0, 5);
 			if((msg.equals("ERROR") || msg.equals("STORED")) && messageLength == 7)
 				return true;
 			else if(msg.equals("VALUE") && endsWithEND(buffer, messageLength))
 				return true;
 			else {
-				//create string from 0-10
+				msg = new String(buffer.array(), 0, 10);
 				if(msg.equals("NOT_STORED") && messageLength == 12)
 					return true;
 				else {
-					//create string from 0-13
+					msg = new String(buffer.array(), 0, 13);
 					if(msg.equals("CLIENT_ERROR ") || msg.equals("SERVER_ERROR "))
 						return true;
 					else
@@ -179,6 +179,16 @@ public class MemcachedSocketHandler {
 			}
 		}
 	}
+
+	private boolean endsWithEND(ByteBuffer buffer, int messageLength) {
+		return (char)buffer.get(messageLength - 5) == 'E' && (char)buffer.get(messageLength - 4) == 'N' && (char)buffer.get(messageLength - 3) == 'D';
+	}
+
+
+	private boolean endsWithNewline(ByteBuffer buffer, int messageLength) {
+		return (char)buffer.get(messageLength - 2) == '\r' && (char)buffer.get(messageLength - 1) == '\n';
+	}
+
 
 	public int findTargetServer(String key) {
 		return Math.floorMod(key.hashCode(), numServers);  

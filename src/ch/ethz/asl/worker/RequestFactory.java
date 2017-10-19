@@ -83,46 +83,65 @@ public class RequestFactory {
 			
 		}
 		else if(startsWithSet(readBuffer)) {
-			// Get the whole request so far
-			readBuffer.position(0);
-			byte[] commandArr = new byte[messageLength];
-			readBuffer.get(commandArr);
 			
-			String command = new String(commandArr);
+			readBuffer.position(4);
+		    boolean requestIsValid = false;
+		    int whitespaceCount = 0;
+		    int firstNewlinePos = -1;
+		    boolean newlineFound = false;
+		    int numBytesPos = -1;
+		    while(!newlineFound && readBuffer.hasRemaining()) {
+		    	
+		    	char currentChar = (char)readBuffer.get();
+		    	char nextChar = (char)readBuffer.get();
+			    if(currentChar == '\r' && nextChar == '\n') {
+				    newlineFound = true;
+		            firstNewlinePos = readBuffer.position() - 2;
+			    }
+			    else {
+			    	readBuffer.position(readBuffer.position() - 1);
+		            if(currentChar == ' ') {
+		                whitespaceCount++;
+		                if(whitespaceCount == 3)
+			            	numBytesPos = readBuffer.position();
+		                else if(whitespaceCount > 3)
+		                	throw new FaultyRequestException("First line of set request contained more than 5 tokens.");
+		            }
+		            
+			    }
+		    }
 			
-			if(command.endsWith("\r\n")) {
-				int firstNewlinePos = command.indexOf("\r\n");
-				if (firstNewlinePos == command.length() - 2) { // Is there only one \r\n?
-					throw new IncompleteRequestException("Encountered a set request with only one newline. There should be two lines.");
+		    if(!readBuffer.hasRemaining()) {
+		    	throw new IncompleteRequestException("Encountered incomplete set request");
+		    }
+		    else { //if(newlineFound && hasRemaining
+		    	
+		    	// Parse size of data block
+		    	String numBytesText = new String(readBuffer.array(), numBytesPos, readBuffer.position() - numBytesPos - 2);
+		    	int datablockSize;
+		    	try {
+		    		datablockSize = Integer.parseInt(numBytesText);
+			    } catch(NumberFormatException ex) {
+					throw new FaultyRequestException("Encountered set request without valid size of the datablock");
 				}
-				else {
-					String[] whitespaceSplit = command.substring(0, firstNewlinePos).split(" ");
-					if(whitespaceSplit.length != 5) { // A valid set-request should look like: 'set <key> <flags> <expires> <bytes>\r\n...'
-						throw new FaultyRequestException("First line of set request contained more than 5 tokens.");
-					}
-					else {
-						int datablockSize;
-						try {
-							datablockSize = Integer.parseInt(whitespaceSplit[4]);
-						} catch(NumberFormatException ex) {
-							throw new FaultyRequestException("Encountered set request without valid size of the datablock");
-						}
-						if(datablockSize > Request.MAX_DATABLOCK_SIZE) {
-							throw new FaultyRequestException(String.format("Encountered set request with a too large datablock of %d bytes", Request.MAX_DATABLOCK_SIZE));
-							
-						}
-						else {
-							int nextNewlinePos = firstNewlinePos + 2 + datablockSize;
-							if(nextNewlinePos != commandArr.length - 2) {
-								throw new FaultyRequestException("Number of bytes in set request doesn't match real datablock size");
-							} else {
-								req = new SetRequest(readBuffer);
-							}
-							
-						}
-					}
+		    	if(datablockSize > Request.MAX_DATABLOCK_SIZE) {
+					throw new FaultyRequestException(String.format("Encountered set request with a too large datablock of %d bytes", Request.MAX_DATABLOCK_SIZE));
 				}
-			}
+		    	
+		    	
+		    	int nextNewlinePos = firstNewlinePos + datablockSize + 2;
+		    	if(!nextNewlinePosIsCorrect(nextNewlinePos, readBuffer)) {
+		    		throw new FaultyRequestException("Number of bytes in set request doesn't match real datablock size");
+		    	}
+		    	else {
+		    		readBuffer.position(nextNewlinePos + 2);
+		    		if(readBuffer.hasRemaining()) {
+		    			throw new FaultyRequestException("Read more characters after an already valid request");
+		    		} else {
+		    			req = new SetRequest(readBuffer);
+		    		}
+		    	}
+		    }
 		}
 		else {
 			throw new FaultyRequestException("Encountered neither get, nor set request.");
@@ -131,6 +150,10 @@ public class RequestFactory {
 		
 		readBuffer.flip();
 		return req;
+	}
+
+	private static boolean nextNewlinePosIsCorrect(int nextNewlinePos, ByteBuffer readBuffer) {
+		return readBuffer.limit() >= nextNewlinePos + 2 && (char)readBuffer.get(nextNewlinePos) == '\r' && (char)readBuffer.get(nextNewlinePos + 1) == '\n';  
 	}
 
 	private static boolean startsWithGet(ByteBuffer readBuffer) {

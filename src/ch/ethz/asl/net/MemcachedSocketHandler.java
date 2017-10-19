@@ -188,7 +188,11 @@ public class MemcachedSocketHandler {
 
 
 	public int findTargetServer(List<String> keys) {
-		return Math.floorMod(keys.get(0).hashCode(), numServers);
+		StringBuilder bld = new StringBuilder();
+		for(String key : keys) {
+			bld.append(key);
+		}
+		return Math.floorMod(bld.toString().hashCode(), numServers);
 	}
 
 

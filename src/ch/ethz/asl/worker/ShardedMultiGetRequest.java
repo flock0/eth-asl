@@ -171,9 +171,9 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		
 		char firstChar = (char)buffer.get(0);
 		char secondChar = (char)buffer.get(1);
-		if((firstChar == 'E' && secondChar == 'R') ||
-		   firstChar == 'C' ||
-		   firstChar == 'S') {
+		if((firstChar == 'E' && secondChar == 'R') || //ERROR
+		   firstChar == 'C' || //CLIENT_ERROR
+		   firstChar == 'S') { //SERVER_ERROR
 			error = new String(buffer.array(), 0, messageLength);
 			logger.error(String.format("Memcached server responded with error. Will forward to the client: %s", error));
 		}

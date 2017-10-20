@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -60,7 +59,7 @@ public class MemcachedSocketHandler {
 				server.write(commandBuffer);
 			} while(commandBuffer.hasRemaining());
 			
-			commandBuffer.position(0); // We send the same message to all memcached servers, hence a simple reset of the position.
+			commandBuffer.rewind(); // We send the same message to all memcached servers, hence a simple reset of the position.
 		}
 		
 	}
@@ -98,25 +97,6 @@ public class MemcachedSocketHandler {
 			RunMW.shutdown();
 		}
 		return serverBuffers;
-	}
-	
-	public List<String> waitForAllStringResponses() {
-		
-		List<String> responses = new ArrayList<>();
-		HashMap<Integer, ByteBuffer> responseBuffers = waitForAllResponses();
-		for(int i = 0; i < numServers; i++) {
-			ByteBuffer buffer = responseBuffers.get(i);
-			int messageLength = buffer.remaining();
-			byte[] arr = new byte[messageLength];
-			buffer.get(arr);
-			
-			String response = new String(arr);
-			responses.add(response);
-			buffer.clear();
-		}
-		
-		return responses;
-		
 	}
 	
 	public ByteBuffer waitForSingleResponse(int targetServerIndex) {

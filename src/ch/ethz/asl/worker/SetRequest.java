@@ -3,8 +3,6 @@ package ch.ethz.asl.worker;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,30 +31,48 @@ public class SetRequest implements Request {
 	@Override
 	public void handle(MemcachedSocketHandler memcachedSocketHandler, SocketChannel client) {
 		
-		List<String> errors = null;
+		int numServers = MemcachedSocketHandler.getNumServers();
+		String error = null;
+		boolean errorOccured = false;
 		try {
 			//Forward set command to all memcached servers
 			memcachedSocketHandler.sendToAll(readBuffer);
 			readBuffer.clear();
-			//Wait for responses of all memcached servers
-			List<String> responses = memcachedSocketHandler.waitForAllStringResponses();
-			errors = getErrors(responses);
-			
+
+			ByteBuffer responseBuffer;
+			for(int serverIndex = 0; serverIndex < numServers; serverIndex++ ) {
+				
+				// Wait for answers from those servers we sent stuff to!
+				responseBuffer = memcachedSocketHandler.waitForSingleResponse(serverIndex);
+				
+				if(!errorOccured) {
+					// No error occured yet. We will continue to parse and add responses.
+					error = getError(responseBuffer);
+					if(responseContainsError(error)) {
+						// One of the servers encountered an error.
+						// We forward the error message and abort this request
+						errorOccured = true;
+					}
+				}
+				
+				responseBuffer.clear();
+				
+			}
+		
 		} catch (IOException ex) {
 			String errMsg = String.format("SERVER_ERROR Exception in middleware: %s\r\n", ex.getMessage());
 			logger.error(errMsg);
-			if(errors == null)
-				errors = new ArrayList<String>();
-			errors.add(errMsg);
+			errorOccured = true;
+			error = errMsg;
 			//TODO Not sure if we should abort here.
 		}
 		
 		// If an error occured, forward one of the error messages
 		try {
-			if(errors.isEmpty())
+			if(!errorOccured)
 				sendSuccessToClient(client);
 			else
-				sendSingleErrorMessage(client, errors.get(0));
+				sendSingleErrorMessage(client, error);
 		} catch (IOException ex) {
 			logger.error(String.format("%s couldn't send SetRequest response to client. Will close client connection: %s", Thread.currentThread().getName(), ex.getMessage()));
 			try {
@@ -65,27 +81,35 @@ public class SetRequest implements Request {
 				// Nothing we can do here
 				logger.catching(ex2);
 			}
+		} finally {
+			
 		}
 	}
 
-	private List<String> getErrors(List<String> responses) {
-		List<String> errors = new ArrayList<String>();
-		for(String respo : responses) {
-			if(respo.equals("ERROR\r\n") ||
-			   respo.equals("NOT_STORED\r\n") || 
-			   respo.startsWith("CLIENT_ERROR ") ||
-			   respo.startsWith("SERVER_ERROR ")) {
-				logger.error(String.format("Memcached server responded with error. Will forward to the client: %s", respo));
-				errors.add(respo);
-			}
-			else if(!respo.equals("STORED\r\n")) {
-				logger.error(String.format("Memcached server responded unexpectedly. Will forward to the client: %s", respo));
-				errors.add(respo);
-			}
+	private boolean responseContainsError(String error) {
+		return error != null;
+	}
+
+	private String getError(ByteBuffer buffer) {
+		
+		int messageLength = buffer.remaining();
+		String error = null;
+		
+		char firstChar = (char)buffer.get(0);
+		char secondChar = (char)buffer.get(1);
+		if((firstChar == 'E' && secondChar == 'R') ||
+			(firstChar == 'C' && secondChar == 'L') ||
+			(firstChar == 'S' && secondChar == 'E') ||
+			(firstChar == 'N' && secondChar == 'O')) {
+			error = new String(buffer.array(), 0, messageLength);
+			logger.error(String.format("Memcached server responded with error. Will forward to the client: %s", error));
+		}
+		else if(firstChar != 'S' || secondChar != 'T') {
+			error = new String(buffer.array(), 0, messageLength);
+			logger.error(String.format("Memcached server responded unexpectedly. Will forward to the client: %s", error));
 		}
 		
-		return errors;
-		
+		return error;
 	}
 
 	private void sendSuccessToClient(SocketChannel client) throws IOException {

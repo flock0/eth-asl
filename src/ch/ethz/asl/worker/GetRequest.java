@@ -10,13 +10,14 @@ import org.apache.logging.log4j.Logger;
 import ch.ethz.asl.RunMW;
 import ch.ethz.asl.net.MemcachedSocketHandler;
 
-public class GetRequest implements Request {
+public class GetRequest extends Request {
 
 	private static final Logger logger = LogManager.getLogger(GetRequest.class);
 	
 	ByteBuffer readBuffer;
 	String key;
 	public GetRequest(ByteBuffer readBuffer) {
+		super();
 		this.readBuffer = readBuffer;
 	}
 
@@ -24,7 +25,7 @@ public class GetRequest implements Request {
 		return key;
 	}
 
-	public Object getCommand() {
+	public byte[] getCommand() {
 		int messageLength = readBuffer.remaining();
 		byte[] arr = new byte[messageLength];
 		readBuffer.get(arr);

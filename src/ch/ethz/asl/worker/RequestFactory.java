@@ -39,9 +39,7 @@ public class RequestFactory {
 		if(startsWithGet(readBuffer)) {
 			
 			readBuffer.position(4);
-		    boolean requestIsValid = false;
 		    int whitespaceCount = 0;
-		    int newlinePos = -1;
 		    boolean newlineFound = false;
 		    while(!newlineFound && readBuffer.hasRemaining()) {
 		    	
@@ -49,7 +47,6 @@ public class RequestFactory {
 		    	char nextChar = (char)readBuffer.get();
 			    if(currentChar == '\r' && nextChar == '\n') {
 				    newlineFound = true;
-		            newlinePos = readBuffer.position();
 		            break;
 			    }
 			    else {
@@ -84,7 +81,6 @@ public class RequestFactory {
 		else if(startsWithSet(readBuffer)) {
 			
 			readBuffer.position(4);
-		    boolean requestIsValid = false;
 		    int whitespaceCount = 0;
 		    int firstNewlinePos = -1;
 		    boolean newlineFound = false;

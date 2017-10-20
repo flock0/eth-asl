@@ -4,12 +4,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class MultiGetRequest implements Request {
+public abstract class MultiGetRequest extends Request {
 
 	ByteBuffer readBuffer;
 	String keysString;
 	
 	public MultiGetRequest(ByteBuffer readBuffer) {
+		super();
 		this.readBuffer = readBuffer;
 	}
 

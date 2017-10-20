@@ -16,16 +16,20 @@ public abstract class Request {
 	 */
 	public static final int MAX_DATABLOCK_SIZE = 1024;
 	
-	private long nanotimeInitialized;
-	private long millitimeInitialized;
+	private long initializeClockTime;
+	private long initializeTime;
+	private long enqueueTime;
 	
 	protected Request() {
-		nanotimeInitialized = System.nanoTime();
-		millitimeInitialized = System.currentTimeMillis();
+		initializeTime = System.nanoTime();
+		initializeClockTime = System.currentTimeMillis();
 	}
 	
 	public abstract byte[] getCommand();
 
 	public abstract void handle(MemcachedSocketHandler memcachedSocketHandler, SocketChannel client);
 	
+	public void setEnqueueTime() {
+		enqueueTime = System.nanoTime();
+	}
 }

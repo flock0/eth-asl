@@ -26,6 +26,8 @@ public class Worker implements Runnable {
     }
 
     public void run(){
+    	request.setDequeueTime();
     	request.handle(sockets.get(), client);
+    	request.setCompletedTime();
     }
 }

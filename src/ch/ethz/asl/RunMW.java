@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ch.ethz.asl.net.MemcachedSocketHandler;
+import ch.ethz.asl.worker.Request;
 import ch.ethz.asl.net.ClientsSocketsHandler;
 
 public class RunMW {
@@ -165,5 +166,9 @@ public class RunMW {
 			sockHandler.closeClientSockets();
 			logger.info("Shutdown completed");
 		}
+	}
+
+	public static void setQueueLength(Request request) {
+		request.setQueueLength(channelQueue.size());
 	}
 }

@@ -2,6 +2,7 @@ package ch.ethz.asl.worker;
 
 import java.nio.channels.SocketChannel;
 
+import ch.ethz.asl.RunMW;
 import ch.ethz.asl.net.MemcachedSocketHandler;
 
 public class Worker implements Runnable {
@@ -27,6 +28,7 @@ public class Worker implements Runnable {
 
     public void run(){
     	request.setDequeueTime();
+    	RunMW.setQueueLength(request);
     	request.handle(sockets.get(), client);
     	request.setCompletedTime();
     }

@@ -21,6 +21,7 @@ public abstract class Request {
 	private long enqueueTime;
 	private long dequeueTime;
 	private long completedTime;
+	private int queueLength;
 	
 	protected Request() {
 		initializeTime = System.nanoTime();
@@ -41,6 +42,11 @@ public abstract class Request {
 
 	public void setCompletedTime() {
 		completedTime = System.nanoTime();
+		
+	}
+
+	public void setQueueLength(int queueLength) {
+		this.queueLength = queueLength; 
 		
 	}
 }

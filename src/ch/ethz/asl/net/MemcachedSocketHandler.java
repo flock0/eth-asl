@@ -160,10 +160,12 @@ public class MemcachedSocketHandler {
 		if(!endsWithNewline(buffer, messageLength))
 			return false;
 		else {
-			String msg = new String(buffer.array(), 0, 5);
-			if((msg.equals("ERROR") || msg.equals("STORED")) && messageLength == 7)
+			String msg = new String(buffer.array(), 0, 6);
+			if(msg.equals("ERROR\r") && messageLength == 7)
 				return true;
-			else if(msg.equals("VALUE") && endsWithEND(buffer, messageLength))
+			else if(msg.equals("STORED") && messageLength == 8)
+				return true;
+			else if(endsWithEND(buffer, messageLength))
 				return true;
 			else {
 				msg = new String(buffer.array(), 0, 10);

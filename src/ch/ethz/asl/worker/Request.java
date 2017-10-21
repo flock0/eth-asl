@@ -24,6 +24,8 @@ public abstract class Request {
 	private long afterReceiveTime;
 	private long completedTime;
 	private int queueLength;
+	protected byte numKeysRequested;
+	protected byte numKeysReceived;
 	
 	protected Request() {
 		initializeTime = System.nanoTime();

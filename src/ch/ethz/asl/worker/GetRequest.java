@@ -19,6 +19,7 @@ public class GetRequest extends Request {
 	public GetRequest(ByteBuffer readBuffer) {
 		super();
 		this.readBuffer = readBuffer;
+		this.numKeysRequested = 1;
 	}
 
 	public String getKey() {

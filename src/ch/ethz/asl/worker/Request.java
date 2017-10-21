@@ -2,9 +2,14 @@ package ch.ethz.asl.worker;
 
 import java.nio.channels.SocketChannel;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import ch.ethz.asl.net.MemcachedSocketHandler;
 
 public abstract class Request {
+	
+	private static final Logger requestLogger = LogManager.getLogger("request_csv");
 	
 	/***
 	 * Maximum size of a request or answer is around 10200 bytes.
@@ -63,7 +68,7 @@ public abstract class Request {
 	}
 
 	public void writeLog() {
-		// TODO
+		requestLogger.log(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,", requestType, firstTargetServer, numOfTargetServers, initializeClockTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, queueLength, numKeysRequested, numHits)
 	}
 
 	public void setNumHits(int numHits) {

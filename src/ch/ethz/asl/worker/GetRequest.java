@@ -43,6 +43,7 @@ public class GetRequest extends Request {
 		
 		// TODO Send getrequest to designated server
 		
+		setBeforeSendTime();
 		try {
 			memcachedSocketHandler.sendToSingleServer(readBuffer, targetServerIndex);
 		} catch (IOException ex) {
@@ -54,11 +55,13 @@ public class GetRequest extends Request {
 		}
 		
 		ByteBuffer response = null;
-		try {
-			// TODO read from designated server
-			response = memcachedSocketHandler.waitForSingleResponse(targetServerIndex);
-			
-			// TODO Forward answerbuffer to client
+		
+		// Read from designated server
+		response = memcachedSocketHandler.waitForSingleResponse(targetServerIndex);
+		setAfterReceiveTime(); // Caveat: We don't log the time if an error in the wait-method leads to a shutdown
+
+		try {	
+			// Forward answerbuffer to client
 			sendResponseToClient(client, response);
 			
 		} catch (IOException ex) {

@@ -20,6 +20,8 @@ public abstract class Request {
 	private long initializeTime;
 	private long enqueueTime;
 	private long dequeueTime;
+	private long beforeSendTime;
+	private long afterReceiveTime;
 	private long completedTime;
 	private int queueLength;
 	
@@ -40,6 +42,14 @@ public abstract class Request {
 		dequeueTime = System.nanoTime();
 	}
 
+	public void setBeforeSendTime() {
+		beforeSendTime = System.nanoTime();
+	}
+	
+	public void setAfterReceiveTime() {
+		afterReceiveTime = System.nanoTime();
+	}
+	
 	public void setCompletedTime() {
 		completedTime = System.nanoTime();
 		
@@ -48,5 +58,10 @@ public abstract class Request {
 	public void setQueueLength(int queueLength) {
 		this.queueLength = queueLength; 
 		
+	}
+
+	public void writeLog() {
+		// TODO
+		throw new UnsupportedOperationException("Not yet implemented");
 	}
 }

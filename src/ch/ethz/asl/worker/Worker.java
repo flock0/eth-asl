@@ -31,5 +31,6 @@ public class Worker implements Runnable {
     	RunMW.setQueueLength(request);
     	request.handle(sockets.get(), client);
     	request.setCompletedTime();
+    	request.writeLog();
     }
 }

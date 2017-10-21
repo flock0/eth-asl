@@ -18,7 +18,6 @@ public class SetRequest extends Request {
 	public SetRequest(ByteBuffer readBuffer) {
 		super();
 		this.readBuffer = readBuffer;
-		this.numKeysRequested = 0;
 	}
 
 	@Override

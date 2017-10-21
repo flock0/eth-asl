@@ -59,6 +59,8 @@ public class GetRequest extends Request {
 		ByteBuffer response = memcachedSocketHandler.waitForSingleResponse(targetServerIndex);
 		setAfterReceiveTime(); // Caveat: We don't log the time if an error in the wait-method leads to a shutdown
 
+		gatherCatchHitStatistic(response);
+		
 		try {	
 			// Forward answerbuffer to client
 			sendResponseToClient(client, response);
@@ -74,6 +76,11 @@ public class GetRequest extends Request {
 		} finally {
 			if(response != null) response.clear();
 		}
+	}
+
+	private void gatherCatchHitStatistic(ByteBuffer buffer) {
+		if((char)buffer.get(0) == 'V')
+			setNumHits(1);
 	}
 
 	private void parseMessage() {

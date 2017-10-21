@@ -115,6 +115,7 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		
 		try {
 			if(!errorOccured) {
+				gatherCacheHitStatistic(finalResponseBuffer);
 				sendFinalResponse(client, finalResponseBuffer);
 			}
 			else {

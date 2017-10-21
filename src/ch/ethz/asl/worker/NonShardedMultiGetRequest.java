@@ -42,6 +42,7 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 		ByteBuffer response = memcachedSocketHandler.waitForSingleResponse(targetServerIndex);
 		setAfterReceiveTime();
 		
+		gatherCacheHitStatistic(response);
 		try {
 			// TODO Forward answerbuffer to client
 			sendResponseToClient(client, response);

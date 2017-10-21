@@ -24,8 +24,8 @@ public abstract class Request {
 	private long afterReceiveTime;
 	private long completedTime;
 	private int queueLength;
-	protected int numKeysRequested;
-	protected int numKeysReceived;
+	protected int numKeysRequested = 0;
+	private int numHits = 0;
 	
 	protected Request() {
 		initializeTime = System.nanoTime();
@@ -64,6 +64,9 @@ public abstract class Request {
 
 	public void writeLog() {
 		// TODO
-		throw new UnsupportedOperationException("Not yet implemented");
+	}
+
+	public void setNumHits(int numHits) {
+		this.numHits = numHits;
 	}
 }

@@ -36,6 +36,7 @@ public class SetRequest extends Request {
 		String error = null;
 		boolean errorOccured = false;
 		try {
+			setBeforeSendTime();
 			//Forward set command to all memcached servers
 			memcachedSocketHandler.sendToAll(readBuffer);
 			readBuffer.clear();
@@ -66,6 +67,8 @@ public class SetRequest extends Request {
 			errorOccured = true;
 			error = errMsg;
 			//TODO Not sure if we should abort here.
+		} finally {
+			setAfterReceiveTime();
 		}
 		
 		// If an error occured, forward one of the error messages

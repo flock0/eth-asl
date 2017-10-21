@@ -57,6 +57,7 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		HashMap<Integer, ByteBuffer> serverBuffers = null;
 		try {
 			serverBuffers = memcachedSocketHandler.getServerBuffers();
+			setBeforeSendTime();
 			for(int serverIndex : answerAssemblyOrder) {
 				ByteBuffer buffer = RequestFactory.constructMultiGetRequest(keySplits.get(serverIndex), serverBuffers.get(serverIndex));
 				
@@ -109,6 +110,8 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 			}
 			
 		}
+		
+		setAfterReceiveTime();
 		
 		try {
 			if(!errorOccured) {

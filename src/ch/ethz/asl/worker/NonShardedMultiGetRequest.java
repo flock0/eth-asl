@@ -28,6 +28,7 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 		
 		// TODO Send getrequest to designated server
 		try {
+			setBeforeSendTime();
 			memcachedSocketHandler.sendToSingleServer(readBuffer, targetServerIndex);
 		} catch (IOException ex) {
 			logger.error(String.format("%s encountered an error when sending MultiGetRequest to memcached server: %s", Thread.currentThread().getName(), ex.getMessage()));
@@ -37,11 +38,11 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 			readBuffer.clear();
 		}
 		
-		ByteBuffer response = null;
+		// TODO read from designated server
+		ByteBuffer response = memcachedSocketHandler.waitForSingleResponse(targetServerIndex);
+		setAfterReceiveTime();
+		
 		try {
-			// TODO read from designated server
-			response = memcachedSocketHandler.waitForSingleResponse(targetServerIndex);
-			
 			// TODO Forward answerbuffer to client
 			sendResponseToClient(client, response);
 			

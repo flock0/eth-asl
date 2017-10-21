@@ -14,7 +14,7 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 
 	private static final Logger logger = LogManager.getLogger(NonShardedMultiGetRequest.class);
 	
-	public NonShardedMultiGetRequest(ByteBuffer readBuffer, byte numKeysReceived) {
+	public NonShardedMultiGetRequest(ByteBuffer readBuffer, int numKeysReceived) {
 		super(readBuffer, numKeysReceived);
 	}
 

@@ -9,7 +9,7 @@ public abstract class MultiGetRequest extends Request {
 	ByteBuffer readBuffer;
 	String keysString;
 	
-	public MultiGetRequest(ByteBuffer readBuffer, byte numKeysRequested) {
+	public MultiGetRequest(ByteBuffer readBuffer, int numKeysRequested) {
 		super();
 		this.readBuffer = readBuffer;
 		this.numKeysRequested = numKeysRequested;

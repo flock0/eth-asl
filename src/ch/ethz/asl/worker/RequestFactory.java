@@ -39,7 +39,7 @@ public class RequestFactory {
 		if(startsWithGet(readBuffer)) {
 			
 			readBuffer.position(4);
-		    byte whitespaceCount = 0;
+		    int whitespaceCount = 0;
 		    boolean newlineFound = false;
 		    while(!newlineFound && readBuffer.hasRemaining()) {
 		    	
@@ -73,7 +73,7 @@ public class RequestFactory {
 		    		if(RunMW.readSharded)
 						req = new ShardedMultiGetRequest(readBuffer, whitespaceCount + 1);
 					else
-						req = new NonShardedMultiGetRequest(readBuffer, whitespaceCount + 1);
+						req = new NonShardedMultiGetRequest(readBuffer,whitespaceCount + 1);
 		    	}
 		    }
 			

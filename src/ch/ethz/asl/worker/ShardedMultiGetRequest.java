@@ -18,7 +18,7 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 	private static final Logger logger = LogManager.getLogger(ShardedMultiGetRequest.class);
 	 
 	String[] keys;
-	public ShardedMultiGetRequest(ByteBuffer readBuffer, byte numKeysReceived) {
+	public ShardedMultiGetRequest(ByteBuffer readBuffer, int numKeysReceived) {
 		super(readBuffer, numKeysReceived);
 	}
 

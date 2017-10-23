@@ -13,6 +13,8 @@ import ch.ethz.asl.net.MemcachedSocketHandler;
 public class NonShardedMultiGetRequest extends MultiGetRequest {
 
 	private static final Logger logger = LogManager.getLogger(NonShardedMultiGetRequest.class);
+
+	private int targetServerIndex;
 	
 	public NonShardedMultiGetRequest(ByteBuffer readBuffer, int numKeysReceived) {
 		super(readBuffer, numKeysReceived);
@@ -24,7 +26,7 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 		parseMessage();
 		
 		// TODO Hash key to find server to handle
-		int targetServerIndex = memcachedSocketHandler.findTargetServer(keysString);
+		targetServerIndex = memcachedSocketHandler.findTargetServer(keysString);
 		
 		// TODO Send getrequest to designated server
 		try {
@@ -71,5 +73,15 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 	@Override
 	public String getRequestType() {
 		return "NonshardedGET";
+	}
+
+	@Override
+	public int getFirstTargetServer() {
+		return targetServerIndex;
+	}
+
+	@Override
+	public int getNumOfTargetServers() {
+		return 1;
 	}
 }

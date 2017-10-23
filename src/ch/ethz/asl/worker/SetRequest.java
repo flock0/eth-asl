@@ -135,4 +135,15 @@ public class SetRequest extends Request {
 	public String getRequestType() {
 		return "SET";
 	}
+
+	@Override
+	public int getFirstTargetServer() {
+		return -1;
+	}
+
+	@Override
+	public int getNumOfTargetServers() {
+		// TODO Auto-generated method stub
+		return MemcachedSocketHandler.getNumServers();
+	}
 }

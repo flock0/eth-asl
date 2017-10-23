@@ -16,6 +16,8 @@ public class GetRequest extends Request {
 	
 	ByteBuffer readBuffer;
 	String key;
+	private int targetServerIndex;
+	
 	public GetRequest(ByteBuffer readBuffer) {
 		super();
 		this.readBuffer = readBuffer;
@@ -40,7 +42,7 @@ public class GetRequest extends Request {
 		parseMessage();
 		
 		// TODO Hash key to find server to handle
-		int targetServerIndex = memcachedSocketHandler.findTargetServer(key);
+		targetServerIndex = memcachedSocketHandler.findTargetServer(key);
 		
 		// TODO Send getrequest to designated server
 		
@@ -98,5 +100,16 @@ public class GetRequest extends Request {
 	@Override
 	public String getRequestType() {
 		return "GET";
+	}
+
+	@Override
+	public int getFirstTargetServer() {
+		// TODO Auto-generated method stub
+		return targetServerIndex;
+	}
+
+	@Override
+	public int getNumOfTargetServers() {
+		return 1;
 	}
 }

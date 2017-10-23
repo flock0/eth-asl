@@ -42,6 +42,8 @@ public abstract class Request {
 	public abstract void handle(MemcachedSocketHandler memcachedSocketHandler, SocketChannel client);
 	
 	public abstract String getRequestType();
+	public abstract int getFirstTargetServer();
+	public abstract int getNumOfTargetServers();
 	
 	public void setEnqueueTime() {
 		enqueueTime = System.nanoTime();
@@ -70,7 +72,7 @@ public abstract class Request {
 	}
 
 	public void writeLog() {
-		requestLogger.log(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,", getRequestType(), firstTargetServer, numOfTargetServers, initializeClockTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, queueLength, numKeysRequested, numHits);
+		requestLogger.debug(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,", getRequestType(), getFirstTargetServer(), getNumOfTargetServers(), initializeClockTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, queueLength, numKeysRequested, numHits));
 	}
 
 	public void setNumHits(int numHits) {

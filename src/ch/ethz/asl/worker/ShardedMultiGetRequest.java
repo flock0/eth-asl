@@ -18,6 +18,9 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 	private static final Logger logger = LogManager.getLogger(ShardedMultiGetRequest.class);
 	 
 	String[] keys;
+	private int startingServerIndex;
+	private int numOfTargetServers;
+	
 	public ShardedMultiGetRequest(ByteBuffer readBuffer, int numKeysReceived) {
 		super(readBuffer, numKeysReceived);
 	}
@@ -30,7 +33,7 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		
 		// TODO Split up keys to available servers
 		readBuffer.clear();
-		int startingServerIndex = memcachedSocketHandler.findTargetServer(keysString);
+		startingServerIndex = memcachedSocketHandler.findTargetServer(keysString);
 		int numServers = MemcachedSocketHandler.getNumServers();
 		
 		List<Integer> answerAssemblyOrder = new ArrayList<Integer>();
@@ -52,7 +55,7 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 			}
 		}
 		
-		
+		numOfTargetServers = answerAssemblyOrder.size();
 		// Construct separate multigets
 		HashMap<Integer, ByteBuffer> serverBuffers = null;
 		try {
@@ -197,6 +200,17 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 	@Override
 	public String getRequestType() {
 		return "ShardedGET";
+	}
+
+	@Override
+	public int getFirstTargetServer() {
+		return startingServerIndex;
+	}
+
+	@Override
+	public int getNumOfTargetServers() {
+		// TODO Auto-generated method stub
+		return numOfTargetServers;
 	}
 
 }

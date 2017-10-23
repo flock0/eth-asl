@@ -67,4 +67,9 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 		} while(response.hasRemaining());
 		
 	}
+
+	@Override
+	public String getRequestType() {
+		return "NonshardedGET";
+	}
 }

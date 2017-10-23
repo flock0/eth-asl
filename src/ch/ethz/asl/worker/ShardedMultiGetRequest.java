@@ -194,4 +194,9 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		return (char)buffer.get(messageLength-5) == 'E' && (char)buffer.get(messageLength-4) == 'N' && (char)buffer.get(messageLength-3) == 'D' && (char)buffer.get(messageLength-2) == '\r' && (char)buffer.get(messageLength-1) == '\n';
 	}
 
+	@Override
+	public String getRequestType() {
+		return "ShardedGET";
+	}
+
 }

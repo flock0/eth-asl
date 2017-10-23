@@ -94,4 +94,9 @@ public class GetRequest extends Request {
 		} while(response.hasRemaining());
 		
 	}
+
+	@Override
+	public String getRequestType() {
+		return "GET";
+	}
 }

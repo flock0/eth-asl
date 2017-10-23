@@ -130,4 +130,9 @@ public class SetRequest extends Request {
 			client.write(errorBuffer);
 		} while(errorBuffer.hasRemaining());
 	}
+
+	@Override
+	public String getRequestType() {
+		return "SET";
+	}
 }

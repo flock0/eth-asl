@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ch.ethz.asl.net.MemcachedSocketHandler;
+import ch.ethz.asl.worker.ContextSettingThreadFactory;
 import ch.ethz.asl.worker.Request;
 import ch.ethz.asl.net.ClientsSocketsHandler;
 
@@ -60,7 +61,7 @@ public class RunMW {
 		// -----------------------------------------------------------------------------
 		MemcachedSocketHandler.setMcAddresses(mcAddresses);
 		channelQueue = new LinkedBlockingQueue<Runnable>();
-		threadPool = new ThreadPoolExecutor(numThreadsPTP, numThreadsPTP, POOLTHREAD_KEEP_ALIVE_MS, TimeUnit.MILLISECONDS, channelQueue);
+		threadPool = new ThreadPoolExecutor(numThreadsPTP, numThreadsPTP, POOLTHREAD_KEEP_ALIVE_MS, TimeUnit.MILLISECONDS, channelQueue, new ContextSettingThreadFactory());
 		sockHandler = new ClientsSocketsHandler(myIp, myPort, threadPool);
 		new Thread(sockHandler).start();
 

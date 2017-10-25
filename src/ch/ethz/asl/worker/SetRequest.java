@@ -12,7 +12,7 @@ import ch.ethz.asl.net.MemcachedSocketHandler;
 public class SetRequest extends Request {
 
 	private static final Logger logger = LogManager.getLogger(SetRequest.class);
-	private static ByteBuffer successBuffer = ByteBuffer.wrap(new String("STORED\r\n").getBytes());
+	private ByteBuffer successBuffer = ByteBuffer.wrap(new String("STORED\r\n").getBytes());
 	ByteBuffer readBuffer;
 	
 	public SetRequest(ByteBuffer readBuffer) {

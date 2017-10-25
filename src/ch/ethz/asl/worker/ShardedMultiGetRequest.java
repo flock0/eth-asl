@@ -118,6 +118,7 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		
 		try {
 			if(!errorOccured) {
+				finalResponseBuffer.flip();
 				gatherCacheHitStatistic(finalResponseBuffer);
 				sendFinalResponse(client, finalResponseBuffer);
 			}
@@ -146,7 +147,6 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 	}
 
 	private void sendFinalResponse(SocketChannel client, ByteBuffer buffer) throws IOException {
-		buffer.flip();
 		do {
 			client.write(buffer);
 		} while(buffer.hasRemaining());

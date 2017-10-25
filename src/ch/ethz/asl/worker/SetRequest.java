@@ -12,7 +12,6 @@ import ch.ethz.asl.net.MemcachedSocketHandler;
 public class SetRequest extends Request {
 
 	private static final Logger logger = LogManager.getLogger(SetRequest.class);
-	private ByteBuffer successBuffer = ByteBuffer.wrap(new String("STORED\r\n").getBytes());
 	ByteBuffer readBuffer;
 	
 	public SetRequest(ByteBuffer readBuffer) {
@@ -35,6 +34,7 @@ public class SetRequest extends Request {
 		int numServers = MemcachedSocketHandler.getNumServers();
 		String error = null;
 		boolean errorOccured = false;
+		ByteBuffer firstPositiveResponseBuffer = null;
 		try {
 			setBeforeSendTime();
 			//Forward set command to all memcached servers
@@ -42,6 +42,7 @@ public class SetRequest extends Request {
 			readBuffer.clear();
 
 			ByteBuffer responseBuffer;
+			boolean isFirstPositiveReponse = true;
 			for(int serverIndex = 0; serverIndex < numServers; serverIndex++ ) {
 				
 				// Wait for answers from those servers we sent stuff to!
@@ -54,10 +55,16 @@ public class SetRequest extends Request {
 						// One of the servers encountered an error.
 						// We forward the error message and abort this request
 						errorOccured = true;
+					} else if(isFirstPositiveReponse) {
+						firstPositiveResponseBuffer = responseBuffer;
+						isFirstPositiveReponse = false;
+					} else {
+						responseBuffer.clear();
 					}
+				} else {
+					responseBuffer.clear();
 				}
 				
-				responseBuffer.clear();
 				
 			}
 		
@@ -74,7 +81,7 @@ public class SetRequest extends Request {
 		// If an error occured, forward one of the error messages
 		try {
 			if(!errorOccured)
-				sendSuccessToClient(client);
+				sendSuccessToClient(client, firstPositiveResponseBuffer);
 			else
 				sendSingleErrorMessage(client, error);
 		} catch (IOException ex) {
@@ -86,7 +93,7 @@ public class SetRequest extends Request {
 				logger.catching(ex2);
 			}
 		} finally {
-			
+			if(firstPositiveResponseBuffer != null) firstPositiveResponseBuffer.clear();
 		}
 	}
 
@@ -116,11 +123,10 @@ public class SetRequest extends Request {
 		return error;
 	}
 
-	private void sendSuccessToClient(SocketChannel client) throws IOException {
-		successBuffer.position(0);
+	private void sendSuccessToClient(SocketChannel client, ByteBuffer buffer) throws IOException {
 		do {
-			client.write(successBuffer);
-		} while(successBuffer.hasRemaining());
+			client.write(buffer);
+		} while(buffer.hasRemaining());
 		
 	}
 	

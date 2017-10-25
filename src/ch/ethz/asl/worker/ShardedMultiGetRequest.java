@@ -32,6 +32,7 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		this.keys = splitUpKeys(keysString);
 		
 		// TODO Split up keys to available servers
+		setRequestSize(readBuffer.limit());
 		readBuffer.clear();
 		startingServerIndex = memcachedSocketHandler.findTargetServer(keysString);
 		int numServers = MemcachedSocketHandler.getNumServers();
@@ -119,10 +120,12 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		try {
 			if(!errorOccured) {
 				finalResponseBuffer.flip();
+				setResponseSize(finalResponseBuffer.limit());
 				gatherCacheHitStatistic(finalResponseBuffer);
 				sendFinalResponse(client, finalResponseBuffer);
 			}
 			else {
+				setResponseSize(error.length());
 				sendErrorMessage(client, error);
 			}
 			

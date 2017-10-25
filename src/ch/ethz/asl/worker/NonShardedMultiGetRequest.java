@@ -30,6 +30,7 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 		
 		// TODO Send getrequest to designated server
 		try {
+			setRequestSize(readBuffer.limit());
 			setBeforeSendTime();
 			memcachedSocketHandler.sendToSingleServer(readBuffer, targetServerIndex);
 		} catch (IOException ex) {
@@ -44,6 +45,7 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 		ByteBuffer response = memcachedSocketHandler.waitForSingleResponse(targetServerIndex);
 		setAfterReceiveTime();
 		
+		setResponseSize(response.limit());
 		gatherCacheHitStatistic(response);
 		try {
 			// TODO Forward answerbuffer to client

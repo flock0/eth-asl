@@ -31,6 +31,8 @@ public abstract class Request {
 	private int queueLength;
 	protected int numKeysRequested = 0;
 	private int numHits = 0;
+	private int requestSize;
+	private int responseSize;
 
 	protected Request() {
 		initializeTime = System.nanoTime();
@@ -72,10 +74,18 @@ public abstract class Request {
 	}
 
 	public void writeLog() {
-		requestLogger.debug(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,", getRequestType(), getFirstTargetServer(), getNumOfTargetServers(), initializeClockTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, queueLength, numKeysRequested, numHits));
+		requestLogger.debug(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", getRequestType(), getFirstTargetServer(), getNumOfTargetServers(), initializeClockTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, queueLength, numKeysRequested, numHits, requestSize, responseSize));
 	}
 
 	public void setNumHits(int numHits) {
 		this.numHits = numHits;
+	}
+
+	public void setRequestSize(int requestSize) {
+		this.requestSize = requestSize;
+	}
+
+	public void setResponseSize(int responseSize) {
+		this.responseSize = responseSize;
 	}
 }

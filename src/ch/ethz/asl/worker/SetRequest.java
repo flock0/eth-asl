@@ -36,6 +36,7 @@ public class SetRequest extends Request {
 		boolean errorOccured = false;
 		ByteBuffer firstPositiveResponseBuffer = null;
 		try {
+			setRequestSize(readBuffer.limit());
 			setBeforeSendTime();
 			//Forward set command to all memcached servers
 			memcachedSocketHandler.sendToAll(readBuffer);
@@ -80,10 +81,13 @@ public class SetRequest extends Request {
 		
 		// If an error occured, forward one of the error messages
 		try {
-			if(!errorOccured)
+			if(!errorOccured) {
+				setResponseSize(firstPositiveResponseBuffer.limit());
 				sendSuccessToClient(client, firstPositiveResponseBuffer);
-			else
+			} else {
+				setResponseSize(error.length());
 				sendSingleErrorMessage(client, error);
+			}
 		} catch (IOException ex) {
 			logger.error(String.format("%s couldn't send SetRequest response to client. Will close client connection: %s", Thread.currentThread().getName(), ex.getMessage()));
 			try {

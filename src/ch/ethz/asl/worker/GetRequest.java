@@ -46,6 +46,7 @@ public class GetRequest extends Request {
 		
 		// TODO Send getrequest to designated server
 		
+		setRequestSize(readBuffer.limit());
 		setBeforeSendTime();
 		try {
 			memcachedSocketHandler.sendToSingleServer(readBuffer, targetServerIndex);
@@ -61,6 +62,7 @@ public class GetRequest extends Request {
 		ByteBuffer response = memcachedSocketHandler.waitForSingleResponse(targetServerIndex);
 		setAfterReceiveTime(); // Caveat: We don't log the time if an error in the wait-method leads to a shutdown
 
+		setResponseSize(response.limit());
 		gatherCatchHitStatistic(response);
 		
 		try {	

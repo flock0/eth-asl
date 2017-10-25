@@ -9,7 +9,7 @@ import ch.ethz.asl.net.MemcachedSocketHandler;
 
 public abstract class Request {
 	
-	private static final Logger requestLogger = LogManager.getLogger("request_csv");
+	private static final Logger requestLogger = LogManager.getLogger("request_logger");
 	
 	/***
 	 * Maximum size of a request or answer is around 10200 bytes.

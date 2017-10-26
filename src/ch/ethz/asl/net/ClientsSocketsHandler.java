@@ -235,7 +235,7 @@ public class ClientsSocketsHandler implements Runnable {
 			logger.debug("Server socket closed.");
 		} catch (IOException ex) {
 			// Nothing else we can do here
-			logger.catching(ex);
+			logger.error(String.format("Error while closing server socket: %s", ex.getMessage()));
 		}
 	}
 	
@@ -265,7 +265,7 @@ public class ClientsSocketsHandler implements Runnable {
 				try {
 					client.close();
 				} catch (IOException ex) {
-					logger.catching(ex);
+					logger.error(String.format("Error while closing client sockets: %s", ex.getMessage()));
 				}
 			});
 	}

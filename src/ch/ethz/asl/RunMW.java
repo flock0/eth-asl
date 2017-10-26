@@ -162,7 +162,7 @@ public class RunMW {
 					else
 						logger.debug("Threadpool has been terminated.");
 				} catch (InterruptedException ex) {
-					logger.catching(ex);
+					logger.error(String.format("Interrupt while waiting for threadpool termination: %s", ex.getMessage()));
 				}
 			}
 			if(sockHandler != null) sockHandler.closeClientSockets();

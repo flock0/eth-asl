@@ -192,7 +192,7 @@ public class MemcachedSocketHandler {
 			try {
 				channels.get(i).close();
 			} catch (IOException ex) {
-				logger.catching(ex);
+				logger.error(String.format("Error while closing conections to memcached sockets in %s: %s", Thread.currentThread().getName(), ex.getMessage()));
 			}
 		}
 	}

@@ -150,21 +150,22 @@ public class RunMW {
 		if(!shutdownRequested) {
 			shutdownRequested = true;
 			logger.info("Shutting down middleware...");
-			sockHandler.shutdown();
-			threadPool.shutdown();
-			
-			try {
-				boolean isTerminated = threadPool.awaitTermination(THREADPOOL_AWAIT_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-				if(!isTerminated) {
-					List<Runnable> droppedTasks = threadPool.shutdownNow();
-	            	logger.info("Thread pool was abruptly shut down. " + droppedTasks.size() + " requests will not be executed.");
+			if(sockHandler != null) sockHandler.shutdown();
+			if(threadPool != null) {
+				threadPool.shutdown();
+				try {
+					boolean isTerminated = threadPool.awaitTermination(THREADPOOL_AWAIT_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+					if(!isTerminated) {
+						List<Runnable> droppedTasks = threadPool.shutdownNow();
+		            	logger.info("Thread pool was abruptly shut down. " + droppedTasks.size() + " requests will not be executed.");
+					}
+					else
+						logger.debug("Threadpool has been terminated.");
+				} catch (InterruptedException ex) {
+					logger.catching(ex);
 				}
-				else
-					logger.debug("Threadpool has been terminated.");
-			} catch (InterruptedException ex) {
-				logger.catching(ex);
 			}
-			sockHandler.closeClientSockets();
+			if(sockHandler != null) sockHandler.closeClientSockets();
 			logger.info("Shutdown completed");
 		}
 	}

@@ -56,6 +56,9 @@ public class RunMW {
 		
 		parseArguments(args);
 
+		String mcAddressesStr = concatStrings(mcAddresses);
+		logger.info(String.format("Starting middleware with the following parameters: myIp=%s, myPort=%s, numThreadsPTP=%d, readSharded=%s, mcAddresses=%s",
+				                  myIp, myPort, numThreadsPTP, readSharded, mcAddressesStr));
 		// -----------------------------------------------------------------------------
 		// Start the Middleware
 		// -----------------------------------------------------------------------------
@@ -65,6 +68,15 @@ public class RunMW {
 		sockHandler = new ClientsSocketsHandler(myIp, myPort, threadPool);
 		new Thread(sockHandler).start();
 
+	}
+
+	private static String concatStrings(List<String> addrs) {
+		StringBuilder bld = new StringBuilder();
+		for(String addr : addrs) {
+			bld.append(" ");
+			bld.append(addr);
+		}
+		return bld.toString();
 	}
 
 	private static void parseArguments(String[] args) {

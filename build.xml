@@ -4,9 +4,10 @@
     <property name="jarfile" value="ASL17_Middleware.jar"/>
     <property name="build.dir" value="bin/classes"/>
     <property name="src.dir" value="src"/>
+	<property name="lib.dir" value="lib"/>
     <!-- Add log4j2 jars -->
     <path id="classpath">
-        <fileset dir="lib">
+        <fileset dir="${lib.dir}">
             <include name="log4j-core-2.9.1.jar"/>
             <include name="log4j-api-2.9.1.jar"/>
         </fileset>
@@ -37,6 +38,7 @@
                 <attribute name="Main-Class" value="ch.ethz.asl.RunMW"/>
                 <attribute name="Class-Path" value="${manifest.classpath}"/>
             </manifest>
+        	<zipgroupfileset dir="${lib.dir}" includes="**/*.jar" />
         </jar>
     </target>
 

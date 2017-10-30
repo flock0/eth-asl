@@ -1,6 +1,5 @@
 #!/bin/bash
 
-sudo apt-get update
-sudo apt-get install memcached unzip openjdk-8-jdk
+sudo apt-get update -y
+sudo apt-get install memcached unzip openjdk-8-jdk -y
 sudo service memcached stop
-memcached -t 1 -p 11211

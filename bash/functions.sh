@@ -25,6 +25,8 @@ start_vms() {
 		az vm start --name $vm_nameprefix$server_id --no-wait
 	done
 
+	echo "Waiting for VMs to start"
+
 	for server_id in $1
 	do
 		az vm wait --name $vm_nameprefix$server_id --updated
@@ -33,37 +35,54 @@ start_vms() {
 }
 
 bootstrap_clients() {
-	for server_id in $1
+	for server_id in ${clients[@]}
 	do
 		echo "Bootstrapping client" $server_id
 		server_name = create_dns_name server_id
 		scp $client_bootstrap_script_path $(echo $server_name":~")
 		scp $private_ssh_key $(echo $server_name":/home/.ssh/id_rsa")
-		ssh server_name -o "StrictHostKeyChecking no" "bash ./bootstrap_client.sh > "
+		ssh server_name -o "StrictHostKeyChecking no" "bash ./bootstrap_client.sh > ~.bootstrap.log"
 	done
 }
 
 bootstrap_middlewares() {
-	for server_id in $1
+	for server_id in ${middlewares[@]}
 	do
 		echo "Bootstrapping middleware" $server_id
 		server_name = create_dns_name server_id
 		scp $middleware_bootstrap_script_path $(echo $server_name":~")
 		scp $private_ssh_key $(echo $server_name":/home/.ssh/id_rsa")
-		ssh server_name -o "StrictHostKeyChecking no" "bash ./bootstrap_middleware.sh"
+		ssh server_name -o "StrictHostKeyChecking no" "bash ./bootstrap_middleware.sh > ~.bootstrap.log"
 	done
 }
 
 bootstrap_servers() {
-	for server_id in $1
+	for server_id in ${servers[@]}
 	do
 		echo "Bootstrapping servers" $server_id
 		server_name = create_dns_name server_id
 		scp $server_bootstrap_script_path $(echo $server_name":~")
 		scp $private_ssh_key $(echo $server_name":/home/.ssh/id_rsa")
-		ssh server_name -o "StrictHostKeyChecking no" "bash ./bootstrap_server.sh > "
+		ssh server_name -o "StrictHostKeyChecking no" "bash ./bootstrap_server.sh > ~.bootstrap.log"
 	done
 }
+
+start_all_vms() {
+	for server_id in ${all_vms[@]}
+	do
+		echo "Starting VM" $server_id 
+		az vm start --name $vm_nameprefix$server_id --no-wait
+	done
+
+	echo "Waiting for VMs to start"
+
+	for server_id in ${all_vms[@]}
+	do
+		az vm wait --name $vm_nameprefix$server_id --updated
+		echo "VM" $server_id "started"
+	done
+}
+
 
 stop_all_vms() {
 
@@ -75,11 +94,10 @@ stop_all_vms() {
 }
 
 bootstrap_all_vms() {
-	start_vms ${all_vms[@]}
 
-	bootstrap_clients ${clients[@]}
-	bootstrap_middlewares ${middlewares[@]}
-	bootstrap_servers ${servers[@]}
+	bootstrap_clients
+	bootstrap_middlewares
+	bootstrap_servers
 	
 }
 

@@ -82,3 +82,5 @@ bootstrap_all_vms() {
 	bootstrap_servers ${servers[@]}
 	
 }
+
+az configure --defaults group=$resource_group

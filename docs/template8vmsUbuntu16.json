@@ -19,11 +19,11 @@
       "type": "string"
     },
     "key": {
-      "defaultValue": "<SSH public key>",
+      "defaultValue": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDeH7a7aL4a2t4H46x5pHsl19yeWm71XDaLsZrKa0eP52ul+EqmkQQpKBXOEQRFj7B6RB3KTOkrfBmpw+miuqy42kzXTkHKBbsjgrcbB4RtYCCAMUBwXY3X/LdDq0msf9QEAkePOR6Kuemy07HYUoOnVEJbCIAlfyCM0Pur8Ae09soQvJCMa/OhYtTSHcUmQ/q71gJ3A3mBZCtMgV2PsyV1ADm+/7iFd/BErWzCkvGLPPjRBa6z3MMH1eI9LGBoUs1wOFM4nY8mjET68w1mqPyoUCJMV0+WKeD9WEtHzNr/tbJ8FWoGjRHglGdrteshdRfFfMVYN7mOo0zdipfXUjYB/+P+RXCtVNbfqABNAMtOXgj8npEIzoDRT3uUdPcDat5rn8a0EDcaASxI0xZnbjKipj4d21W8w+gkJhaFMrHmh0OBWvHlYVTHmwj13urRPl+KaB24lIYgQ4xCCT3xbYRI7nNGgjw1GAtaRcSFjoY0ILC/8+o4lysN4QRC+u3InrsgIThJtVZ8dxANTk1HUDGs2WetS7VOz3f1Le+LiC8JKqmcE3WgbyDSZ1NR/x/D/wmVBPUVBlyneqQLVhIOWM+OXCtOpQhqpiADY27zBoXV/31iGAS7SeI74achGtDYJBe6iISQeUHqRbK9tFa8tajCr2Fa2LrxkdiZEv6FItobQw== florian@chlan.net",
       "type": "string"
     },
     "uniquedns": {
-      "defaultValue": "<unique string (try nethz)>",
+      "defaultValue": "fchlan",
       "type": "string"
     }
   },

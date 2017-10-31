@@ -94,7 +94,7 @@ stop_all_vms() {
 	for server_id in ${all_vms[@]}
 	do
 		echo "Stopping VM" $server_id 
-		az vm stop --name $vm_nameprefix$server_id --no-wait
+		az vm deallocate --name $vm_nameprefix$server_id --no-wait
 	done
 }
 

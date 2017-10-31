@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 sudo apt-get update -y
 sudo apt-get install git unzip build-essential autoconf automake libpcre3-dev libevent-dev pkg-config zlib1g-dev -y
 if [ -d "./ethz-asl-experiments" ]; then

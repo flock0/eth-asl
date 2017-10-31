@@ -14,6 +14,7 @@ client_bootstrap_script_path=./bash/bootstrap_client.sh
 middleware_bootstrap_script_path=./bash/bootstrap_middleware.sh
 server_bootstrap_script_path=./bash/bootstrap_server.sh
 private_ssh_key=~/.ssh/azurevms
+public_ssh_key=~/.ssh/azurevms.pub
 
 create_dns_name() {
 	echo $nethz"@"$nethz$vm_nameprefix$1$vm_dns_suffix
@@ -43,6 +44,7 @@ bootstrap_clients() {
 		server_name=$(create_dns_name $server_id)
 		rsync -r $client_bootstrap_script_path $(echo $server_name":~")
 		rsync -r $private_ssh_key $(echo $server_name":~/.ssh/id_rsa")
+		rsync -r $public_ssh_key $(echo $server_name":~/.ssh/id_rsa.pub")
 		rsync -r bash/sshd_config $(echo $server_name":~/.ssh/config")
 		ssh $server_name "nohup bash ./bootstrap_client.sh > ~/bootstrap.log 2>&1 &"
 	done
@@ -55,6 +57,7 @@ bootstrap_middlewares() {
 		server_name=$(create_dns_name $server_id)
 		rsync -r $middleware_bootstrap_script_path $(echo $server_name":~")
 		rsync -r $private_ssh_key $(echo $server_name":~/.ssh/id_rsa")
+		rsync -r $public_ssh_key $(echo $server_name":~/.ssh/id_rsa.pub")
 		rsync -r bash/sshd_config $(echo $server_name":~/.ssh/config")
 		ssh $server_name "nohup bash ./bootstrap_middleware.sh > ~/bootstrap.log 2>&1 &"
 	done
@@ -67,6 +70,7 @@ bootstrap_servers() {
 		server_name=$(create_dns_name $server_id)
 		rsync -r $server_bootstrap_script_path $(echo $server_name":~")
 		rsync -r $private_ssh_key $(echo $server_name":~/.ssh/id_rsa")
+		rsync -r $public_ssh_key $(echo $server_name":~/.ssh/id_rsa.pub")
 		rsync -r bash/sshd_config $(echo $server_name":~/.ssh/config")
 		ssh $server_name "nohup bash ./bootstrap_server.sh > ~/bootstrap.log 2>&1 &"
 	done

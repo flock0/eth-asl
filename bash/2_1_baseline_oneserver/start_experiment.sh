@@ -3,6 +3,7 @@
 source ../functions.sh
 
 all_vms=(1 2 3 7)
+master=9
 clients=(1 2 3)
 middlewares=()
 servers=(7)
@@ -19,7 +20,7 @@ start_all_vms
 bootstrap_all_vms
 
 echo "Using VM" $all_vms "as master"
-server_name=$(create_dns_name $all_vms)
+server_name=$(create_dns_name $master)
 
 rsync -r $master_script_path $(echo $server_name":~")
 ssh $server_name "nohup bash ./experiment_master_script.sh > ~/experiment.log 2>&1 &"

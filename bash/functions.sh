@@ -1,6 +1,7 @@
 #!/bin/bash
 
-all_vms=(1 2 3 4 5 6 7 8)
+all_vms=(1 2 3 4 5 6 7 8 9)
+master=(9)
 clients=(1 2 3)
 middlewares=(4)
 servers=(7)
@@ -10,6 +11,7 @@ vm_nameprefix=foraslvms
 vm_dns_suffix=.westeurope.cloudapp.azure.com
 nethz=fchlan
 
+master_bootstrap_script_path=./bash/bootstrap_master.sh
 client_bootstrap_script_path=./bash/bootstrap_client.sh
 middleware_bootstrap_script_path=./bash/bootstrap_middleware.sh
 server_bootstrap_script_path=./bash/bootstrap_server.sh
@@ -34,6 +36,19 @@ start_vms() {
 	do
 		az vm wait --name $vm_nameprefix$server_id --updated
 		echo "VM" $server_id "started"
+	done
+}
+
+bootstrap_master() {
+	for server_id in ${master[@]}
+	do
+		echo "Bootstrapping master" $server_id
+		server_name=$(create_dns_name $server_id)
+		rsync -r $master_bootstrap_script_path $(echo $server_name":~")
+		rsync -r $private_ssh_key $(echo $server_name":~/.ssh/id_rsa")
+		rsync -r $public_ssh_key $(echo $server_name":~/.ssh/id_rsa.pub")
+		rsync -r bash/sshd_config $(echo $server_name":~/.ssh/config")
+		ssh $server_name "nohup bash ./bootstrap_master.sh > ~/bootstrap.log 2>&1 &"
 	done
 }
 
@@ -104,6 +119,7 @@ stop_all_vms() {
 
 bootstrap_all_vms() {
 
+	bootstrap_master
 	bootstrap_clients
 	bootstrap_middlewares
 	bootstrap_servers

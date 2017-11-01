@@ -3,8 +3,8 @@
 all_vms=(1 2 3 4 5 6 7 8 9)
 master=(9)
 clients=(1 2 3)
-middlewares=(4)
-servers=(7)
+middlewares=(4 5)
+servers=(6 7 8)
 
 resource_group=fchlan
 vm_nameprefix=foraslvms

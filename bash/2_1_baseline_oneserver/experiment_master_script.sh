@@ -56,7 +56,7 @@ do
 		do
 			echo "Starting experiment with" $workload "workload"
  			# Start memcached, wait shortly
- 			for $mc_id in ${servers[@]}
+ 			for mc_id in ${servers[@]}
  			do
  				ssh $nethz"@"$(create_vm_ip $mc_id) $memcached_cmd
  			done
@@ -73,11 +73,13 @@ do
 			num_clients=$vc_per_thread
 			num_threads=2
 
-			memtier_cmd = "memtier_benchmark --out-file=memtier.log -s "$(create_vm_ip $servers)" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$num_clients" --threads="$num_threads" --test-time="$single_experiment_length_sec"--expiry-range=9999-10000 --ratio="$ratio
+			memtier_cmd="memtier_benchmark --out-file=memtier.log -s "$(create_vm_ip $servers)" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$num_clients" --threads="$num_threads" --test-time="$single_experiment_length_sec"--expiry-range=9999-10000 --ratio="$ratio
 			echo $memtier_cmd
 			for client_id in ${clients[@]}
 			do
+				echo "Starting memtier on client" $client_id
 				client_vm_ip=$(create_vm_ip $client_id)
+				echo $nethz"@"$client_vm_ip $memtier_cmd" &"
 				ssh $nethz"@"$client_vm_ip $memtier_cmd" &"
 			done
 
@@ -85,7 +87,7 @@ do
 			sleep $(single_experiment_length_sec + 5)
 
 			# Shutdown memcached
- 			for $mc_id in ${servers[@]}
+ 			for mc_id in ${servers[@]}
  			do
  				ssh $(create_vm_ip $mc_id) pkill -2f memcached
  			done
@@ -105,7 +107,7 @@ do
 			done
 			
 			# Copy over logs from memcached
- 			for $mc_id in ${servers[@]}
+ 			for mc_id in ${servers[@]}
  			do
  				server_vm_ip=$(create_vm_ip $mc_id)
  				server_log_filename=$(create_server_log_filename $mc_id)

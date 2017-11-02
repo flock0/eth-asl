@@ -47,7 +47,7 @@ sleep 120
 memcached_cmd="memcached -p "$memcached_port" -vv > memcached.log 2>&1 &"
 
 # For each repetition
-for $rep in $(seq $num_repetitions)
+for rep in $(seq $num_repetitions)
 do
 	echo "Starting repetition" $rep
 	# For each parameter setting

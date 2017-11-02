@@ -10,3 +10,4 @@ if [ -d "./ethz-asl-experiments" ]; then
 else
 	git clone git@gitlab.ethz.ch:fchlan/ethz-asl-experiments.git
 fi
+git config --global push.default matching

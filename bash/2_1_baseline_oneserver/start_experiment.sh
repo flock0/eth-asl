@@ -15,8 +15,7 @@ nethz=fchlan
 
 master_script_path=./experiment_master_script.sh
 
-
-if [ ! $1 == nostart ]; then
+if [ "$#" ==1 ] && [ ! $1 == "nostart" ]; then
 	start_all_vms
 	# Wait some time for all VMs to boot
 	echo "Waiting for VMs to boot up"

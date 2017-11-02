@@ -40,9 +40,7 @@ folder_name=$experiment"_"$timestamp
 mkdir $folder_name
 cd $folder_name
 
-# Wait some time for all VMs to boot
-echo "Waiting for VMs to boot up"
-sleep 120
+echo "Starting experiment" $folder_name
 
 memcached_cmd="memcached -p "$memcached_port" -vv > memcached.log 2>&1 &"
 
@@ -122,6 +120,7 @@ done
 
 # Zip all experiment files
 zip_file=$folder_name".tar.gz"
+cp ~/experiment.log ./master.log
 tar -zcvf $zip_file .
 # TODO 			git commit
 mv $zip_file ~/ethz-asl-experiments/
@@ -134,3 +133,5 @@ git commit -m "Finished experiment $folder_name"
 git push
 
 rm $zip_file
+cd ..
+rm -rf ~/$folder_name

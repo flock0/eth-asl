@@ -2,7 +2,7 @@
 
 source ../functions.sh
 
-all_vms=(1 2 3 7)
+all_vms=(1 2 3 7 9)
 master=9
 clients=(1 2 3)
 middlewares=()

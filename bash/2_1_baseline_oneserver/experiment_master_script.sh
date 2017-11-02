@@ -42,7 +42,7 @@ cd $folder_name
 
 # Wait some time for all VMs to boot
 echo "Waiting for VMs to boot up"
-sleep 60
+sleep 120
 
 memcached_cmd="memcached -p "$memcached_port" -vv > memcached.log 2>&1 &"
 

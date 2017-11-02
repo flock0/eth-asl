@@ -16,10 +16,11 @@ nethz=fchlan
 master_script_path=./experiment_master_script.sh
 
 
-start_all_vms
-bootstrap_all_vms
+if [ ! $1 == nostart ]; then
+	start_all_vms
+fi
 
-echo "Using VM" $all_vms "as master"
+echo "Using VM" $master "as master"
 server_name=$(create_dns_name $master)
 
 rsync -r $master_script_path $(echo $server_name":~")

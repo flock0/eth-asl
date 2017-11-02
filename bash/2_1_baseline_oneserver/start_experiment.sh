@@ -38,3 +38,4 @@ rsync -r $private_ips_path $(echo $server_name":~")
 ssh $server_name "nohup bash ./experiment_master_script.sh > ~/experiment.log 2>&1 &"
 
 echo "Kicked off experiment..."
+rm $private_ips_path

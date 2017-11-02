@@ -21,17 +21,17 @@ vm_dns_suffix=.westeurope.cloudapp.azure.com
 nethz=fchlan
 memcached_port=11211
 
-all_vms=(1 7 9)
-clients=(1)
+all_vms=(1 2 3 6 9)
+clients=(1 2 3)
 middlewares=()
-servers=(7)
+servers=(6)
 
 experiment=2_1_baseline_oneserver 
 
-num_repetitions=2
-single_experiment_length_sec=10
-params_vc_per_thread=(1 2 4)
-params_workload=(writeOnly)
+num_repetitions=5
+single_experiment_length_sec=90
+params_vc_per_thread=(1 4 8 12 16 20 24 28 32)
+params_workload=(readOnly writeOnly)
 
 echo "Extracting private IPs"
 private_ips_path=./private_ips.txt
@@ -59,7 +59,7 @@ do
 done
 
 echo "Starting experiment" $folder_name
-memcached_cmd="memcached -p "$memcached_port" -vv > memcached.log 2>&1 &"
+memcached_cmd="nohup memcached -p "$memcached_port" -v > memcached.log 2>&1 &"
 
 # For each repetition
 for rep in $(seq $num_repetitions)
@@ -76,7 +76,6 @@ do
  			for mc_id in ${servers[@]}
  			do
  				ssh $(create_vm_ip $mc_id) $memcached_cmd
- 				echo $(create_vm_ip $mc_id) $memcached_cmd
  			done
 			sleep 4
 			echo "Started memcached servers"
@@ -85,19 +84,28 @@ do
 			if [ $workload = "writeOnly" ]; then
                ratio=1:0
             elif [ $workload = "readOnly" ]; then
-               # TODo Use memtier to fill up the MCs. Write all keys at least once
-               ratio=0:1
+				ratio=0:1
+				# Use memtier to fill the servers with keys. As our maximum key is 
+				# 10000. We let memtier run for 5 seconds, which should be sufficient.
+				memtier_fill_cmd="nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients=4 --threads=2 --test-time=5 --expiry-range=9999-10000 --ratio=1:0 > /dev/null 2>&1"
+				echo "Prepare the memcached servers for the read-only workload"
+				for server_id in ${servers[@]}
+				do
+					client_vm_ip=$(create_vm_ip ${clients[0]})
+					ssh $nethz"@"$client_vm_ip $memtier_fill_cmd" &"
+				done
             fi
+            sleep 8
+
 			num_clients=$vc_per_thread
 			num_threads=2
 
-			memtier_cmd="memtier_benchmark -s "$(create_vm_ip $servers)" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$num_clients" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log"
+			memtier_cmd="nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$num_clients" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log 2>&1"
 			echo $memtier_cmd
 			for client_id in ${clients[@]}
 			do
 				echo "Starting memtier on client" $client_id
 				client_vm_ip=$(create_vm_ip $client_id)
-				echo $nethz"@"$client_vm_ip $memtier_cmd" &"
 				ssh $nethz"@"$client_vm_ip $memtier_cmd" &"
 			done
 
@@ -120,7 +128,6 @@ do
 			do
 				client_vm_ip=$(create_vm_ip $client_id)
 				client_log_filename=$(create_client_log_filename $client_id)
-				echo "client_log_filename" $client_log_filename
 				rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier.log") $client_log_filename
 				ssh $nethz"@"$client_vm_ip rm memtier.log
 			done
@@ -155,3 +162,5 @@ git push
 rm $zip_file
 cd ..
 rm -rf ~/$folder_name
+
+# TODO Shudown all servers

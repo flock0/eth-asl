@@ -2,11 +2,11 @@
 
 source ../functions.sh
 
-all_vms=(1 6 9)
+all_vms=(1 7 9)
 master=9
 clients=(1)
 middlewares=()
-servers=(6)
+servers=(7)
 
 resource_group=fchlan
 vm_nameprefix=foraslvms

@@ -13,7 +13,7 @@ create_client_log_filename() {
 }
 
 create_server_log_filename() {
-	echo "client_0"$1".log"
+	echo "server_0"$1".log"
 }
 # Parameters
 vm_nameprefix=foraslvms
@@ -21,19 +21,19 @@ vm_dns_suffix=.westeurope.cloudapp.azure.com
 nethz=fchlan
 memcached_port=11211
 
-all_vms=(1 6 9)
+all_vms=(1 7 9)
 clients=(1)
 middlewares=()
-servers=(6)
+servers=(7)
 
 experiment=2_1_baseline_oneserver 
 
-num_repetitions=1
+num_repetitions=2
 single_experiment_length_sec=10
 params_vc_per_thread=(1 2 4)
 params_workload=(writeOnly)
 
-echo "Exracting private IPs"
+echo "Extracting private IPs"
 private_ips_path=./private_ips.txt
 declare -A private_ips
 i=0
@@ -51,6 +51,12 @@ folder_name=$experiment"_"$timestamp
 mkdir $folder_name
 cd $folder_name
 
+
+# Shutdown memcached
+for mc_id in ${servers[@]}
+do
+	ssh $(create_vm_ip $mc_id) sudo service memcached stop
+done
 
 echo "Starting experiment" $folder_name
 memcached_cmd="memcached -p "$memcached_port" -vv > memcached.log 2>&1 &"
@@ -85,7 +91,7 @@ do
 			num_clients=$vc_per_thread
 			num_threads=2
 
-			memtier_cmd="memtier_benchmark --out-file=memtier.log -s "$(create_vm_ip $servers)" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$num_clients" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio
+			memtier_cmd="memtier_benchmark -s "$(create_vm_ip $servers)" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$num_clients" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log"
 			echo $memtier_cmd
 			for client_id in ${clients[@]}
 			do
@@ -108,12 +114,13 @@ do
  			log_dir="./"$workload"_"$vc_per_thread"vc/"$rep
  			mkdir -p $log_dir
  			cd $log_dir
- 			
+ 			echo "Log dir=" $log_dir
 			# Copy over logs from memtiers
 			for client_id in ${clients[@]}
 			do
 				client_vm_ip=$(create_vm_ip $client_id)
 				client_log_filename=$(create_client_log_filename $client_id)
+				echo "client_log_filename" $client_log_filename
 				rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier.log") $client_log_filename
 				ssh $nethz"@"$client_vm_ip rm memtier.log
 			done
@@ -135,8 +142,7 @@ done
 # Zip all experiment files
 zip_file=$folder_name".tar.gz"
 cp ~/experiment.log ./master.log
-tar -zcvf $zip_file .
-# TODO 			git commit
+tar -zcvf $zip_file ./*
 mv $zip_file ~/ethz-asl-experiments/
 cd ~/ethz-asl-experiments
 

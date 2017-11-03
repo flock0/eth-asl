@@ -86,6 +86,28 @@ do
 	ssh $(create_vm_ip $mc_id) sudo service memcached stop
 done
 
+### Start up all instances of memcached and prepopulate them for the read-only workload
+for mc_id in ${servers[@]}
+do
+	ssh $(create_vm_ip $mc_id) $memcached_cmd
+done
+sleep 4
+echo "Started memcached servers"
+
+# Use memtier to fill the servers with keys. As our maximum key is 
+# 10000. We let memtier run for 15 seconds, which should be sufficient.
+file_time_sec=15
+memtier_fill_cmd="nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients=4 --threads=2 --test-time="$fill_time_sec" --expiry-range=9999-10000 --ratio=1:0 > /dev/null 2>&1"
+echo "        Prepare the memcached servers for the read-only workload"
+for server_id in ${servers[@]}
+do
+	client_vm_ip=$(create_vm_ip ${clients[0]})
+	ssh $nethz"@"$client_vm_ip $memtier_fill_cmd" &"
+done
+
+sleep $((fill_time_sec + 2))
+### Now start with the actual experiments
+echo "========="
 echo "Starting experiment" $folder_name
 memcached_cmd="nohup memcached -p "$memcached_port" -v > memcached.log 2>&1 &"
 
@@ -100,30 +122,12 @@ do
 		for workload in ${params_workload[@]}
 		do
 			echo "        Starting experiment with" $workload "workload"
- 			# Start memcached, wait shortly
- 			for mc_id in ${servers[@]}
- 			do
- 				ssh $(create_vm_ip $mc_id) $memcached_cmd
- 			done
-			sleep 4
-			echo "        Started memcached servers"
-
-			# Start memtiers
+ 			
 			if [ $workload = "writeOnly" ]; then
                ratio=1:0
             elif [ $workload = "readOnly" ]; then
 				ratio=0:1
-				# Use memtier to fill the servers with keys. As our maximum key is 
-				# 10000. We let memtier run for 5 seconds, which should be sufficient.
-				memtier_fill_cmd="nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients=4 --threads=2 --test-time=5 --expiry-range=9999-10000 --ratio=1:0 > /dev/null 2>&1"
-				echo "        Prepare the memcached servers for the read-only workload"
-				for server_id in ${servers[@]}
-				do
-					client_vm_ip=$(create_vm_ip ${clients[0]})
-					ssh $nethz"@"$client_vm_ip $memtier_fill_cmd" &"
-				done
-            fi
-            sleep 8
+			fi
 
 			num_clients=$vc_per_thread
 			num_threads=2

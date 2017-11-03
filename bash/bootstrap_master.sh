@@ -15,3 +15,6 @@ else
 	git clone git@gitlab.ethz.ch:fchlan/ethz-asl-experiments.git
 fi
 git config --global push.default matching
+
+echo "Bootstrapped the master VM."
+echo "You still need to manually authenticate the Azure CLI using 'az login'."

@@ -98,7 +98,7 @@ echo "Started memcached servers"
 
 # Use memtier to fill the servers with keys. As our maximum key is 
 # 10000. We let memtier run for 15 seconds, which should be sufficient.
-file_time_sec=15
+fill_time_sec=15
 memtier_fill_cmd="nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients=4 --threads=2 --test-time="$fill_time_sec" --expiry-range=9999-10000 --ratio=1:0 > /dev/null 2>&1"
 echo "        Prepare the memcached servers for the read-only workload"
 for server_id in ${servers[@]}
@@ -159,15 +159,6 @@ do
 				rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier.log") $client_log_filename
 				ssh $nethz"@"$client_vm_ip rm memtier.log
 			done
-			
-			# Copy over logs from memcached
- 			for mc_id in ${servers[@]}
- 			do
- 				server_vm_ip=$(create_vm_ip $mc_id)
- 				server_log_filename=$(create_server_log_filename $mc_id)
- 				rsync -r $(echo $nethz"@"$server_vm_ip":~/memcached.log") $server_log_filename
- 				ssh $nethz"@"$server_vm_ip rm memcached.log
- 			done
 
  			cd ../..
  			echo "        ========="
@@ -179,6 +170,15 @@ done
 for mc_id in ${servers[@]}
 do
 	ssh $(create_vm_ip $mc_id) pkill -2f memcached
+done
+
+# Copy over logs from memcached
+for mc_id in ${servers[@]}
+do
+	server_vm_ip=$(create_vm_ip $mc_id)
+	server_log_filename=$(create_server_log_filename $mc_id)
+	rsync -r $(echo $nethz"@"$server_vm_ip":~/memcached.log") ~/$folder_name/$server_log_filename
+	ssh $nethz"@"$server_vm_ip rm memcached.log
 done
 
 # Zip all experiment files

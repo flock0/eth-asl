@@ -47,9 +47,9 @@ servers=(6)
 
 ### Experiment parameters
 experiment=2_1_baseline_oneserver 
-num_repetitions=5
+num_repetitions=3
 single_experiment_length_sec=90
-params_vc_per_thread=(1 4 8 12 16 20 24 28 32)
+params_vc_per_thread=(1 2 4 8 12 16 20 24 28 32)
 params_workload=(readOnly writeOnly)
 
 # Configuring the Azure resource group

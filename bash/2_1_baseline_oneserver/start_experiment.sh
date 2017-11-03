@@ -15,6 +15,6 @@ echo "Using VM" $master "as master"
 server_name=$(create_dns_name $master)
 
 rsync -r $master_script_path $(echo $server_name":~")
-ssh $server_name "nohup bash ./experiment_master_script.sh > ~/experiment.log 2>&1 &"
+ssh $server_name "> ~/experiment.log; nohup bash ./experiment_master_script.sh > ~/experiment.log 2>&1 &"
 
 echo "Kicked off experiment..."

@@ -37,7 +37,7 @@ vm_nameprefix=foraslvms
 vm_dns_suffix=.westeurope.cloudapp.azure.com
 nethz=fchlan
 memcached_port=11211
-master = 9
+master=9
 
 ### Servers involved in the experiment
 all_vms=(1 2 3 6)
@@ -59,8 +59,10 @@ az configure --defaults group=$resource_group
 if [ ! "$#" == 1 ] || [ ! $1 == "nostart" ]; then
 	start_all_vms
 	# Wait some time for all VMs to boot
-	echo "Waiting for VMs to boot up"
-	sleep 120
+	echo "Sleeping for 120 sec to let VMs services boot up..."
+	sleep 60
+	echo "60 seconds remaining..."
+	sleep 60
 fi
 
 ### We're using the private IPs to connect the servers with
@@ -144,12 +146,6 @@ do
 			# Wait for experiment to finish, + 5 sec to account for delays
 			sleep $((single_experiment_length_sec + 5))
 
-			# Shutdown memcached
- 			for mc_id in ${servers[@]}
- 			do
- 				ssh $(create_vm_ip $mc_id) pkill -2f memcached
- 			done
-
  			# Create folder
  			log_dir="./"$workload"_"$vc_per_thread"vc/"$rep
  			mkdir -p $log_dir
@@ -177,6 +173,12 @@ do
  			echo "        ========="
 		done
 	done
+done
+
+# Shutdown all memcached servers
+for mc_id in ${servers[@]}
+do
+	ssh $(create_vm_ip $mc_id) pkill -2f memcached
 done
 
 # Zip all experiment files

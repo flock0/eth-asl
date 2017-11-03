@@ -11,14 +11,6 @@ nethz=fchlan
 
 master_script_path=./experiment_master_script.sh
 
-if [ ! "$#" == 1 ] || [ ! $1 == "nostart" ]; then
-	echo "Starting master" $master 
-		az vm start --name $vm_nameprefix$master
-	# Wait some time for all VMs to boot
-	echo "Waiting for VMs to boot up"
-	sleep 120
-fi
-
 echo "Using VM" $master "as master"
 server_name=$(create_dns_name $master)
 

@@ -89,6 +89,7 @@ do
 done
 
 ### Start up all instances of memcached and prepopulate them for the read-only workload
+memcached_cmd="nohup memcached -p "$memcached_port" -v > memcached.log 2>&1 &"
 for mc_id in ${servers[@]}
 do
 	ssh $(create_vm_ip $mc_id) $memcached_cmd
@@ -111,7 +112,6 @@ sleep $((fill_time_sec + 2))
 ### Now start with the actual experiments
 echo "========="
 echo "Starting experiment" $folder_name
-memcached_cmd="nohup memcached -p "$memcached_port" -v > memcached.log 2>&1 &"
 
 # For each repetition
 for rep in $(seq $num_repetitions)

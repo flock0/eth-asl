@@ -192,4 +192,10 @@ rm $zip_file
 cd ..
 rm -rf ~/$folder_name
 
-# TODO Shudown all servers
+### Shudown all servers
+for server_id in ${all_vms[@]}
+do
+	echo "Stopping VM" $server_id 
+	az vm deallocate --name $vm_nameprefix$server_id --no-wait
+done
+az vm deallocate --name $vm_nameprefix$master --no-wait

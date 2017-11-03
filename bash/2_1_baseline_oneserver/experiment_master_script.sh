@@ -85,7 +85,7 @@ cd $folder_name
 ### Shutdown memcached that may be running on autostart
 for mc_id in ${servers[@]}
 do
-	ssh $(create_vm_ip $mc_id) sudo service memcached stop
+	ssh $(create_vm_ip $mc_id) "sudo service memcached stop; pkill -2f memcached"
 done
 
 ### Start up all instances of memcached and prepopulate them for the read-only workload

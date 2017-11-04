@@ -12,9 +12,18 @@ create_client_log_filename() {
 	echo "client_0"$1".log"
 }
 
+create_client_dstat_filename() {
+	echo "client_dstat_0"$1".log"
+}
+
 create_server_log_filename() {
 	echo "server_0"$1".log"
 }
+
+create_server_dstat_filename() {
+	echo "server_dstat_0"$1".log"
+}
+
 start_all_vms() {
 	for server_id in ${all_vms[@]}
 	do
@@ -90,7 +99,7 @@ do
 done
 
 ### Start up all instances of memcached and prepopulate them for the read-only workload
-memcached_cmd="nohup memcached -p "$memcached_port" -v > memcached.log 2>&1 &"
+memcached_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & nohup memcached -p "$memcached_port" -v > memcached.log 2>&1 &"
 for mc_id in ${servers[@]}
 do
 	ssh $(create_vm_ip $mc_id) $memcached_cmd
@@ -132,7 +141,7 @@ do
 				ratio=0:1
 			fi
 
-			memtier_cmd="nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log 2>&1"
+			memtier_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log 2>&1"
 			echo "       " $memtier_cmd
 			for client_id in ${clients[@]}
 			do
@@ -154,7 +163,10 @@ do
 			do
 				client_vm_ip=$(create_vm_ip $client_id)
 				client_log_filename=$(create_client_log_filename $client_id)
+				client_dstat_filename=$(create_client_dstat_filename $client_id)
+				ssh $nethz"@"$client_vm_ip pkill -f dstat
 				rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier.log") $client_log_filename
+				rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
 				ssh $nethz"@"$client_vm_ip rm memtier.log
 			done
 
@@ -167,7 +179,7 @@ done
 # Shutdown all memcached servers
 for mc_id in ${servers[@]}
 do
-	ssh $(create_vm_ip $mc_id) pkill -2f memcached
+	ssh $(create_vm_ip $mc_id) pkill -2f memcached; pkill -f dstat
 done
 
 # Copy over logs from memcached
@@ -175,7 +187,9 @@ for mc_id in ${servers[@]}
 do
 	server_vm_ip=$(create_vm_ip $mc_id)
 	server_log_filename=$(create_server_log_filename $mc_id)
+	server_dstat_filename=$(create_server_dstat_filename $mc_id)
 	rsync -r $(echo $nethz"@"$server_vm_ip":~/memcached.log") ~/$folder_name/$server_log_filename
+	rsync -r $(echo $nethz"@"$server_vm_ip":~/dstat.log") ~/$folder_name/$server_dstat_filename
 	ssh $nethz"@"$server_vm_ip rm memcached.log
 done
 

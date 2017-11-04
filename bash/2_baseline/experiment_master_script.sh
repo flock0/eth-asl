@@ -152,7 +152,7 @@ do
 				ratio=0:1
 			fi
 
-			memtier_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log 2>&1"
+			memtier_cmd="> dstat.log; echo $(date +%Y%m%d_%H%M%S) > memtier.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log 2>&1"
 			echo "       " $memtier_cmd
 			for client_id in ${clients[@]}
 			do
@@ -307,8 +307,8 @@ do
 				ratio=0:1
 			fi
 
-			memtier_0_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier_0.log 2>&1"
-			memtier_1_cmd="nohup memtier_benchmark -s "$(create_vm_ip ${servers[1]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier_1.log 2>&1"
+			memtier_0_cmd="> dstat.log; echo $(date +%Y%m%d_%H%M%S) > memtier.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier_0.log 2>&1"
+			memtier_1_cmd="echo $(date +%Y%m%d_%H%M%S) > memtier.log; nohup memtier_benchmark -s "$(create_vm_ip ${servers[1]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier_1.log 2>&1"
 			echo "       " $memtier_0_cmd
 			echo "       " $memtier_1_cmd
 			client_id=${clients[0]}
@@ -384,7 +384,7 @@ rm -rf ~/$folder_name
 
 
 ### Shudown all servers
-for server_id in ${all_vms[@]}
+for server_id in ${all_exp_vms[@]}
 do
 	echo "Stopping VM" $server_id 
 	az vm deallocate --name $vm_nameprefix$server_id --no-wait

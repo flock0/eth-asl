@@ -51,6 +51,7 @@ num_repetitions=3
 single_experiment_length_sec=90
 params_vc_per_thread=(1 2 4 8 12 16 20 24 28 32)
 params_workload=(readOnly writeOnly)
+num_threads=2
 
 # Configuring the Azure resource group
 az configure --defaults group=$resource_group
@@ -131,10 +132,7 @@ do
 				ratio=0:1
 			fi
 
-			num_clients=$vc_per_thread
-			num_threads=2
-
-			memtier_cmd="nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$num_clients" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log 2>&1"
+			memtier_cmd="nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log 2>&1"
 			echo "       " $memtier_cmd
 			for client_id in ${clients[@]}
 			do

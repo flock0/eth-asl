@@ -114,7 +114,8 @@ do
 done
 
 ### Start up all instances of memcached and prepopulate them for the read-only workload
-memcached_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & nohup memcached -p "$memcached_port" -v > memcached.log 2>&1 &"
+memcached_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+			   nohup memcached -p "$memcached_port" -v > memcached.log 2>&1 &"
 for mc_id in ${servers[@]}
 do
 	ssh $(create_vm_ip $mc_id) $memcached_cmd
@@ -142,8 +143,13 @@ do
 				ratio=0:1
 			fi
 			target_server_ip=$(create_vm_ip ${servers[0]})
-			memtier_cmd="> dstat.log; > ping.log; echo $(date +%Y%m%d_%H%M%S) > memtier.log; echo $(date +%Y%m%d_%H%M%S) > ping.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & ping -Di 5 "$target_server_ip" -w "$single_experiment_length_sec" > ping.log & nohup memtier_benchmark -s "$target_server_ip" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log 2>&1"
-			echo "       " $memtier_cmd
+			memtier_cmd="> dstat.log; > ping.log;
+						echo $(date +%Y%m%d_%H%M%S) > memtier.log;
+						echo $(date +%Y%m%d_%H%M%S) > ping.log;
+						nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+						ping -Di 5 "$target_server_ip" -w "$single_experiment_length_sec" > ping.log &
+						nohup memtier_benchmark -s "$target_server_ip" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
+						--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log 2>&1"
 			for client_id in ${clients[@]}
 			do
 				echo "        Starting memtier on client" $client_id
@@ -286,8 +292,18 @@ do
 				ratio=0:1
 			fi
 
-			memtier_0_cmd="> dstat.log; echo $(date +%Y%m%d_%H%M%S) > memtier.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier_0.log 2>&1"
-			memtier_1_cmd="echo $(date +%Y%m%d_%H%M%S) > memtier.log; nohup memtier_benchmark -s "$(create_vm_ip ${servers[1]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier_1.log 2>&1"
+			memtier_0_cmd="> dstat.log; > ping.log;
+			               echo $(date +%Y%m%d_%H%M%S) > memtier_0.log;
+			               echo $(date +%Y%m%d_%H%M%S) > ping.log;
+			               nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+			               ping -Di 5 "$(create_vm_ip ${servers[0]})" -w "$single_experiment_length_sec" > ping.log &
+			               nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
+			               --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier_0.log 2>&1"
+
+			memtier_1_cmd="echo $(date +%Y%m%d_%H%M%S) > memtier_1.log;
+			               nohup memtier_benchmark -s "$(create_vm_ip ${servers[1]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
+			               --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier_1.log 2>&1"
+
 			echo "       " $memtier_0_cmd
 			echo "       " $memtier_1_cmd
 			client_id=${clients[0]}
@@ -310,10 +326,12 @@ do
 				client_vm_ip=$(create_vm_ip $client_id)
 				client_log_filename=$(create_client_log_filename $client_id)
 				client_dstat_filename=$(create_client_dstat_filename $client_id)
+				client_ping_filename=$(create_client_ping_filename $client_id)
 				ssh $nethz"@"$client_vm_ip pkill -f dstat
 				rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_0.log") "client_01_0.log"
 				rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_02_1.log"
 				rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
+				rsync -r $(echo $nethz"@"$client_vm_ip":~/ping.log") $client_ping_filename
 				ssh $nethz"@"$client_vm_ip rm memtier_0.log memtier_1.log
 			done
 

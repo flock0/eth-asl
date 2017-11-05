@@ -83,7 +83,7 @@ experiment=2_1_baseline_oneserver
 num_repetitions=3
 single_experiment_length_sec=90
 params_vc_per_thread=(1 2 4 8 12 16 20 24 28 32)
-params_workload=(readOnly writeOnly)
+params_workload=(writeOnly readOnly)
 num_threads=2
 
 ### We're using the private IPs to connect the servers with
@@ -118,34 +118,20 @@ done
 sleep 4
 echo "Started memcached servers"
 
-# Use memtier to fill the servers with keys. As our maximum key is 
-# 10000. We let memtier run for 15 seconds, which should be sufficient.
-fill_time_sec=15
-memtier_fill_cmd="nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients=4 --threads=2 --test-time="$fill_time_sec" --expiry-range=9999-10000 --ratio=1:0 > /dev/null 2>&1"
-echo "        Prepare the memcached servers for the read-only workload"
-for server_id in ${servers[@]}
-do
-	client_vm_ip=$(create_vm_ip ${clients[0]})
-	ssh $nethz"@"$client_vm_ip $memtier_fill_cmd" &"
-done
-
 sleep $((fill_time_sec + 2))
 ### Now start with the actual experiments
 echo "========="
 echo "Starting experiment" $folder_name
 
-# For each repetition
-for rep in $(seq $num_repetitions)
+for workload in ${params_workload[@]}
 do
-	echo "    Starting repetition" $rep
-	# For each parameter setting
-	for vc_per_thread in ${params_vc_per_thread[@]}
+	echo "    Starting experiment with" $workload "workload"
+	for rep in $(seq $num_repetitions)
 	do
-		echo "        Starting experiment with vc_per_thread="$vc_per_thread
-		for workload in ${params_workload[@]}
+		echo "        Starting repetition" $rep
+		for vc_per_thread in ${params_vc_per_thread[@]}
 		do
-			echo "        Starting experiment with" $workload "workload"
- 			
+			echo "        Starting experiment with vc_per_thread="$vc_per_thread
 			if [ $workload = "writeOnly" ]; then
                ratio=1:0
             elif [ $workload = "readOnly" ]; then
@@ -238,7 +224,7 @@ experiment=2_2_baseline_twoservers
 num_repetitions=3
 single_experiment_length_sec=90
 params_vc_per_thread=(1 2 4 8 12 16 20 24 28 32)
-params_workload=(readOnly writeOnly)
+params_workload=(writeOnly readOnly)
 num_threads=1
 
 ### We're using the private IPs to connect the servers with
@@ -273,33 +259,20 @@ done
 sleep 4
 echo "Started memcached servers"
 
-# Use memtier to fill the servers with keys. As our maximum key is 
-# 10000. We let memtier run for 15 seconds, which should be sufficient.
-fill_time_sec=30
-echo "        Prepare the memcached servers for the read-only workload"
-for server_id in ${servers[@]}
-do
-	memtier_fill_cmd="nohup memtier_benchmark -s "$(create_vm_ip $server_id)" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients=4 --threads=2 --test-time="$fill_time_sec" --expiry-range=9999-10000 --ratio=1:0 > /dev/null 2>&1"
-	client_vm_ip=$(create_vm_ip ${clients[0]})
-	ssh $nethz"@"$client_vm_ip $memtier_fill_cmd" &"
-done
-
 sleep $((fill_time_sec + 2))
 ### Now start with the actual experiments
 echo "========="
 echo "Starting experiment" $folder_name
 
-# For each repetition
-for rep in $(seq $num_repetitions)
+for workload in ${params_workload[@]}
 do
-	echo "    Starting repetition" $rep
-	# For each parameter setting
-	for vc_per_thread in ${params_vc_per_thread[@]}
+	echo "    Starting experiment with" $workload "workload"
+	for rep in $(seq $num_repetitions)
 	do
-		echo "        Starting experiment with vc_per_thread="$vc_per_thread
-		for workload in ${params_workload[@]}
+		echo "        Starting repetition" $rep
+		for vc_per_thread in ${params_vc_per_thread[@]}
 		do
-			echo "        Starting experiment with" $workload "workload"
+			echo "        Starting experiment with vc_per_thread="$vc_per_thread
  			
 			if [ $workload = "writeOnly" ]; then
                ratio=1:0

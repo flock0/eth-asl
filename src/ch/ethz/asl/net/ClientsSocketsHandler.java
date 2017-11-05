@@ -152,7 +152,6 @@ public class ClientsSocketsHandler implements Runnable {
 								try {
 									req = RequestFactory.tryParseClientRequest(readBuffer);
 									// If valid, forward the request to the workers. Create request and copy out of ByteBuffer
-									req.setEnqueueTime();
 									enqueueChannel(client, req);
 									
 									
@@ -221,7 +220,9 @@ public class ClientsSocketsHandler implements Runnable {
 	 * @param req The successfully parsed Request object
 	 */
 	private void enqueueChannel(SocketChannel client, Request req) {
-		threadPool.submit(new Worker(client, req));
+		Worker worker = new Worker(client, req);
+		req.setEnqueueTime();
+		threadPool.submit(worker);
 	
 	}
 	

@@ -16,6 +16,10 @@ create_client_dstat_filename() {
 	echo "client_dstat_0"$1".log"
 }
 
+create_client_ping_filename() {
+	echo "client_ping_0"$1".log"
+}
+
 create_server_log_filename() {
 	echo "server_0"$1".log"
 }
@@ -137,8 +141,8 @@ do
             elif [ $workload = "readOnly" ]; then
 				ratio=0:1
 			fi
-
-			memtier_cmd="> dstat.log; echo $(date +%Y%m%d_%H%M%S) > memtier.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log 2>&1"
+			target_server_ip=$(create_vm_ip ${servers[0]})
+			memtier_cmd="> dstat.log; > ping.log; echo $(date +%Y%m%d_%H%M%S) > memtier.log; echo $(date +%Y%m%d_%H%M%S) > ping.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & ping -Di 5 "$target_server_ip" -w "$single_experiment_length_sec" > ping.log & nohup memtier_benchmark -s "$target_server_ip" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log 2>&1"
 			echo "       " $memtier_cmd
 			for client_id in ${clients[@]}
 			do
@@ -161,9 +165,11 @@ do
 				client_vm_ip=$(create_vm_ip $client_id)
 				client_log_filename=$(create_client_log_filename $client_id)
 				client_dstat_filename=$(create_client_dstat_filename $client_id)
+				client_ping_filename=$(create_client_ping_filename $client_id)
 				ssh $nethz"@"$client_vm_ip pkill -f dstat
 				rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier.log") $client_log_filename
 				rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
+				rsync -r $(echo $nethz"@"$client_vm_ip":~/ping.log") $client_ping_filename
 				ssh $nethz"@"$client_vm_ip rm memtier.log
 			done
 

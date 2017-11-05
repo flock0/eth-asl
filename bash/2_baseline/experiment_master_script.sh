@@ -292,15 +292,17 @@ do
 				ratio=0:1
 			fi
 
-			memtier_0_cmd="> dstat.log; > ping.log;
+			memtier_0_cmd="> dstat.log; > ping_0.log;
 			               echo $(date +%Y%m%d_%H%M%S) > memtier_0.log;
 			               echo $(date +%Y%m%d_%H%M%S) > ping.log;
 			               nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
-			               ping -Di 5 "$(create_vm_ip ${servers[0]})" -w "$single_experiment_length_sec" > ping.log &
+			               ping -Di 5 "$(create_vm_ip ${servers[0]})" -w "$single_experiment_length_sec" > ping_0.log &
 			               nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
 			               --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier_0.log 2>&1"
 
-			memtier_1_cmd="echo $(date +%Y%m%d_%H%M%S) > memtier_1.log;
+			memtier_1_cmd="> ping_1.log;
+						   echo $(date +%Y%m%d_%H%M%S) > memtier_1.log;
+						   ping -Di 5 "$(create_vm_ip ${servers[1]})" -w "$single_experiment_length_sec" > ping_1.log &
 			               nohup memtier_benchmark -s "$(create_vm_ip ${servers[1]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
 			               --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier_1.log 2>&1"
 
@@ -329,9 +331,10 @@ do
 				client_ping_filename=$(create_client_ping_filename $client_id)
 				ssh $nethz"@"$client_vm_ip pkill -f dstat
 				rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_0.log") "client_01_0.log"
-				rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_02_1.log"
+				rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_01_1.log"
 				rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
-				rsync -r $(echo $nethz"@"$client_vm_ip":~/ping.log") $client_ping_filename
+				rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_0.log") "client_ping_01_0.log"
+				rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_1.log") "client_ping_01_1.log"
 				ssh $nethz"@"$client_vm_ip rm memtier_0.log memtier_1.log
 			done
 

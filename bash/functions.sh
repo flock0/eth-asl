@@ -59,6 +59,7 @@ bootstrap_clients() {
 		server_name=$(create_dns_name $server_id)
 		rsync -r $client_bootstrap_script_path $(echo $server_name":~")
 		rsync -r $public_ssh_key $(echo $server_name":~/.ssh/id_rsa.pub")
+		rsync -r $private_ssh_key $(echo $server_name":~/.ssh/id_rsa")
 		rsync -r bash/sshd_config $(echo $server_name":~/.ssh/config")
 		ssh $server_name "nohup bash ./bootstrap_client.sh > ~/bootstrap.log 2>&1 &"
 	done
@@ -71,6 +72,7 @@ bootstrap_middlewares() {
 		server_name=$(create_dns_name $server_id)
 		rsync -r $middleware_bootstrap_script_path $(echo $server_name":~")
 		rsync -r $public_ssh_key $(echo $server_name":~/.ssh/id_rsa.pub")
+		rsync -r $private_ssh_key $(echo $server_name":~/.ssh/id_rsa")
 		rsync -r bash/sshd_config $(echo $server_name":~/.ssh/config")
 		ssh $server_name "nohup bash ./bootstrap_middleware.sh > ~/bootstrap.log 2>&1 &"
 	done
@@ -83,6 +85,7 @@ bootstrap_servers() {
 		server_name=$(create_dns_name $server_id)
 		rsync -r $server_bootstrap_script_path $(echo $server_name":~")
 		rsync -r $public_ssh_key $(echo $server_name":~/.ssh/id_rsa.pub")
+		rsync -r $private_ssh_key $(echo $server_name":~/.ssh/id_rsa")
 		rsync -r bash/sshd_config $(echo $server_name":~/.ssh/config")
 		ssh $server_name "nohup bash ./bootstrap_server.sh > ~/bootstrap.log 2>&1 &"
 	done

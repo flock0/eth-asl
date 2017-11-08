@@ -13,6 +13,7 @@ workload = ""
 shouldOverwrite = False
 clients = range(1,4)
 aggregated_csv_filename = "exp2_1_aggregated.csv"
+concatenated_csv_filename = "exp2_1_concatenated.csv"
 warmup_period_endtime = 10
 cooldown_period_starttime = 80
 
@@ -42,6 +43,8 @@ print ('Workload is "', workload)
 
 aggregated_csv_filename = workload + "_" + aggregated_csv_filename
 aggregated_csv_filepath = os.path.join(inputdir, aggregated_csv_filename)
+concatenated_csv_filename = workload + "_" + concatenated_csv_filename
+concatenated_csv_filepath = os.path.join(inputdir, concatenated_csv_filename)
 
 # Should we overwrite the csv files?
 if (shouldOverwrite and os.path.isfile(aggregated_csv_filepath)):
@@ -88,9 +91,10 @@ for experiment_dir in matching_directories:
 
 
         # Store extracted data in intermediate csv-file
-        source_path = os.path.join(rep_directory, "clients.aggregated")
-        append_to_csv(num_vc_per_thread, str(rep), source_path, aggregated_csv_filepath)
-
+        aggregated_source_path = os.path.join(rep_directory, "clients.aggregated")
+        append_to_csv(num_vc_per_thread, str(rep), aggregated_source_path, aggregated_csv_filepath)
+        concatenated_source_path = os.path.join(rep_directory, "clients.concatenated")
+        append_to_csv(num_vc_per_thread, str(rep), concatenated_source_path, concatenated_csv_filepath)
 
 # TODO     extract median latency (from histogram at the end)
 # TODO Output numbers to final file

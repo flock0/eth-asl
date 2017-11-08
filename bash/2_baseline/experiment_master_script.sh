@@ -85,8 +85,8 @@ servers=(6)
 ### Experiment parameters
 experiment=2_1_baseline_oneserver 
 num_repetitions=3
-single_experiment_length_sec=90
-params_vc_per_thread=(1 2 4 8 12 16 20 24 28 32)
+single_experiment_length_sec=82
+params_vc_per_thread=(1 2 4 8 16 32)
 params_workload=(writeOnly readOnly)
 num_threads=2
 
@@ -234,8 +234,8 @@ servers=(6 7)
 ### Experiment parameters
 experiment=2_2_baseline_twoservers
 num_repetitions=3
-single_experiment_length_sec=90
-params_vc_per_thread=(1 2 4 8 12 16 20 24 28 32)
+single_experiment_length_sec=82
+params_vc_per_thread=(1 2 4 8 16 32)
 params_workload=(writeOnly readOnly)
 num_threads=1
 

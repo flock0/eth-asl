@@ -80,8 +80,8 @@ for experiment_dir in matching_directories:
         rep_directory = os.path.join(experiment_dir, str(rep))
         all_clients_throughputs = []
         all_clients_responsetimes = []
-
-        bashCommand = "bash extract_xput_resptimes.sh {} {}".format(rep_directory,  warmup_period_endtime, cooldown_period_starttime)
+        print ("    Rep directory", rep_directory)
+        bashCommand = "bash extract_xput_resptimes.sh {} {} {}".format(rep_directory,  warmup_period_endtime, cooldown_period_starttime)
         process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
         _, error = process.communicate()
 

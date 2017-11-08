@@ -4,19 +4,15 @@ import sys, os, getopt, subprocess
 import re
 
 def append_to_csv(num_vc_per_thread, rep, source_path, destination_path):
-    bash_command = "awk '{print " + num_vc_per_thread + ", " + rep + ", $0}' " + source_path + " >> " + destination_path
-    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-    _, error = process.communicate()
-
-    if (error != None):
-        print("Encountered error {} when extracting data".format(error))
-        exit(2)
+    with open(destination_path, "a") as dest:
+        for line in open(source_path, 'r'):
+            dest.write("{} {} {}".format(num_vc_per_thread, rep, line))
 
 inputdir = ""
 workload = ""
 shouldOverwrite = False
 clients = range(1,4)
-output_csv_filename = "exp2_output.csv"
+aggregated_csv_filename = "exp2_1_aggregated.csv"
 warmup_period_endtime = 10
 cooldown_period_starttime = 80
 
@@ -44,11 +40,12 @@ for opt, arg in opts:
 print ('Input directory is "', inputdir)
 print ('Workload is "', workload)
 
+aggregated_csv_filename = workload + "_" + aggregated_csv_filename
+aggregated_csv_filepath = os.path.join(inputdir, aggregated_csv_filename)
 
-output_csv_filepath = os.path.join(inputdir, output_csv_filename)
 # Should we overwrite the csv files?
-if (shouldOverwrite and os.path.isfile(output_csv_filepath)):
-    os.remove(output_csv_filepath)
+if (shouldOverwrite and os.path.isfile(aggregated_csv_filepath)):
+    os.remove(aggregated_csv_filepath)
 
 # Gather VCs tested from directory names
 workload_regex = re.compile(workload + "_\d*vc")
@@ -91,8 +88,8 @@ for experiment_dir in matching_directories:
 
 
         # Store extracted data in intermediate csv-file
-
-        append_to_csv(num_vc_per_thread, str(rep), "clients.aggregated", output_csv_filepath)
+        source_path = os.path.join(rep_directory, "clients.aggregated")
+        append_to_csv(num_vc_per_thread, str(rep), source_path, aggregated_csv_filepath)
 
 
 # TODO     extract median latency (from histogram at the end)

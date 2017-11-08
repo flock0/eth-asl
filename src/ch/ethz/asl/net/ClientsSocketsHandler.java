@@ -150,8 +150,10 @@ public class ClientsSocketsHandler implements Runnable {
 								// TODO Check if the request is valid
 								Request req;
 								try {
+									long beforeFactoryTime = System.nanoTime();
 									req = RequestFactory.tryParseClientRequest(readBuffer);
-									// If valid, forward the request to the workers. Create request and copy out of ByteBuffer
+									// If valid, forward the request to the workers.
+									req.setBeforeFactoryTime(beforeFactoryTime);
 									enqueueChannel(client, req);
 									
 									

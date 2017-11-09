@@ -47,6 +47,10 @@ def gather_statistics(inputdir, workload, shouldOverwrite = False):
                 print ("Directory {} had {} reps, but expected {}".format(directory, rep_list_len, num_repetitions))
                 exit(2)
 
+    with open(aggregated_csv_filepath, "a") as aggr_file:
+        aggr_file.write("vc_per_thread rep timestep throughput responsetime\n")
+    with open(concatenated_csv_filepath, "w") as concat_file:
+        concat_file.write("vc_per_thread rep client timestep throughput responsetime\n")
     # Extract individual metrics for one repetition
     num_vc_regex = re.compile("(?<=" + workload + "_)\d*(?=vc)")
     for experiment_dir in matching_directories:

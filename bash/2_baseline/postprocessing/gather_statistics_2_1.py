@@ -6,7 +6,6 @@ import pandas as pd
 
 def gather_statistics(inputdir, workload, shouldOverwrite = False):
 
-    clients = range(1,4)
     aggregated_csv_filename = "exp2_1_aggregated.csv"
     concatenated_csv_filename = "exp2_1_concatenated.csv"
     warmup_period_endtime = 10
@@ -115,14 +114,14 @@ if __name__ == '__main__':
     try:
         opts, args = getopt.getopt(sys.argv[1:],"hri:w:",["inputdir=","workload="])
     except getopt.GetoptError:
-        print ('2_1_gather_statistics.py -i <input directory> -w <workload> -r')
+        print ('gather_statistics_2_1.py -i <input directory> -w <workload> -r')
         print ('<input directory> should contain all the collected log files.')
         print ('<workload> should be writeOnly or readOnly.')
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == '-h':
-            print ('2_1_gather_statistics.py -i <input directory> -w <workload>')
+            print ('gather_statistics_2_1.py -i <input directory> -w <workload>')
             print ('<input directory> should contain all the collected log files.')
             print ('<workload> should be writeOnly or readOnly.')
             sys.exit()

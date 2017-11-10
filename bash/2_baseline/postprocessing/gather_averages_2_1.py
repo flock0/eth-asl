@@ -19,13 +19,13 @@ if __name__ == '__main__':
     try:
         opts, args = getopt.getopt(sys.argv[1:],"i:",["inputdir="])
     except getopt.GetoptError:
-        print ('2_1_gather_averages.py -i <input directory>')
+        print ('gather_averages_2_1.py -i <input directory>')
         print ('<input directory> should contain all the collected log files.')
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == '-h':
-            print('2_1_gather_averages.py -i <input directory>')
+            print('gather_averages_2_1.py -i <input directory>')
             print('<input directory> should contain all the collected log files.')
             sys.exit()
         elif opt in ("-i", "--inputdir"):

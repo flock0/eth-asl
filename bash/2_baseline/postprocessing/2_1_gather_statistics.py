@@ -2,11 +2,7 @@
 
 import sys, os, getopt, subprocess
 import re
-
-def append_to_csv(num_vc_per_thread, rep, source_path, destination_path):
-    with open(destination_path, "a") as dest:
-        for line in open(source_path, 'r'):
-            dest.write("{} {} {}".format(num_vc_per_thread, rep, line))
+import pandas as pd
 
 def gather_statistics(inputdir, workload, shouldOverwrite = False):
 
@@ -15,7 +11,6 @@ def gather_statistics(inputdir, workload, shouldOverwrite = False):
     concatenated_csv_filename = "exp2_1_concatenated.csv"
     warmup_period_endtime = 10
     cooldown_period_starttime = 80
-
 
 
     print ('Input directory is "', inputdir)
@@ -47,10 +42,8 @@ def gather_statistics(inputdir, workload, shouldOverwrite = False):
                 print ("Directory {} had {} reps, but expected {}".format(directory, rep_list_len, num_repetitions))
                 exit(2)
 
-    with open(aggregated_csv_filepath, "a") as aggr_file:
-        aggr_file.write("vc_per_thread rep timestep throughput responsetime\n")
-    with open(concatenated_csv_filepath, "w") as concat_file:
-        concat_file.write("vc_per_thread rep client timestep throughput responsetime\n")
+    aggregate_dataframes_list = []
+    concatenate_dataframes_list = []
     # Extract individual metrics for one repetition
     num_vc_regex = re.compile("(?<=" + workload + "_)\d*(?=vc)")
     for experiment_dir in matching_directories:
@@ -62,10 +55,17 @@ def gather_statistics(inputdir, workload, shouldOverwrite = False):
 
             print ("    Repetition", rep)
             rep_directory = os.path.join(experiment_dir, str(rep))
-            all_clients_throughputs = []
-            all_clients_responsetimes = []
             print ("    Rep directory", rep_directory)
-            bashCommand = "bash extract_xput_resptimes.sh {} {} {}".format(rep_directory,  warmup_period_endtime, cooldown_period_starttime)
+
+            # Extract relevant throughput and response time data from client logs (using bash scripting)
+            with open(os.path.join(rep_directory, 'client_01.log.extracted'), "w") as client_logfile:
+                client_logfile.write("client timestep throughput responsetime\n")
+            with open(os.path.join(rep_directory, 'client_02.log.extracted'), "w") as client_logfile:
+                client_logfile.write("client timestep throughput responsetime\n")
+            with open(os.path.join(rep_directory, 'client_03.log.extracted'), "w") as client_logfile:
+                client_logfile.write("client timestep throughput responsetime\n")
+
+            bashCommand = "bash extract_xput_resptimes.sh {}".format(rep_directory)
             process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
             _, error = process.communicate()
 
@@ -74,11 +74,36 @@ def gather_statistics(inputdir, workload, shouldOverwrite = False):
                 exit(2)
 
 
-            # Store extracted data in intermediate csv-file
-            aggregated_source_path = os.path.join(rep_directory, "clients.aggregated")
-            append_to_csv(num_vc_per_thread, str(rep), aggregated_source_path, aggregated_csv_filepath)
-            concatenated_source_path = os.path.join(rep_directory, "clients.concatenated")
-            append_to_csv(num_vc_per_thread, str(rep), concatenated_source_path, concatenated_csv_filepath)
+
+            client1 = pd.read_csv(os.path.join(rep_directory, 'client_01.log.extracted'), delim_whitespace=True)
+            client2 = pd.read_csv(os.path.join(rep_directory, 'client_02.log.extracted'), delim_whitespace=True)
+            client3 = pd.read_csv(os.path.join(rep_directory, 'client_03.log.extracted'), delim_whitespace=True)
+
+            joined = client1.merge(client2, on='timestep', how='inner').merge(client3, on='timestep', how='inner')
+            joined['sum_throughput'] = joined['throughput_x'] + joined['throughput_y'] + joined['throughput']
+            joined['avg_responsetime'] = (joined['responsetime_x'] + joined['responsetime_y'] + joined[
+                'responsetime']) / 3
+
+            joined['vc_per_thread'] = num_vc_per_thread
+            joined['rep'] = rep
+
+            rep_aggregated_path = os.path.join(rep_directory, "clients.aggregated")
+
+            single_aggregated_dataframe = joined.loc[:, ['vc_per_thread', 'rep', 'timestep', 'sum_throughput', 'avg_responsetime']]
+            single_aggregated_dataframe.to_csv(rep_aggregated_path, index=False)
+            aggregate_dataframes_list.append(single_aggregated_dataframe)
+
+            concat = pd.concat([client1, client2, client3])
+            concat['vc_per_thread'] = num_vc_per_thread
+            concat['rep'] = rep
+
+            rep_concatenated_path = os.path.join(rep_directory, "clients.concatenated")
+            concat.to_csv(rep_concatenated_path, index=False)
+            concatenate_dataframes_list.append(concat)
+
+
+    pd.concat([frame for frame in aggregate_dataframes_list]).to_csv(aggregated_csv_filepath, index=False)
+    pd.concat([frame for frame in concatenate_dataframes_list]).to_csv(concatenated_csv_filepath, index=False)
 
 if __name__ == '__main__':
     inputdir = ""

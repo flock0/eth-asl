@@ -1,6 +1,6 @@
 import sys, os, getopt
 import pandas as pd
-import 2_1_gather_statistics
+from gather_statistics_2_1 import gather_statistics
 
 def gather_averages(inputdir):
 
@@ -8,11 +8,11 @@ def gather_averages(inputdir):
     for workload in workloads:
         gather_statistics(inputdir, workload, True)
 
-        csv_file = pd.read_csv(os.path.join(inputdir, workload + '_exp2_1_aggregated.csv'), delim_whitespace=True)
+        csv_file = pd.read_csv(os.path.join(inputdir, workload + '_exp2_1_aggregated.csv'))
         grouped = csv_file.groupby(['rep', 'vc_per_thread'])
-        grouped['throughput', 'responsetime'].mean().to_csv()
-        # TODO Write to final csv
-        # TODO FIx join in folder ~/Downloads/exp2/2_1_baseline_oneserver_2017-11-08_155916/writeOnly_32vc/2
+        averages = grouped['sum_throughput', 'avg_responsetime'].mean()
+        print(averages)
+
 
 if __name__ == '__main__':
     inputdir = ""

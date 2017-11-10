@@ -10,7 +10,7 @@ def gather_statistics(inputdir, workload, shouldOverwrite = False):
     aggregated_csv_filename = "exp2_1_aggregated.csv"
     concatenated_csv_filename = "exp2_1_concatenated.csv"
     warmup_period_endtime = 10
-    cooldown_period_starttime = 80
+    cooldown_period_starttime = 70
 
 
     print ('Input directory is "', inputdir)
@@ -86,7 +86,8 @@ def gather_statistics(inputdir, workload, shouldOverwrite = False):
 
             joined['vc_per_thread'] = num_vc_per_thread
             joined['rep'] = rep
-
+            joined = joined[joined['timestep'] > warmup_period_endtime]
+            joined = joined[joined['timestep'] < cooldown_period_starttime]
             rep_aggregated_path = os.path.join(rep_directory, "clients.aggregated")
 
             single_aggregated_dataframe = joined.loc[:, ['vc_per_thread', 'rep', 'timestep', 'sum_throughput', 'avg_responsetime']]
@@ -94,6 +95,8 @@ def gather_statistics(inputdir, workload, shouldOverwrite = False):
             aggregate_dataframes_list.append(single_aggregated_dataframe)
 
             concat = pd.concat([client1, client2, client3])
+            concat = concat[concat['timestep'] > warmup_period_endtime]
+            concat = concat[concat['timestep'] < cooldown_period_starttime]
             concat['vc_per_thread'] = num_vc_per_thread
             concat['rep'] = rep
 

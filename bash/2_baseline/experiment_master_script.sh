@@ -86,7 +86,7 @@ servers=(6)
 experiment=2_1_baseline_oneserver 
 num_repetitions=3
 single_experiment_length_sec=82
-params_vc_per_thread=(1 2 4 8 16 32)
+params_vc_per_thread=(1 4 8 16 32 64 128)
 params_workload=(writeOnly readOnly)
 num_threads=2
 
@@ -149,7 +149,7 @@ do
 						nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
 						ping -Di 5 "$target_server_ip" -w "$single_experiment_length_sec" > ping.log &
 						nohup memtier_benchmark -s "$target_server_ip" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
-						--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier.log 2>&1"
+						--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier.log 2>&1"
 			for client_id in ${clients[@]}
 			do
 				echo "        Starting memtier on client" $client_id
@@ -235,7 +235,7 @@ servers=(6 7)
 experiment=2_2_baseline_twoservers
 num_repetitions=3
 single_experiment_length_sec=82
-params_vc_per_thread=(1 2 4 8 16 32)
+params_vc_per_thread=(1 4 8 16 32 64 128 256 512)
 params_workload=(writeOnly readOnly)
 num_threads=1
 
@@ -298,13 +298,13 @@ do
 			               nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
 			               ping -Di 5 "$(create_vm_ip ${servers[0]})" -w "$single_experiment_length_sec" > ping_0.log &
 			               nohup memtier_benchmark -s "$(create_vm_ip ${servers[0]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
-			               --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier_0.log 2>&1"
+			               --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier_0.log 2>&1"
 
 			memtier_1_cmd="> ping_1.log;
 						   echo $(date +%Y%m%d_%H%M%S) > memtier_1.log;
 						   ping -Di 5 "$(create_vm_ip ${servers[1]})" -w "$single_experiment_length_sec" > ping_1.log &
 			               nohup memtier_benchmark -s "$(create_vm_ip ${servers[1]})" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
-			               --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --ratio="$ratio" > memtier_1.log 2>&1"
+			               --threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier_1.log 2>&1"
 
 			echo "       " $memtier_0_cmd
 			echo "       " $memtier_1_cmd

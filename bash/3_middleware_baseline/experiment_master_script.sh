@@ -139,7 +139,7 @@ do
 done
 
 ### Compile middleware 
-middleware_start_cmd="cd asl-fall17-project/; git pull; ant clean; ant jar > build.log; rm -rf logs/*"
+middleware_start_cmd="cd asl-fall17-project/; git checkout develop; git pull; ant clean; ant jar > build.log; rm -rf logs/*"
 
 for mw_id in ${middlewares[@]}
 do
@@ -181,7 +181,7 @@ do
 					ssh $(create_vm_ip $mw_id) $middleware_cmd
 				done
 				sleep 4
-				echo "Middlewares started"
+				echo "                Middlewares started"
 
 				
 				target_middleware_ip=$(create_vm_ip ${middlewares[0]})
@@ -194,7 +194,7 @@ do
 							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier.log 2>&1"
 				for client_id in ${clients[@]}
 				do
-					echo "        Starting memtier on client" $client_id
+					echo "                Starting memtier on client" $client_id
 					client_vm_ip=$(create_vm_ip $client_id)
 					ssh $nethz"@"$client_vm_ip $memtier_cmd" &"
 				done
@@ -208,11 +208,11 @@ do
 					ssh $(create_vm_ip $mw_id) pkill --signal=SIGTERM -f java
 				done
 				sleep 4
-				echo "Middlewares stopped"
+				echo "                Middlewares stopped"
 
 
 	 			# Create folder
-	 			log_dir="./"$workload"_"$vc_per_thread"vc/"$rep
+	 			log_dir="./"$workload"_"$vc_per_thread"vc"$num_workers"workers/"$rep
 	 			mkdir -p $log_dir
 	 			cd $log_dir
 	 			echo "        Log dir=" $log_dir

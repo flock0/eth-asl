@@ -135,7 +135,7 @@ echo "Started memcached servers"
 ### Shutdown middleware instances that may be still running
 for mw_id in ${middlewares[@]}
 do
-	ssh $(create_vm_ip $mw_id) pkill -2f ASL17_Middleware.jar
+	ssh $(create_vm_ip $mw_id) pkill --signal=SIGINT -f java
 done
 
 ### Compile middleware 
@@ -205,7 +205,7 @@ do
 				# Terminate middlewares
 				for mw_id in ${middlewares[@]}
 				do
-					ssh $(create_vm_ip $mw_id) pkill -2f ASL17_Middleware.jar
+					ssh $(create_vm_ip $mw_id) pkill --signal=SIGTERM -f java
 				done
 				sleep 4
 				echo "Middlewares stopped"
@@ -237,6 +237,7 @@ do
 					middleware_vm_ip=$(create_vm_ip $mw_id)
 					middleware_logs_dirname=$(create_middleware_logs_dirname $mw_id)
 					middleware_dstat_filename=$(create_middleware_dstat_filename $mw_id)
+					ssh $nethz"@"$middleware_vm_ip pkill -f dstat
 					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/"
 					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_dstat_filename
 					ssh $nethz"@"$middleware_vm_ip rm -rf ~/asl-fall17-project/logs/*

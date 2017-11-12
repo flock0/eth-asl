@@ -135,7 +135,7 @@ echo "Started memcached servers"
 ### Shutdown middleware instances that may be still running
 for mw_id in ${middlewares[@]}
 do
-	ssh $(create_vm_ip $mw_id) "pkill -2f RunMW"
+	ssh $(create_vm_ip $mw_id) pkill -2f ASL17_Middleware.jar
 done
 
 ### Compile middleware 
@@ -205,7 +205,7 @@ do
 				# Terminate middlewares
 				for mw_id in ${middlewares[@]}
 				do
-					ssh $(create_vm_ip $mw_id) pkill -2f RunMW
+					ssh $(create_vm_ip $mw_id) pkill -2f ASL17_Middleware.jar
 				done
 				sleep 4
 				echo "Middlewares stopped"

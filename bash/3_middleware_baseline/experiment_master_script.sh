@@ -399,7 +399,7 @@ do
 				memtier_1_cmd="> ping_1.log;
 							echo $(date +%Y%m%d_%H%M%S) > memtier_1.log;
 							echo $(date +%Y%m%d_%H%M%S) > ping_1.log;
-							ping -Di 5 "target_middleware_1_ip" -w "$single_experiment_length_sec" > ping_1.log &
+							ping -Di 5 "$target_middleware_1_ip" -w "$single_experiment_length_sec" > ping_1.log &
 							nohup memtier_benchmark -s "$target_middleware_1_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
 							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier_1.log 2>&1"
 				

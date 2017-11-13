@@ -135,7 +135,7 @@ echo "Started memcached servers"
 ### Shutdown middleware instances that may be still running
 for mw_id in ${middlewares[@]}
 do
-	ssh $(create_vm_ip $mw_id) pkill --signal=SIGINT -f java
+	ssh $(create_vm_ip $mw_id) pkill --signal=SIGTERM -f java
 done
 
 ### Compile middleware 
@@ -341,7 +341,7 @@ echo "Started memcached servers"
 ### Shutdown middleware instances that may be still running
 for mw_id in ${middlewares[@]}
 do
-	ssh $(create_vm_ip $mw_id) pkill --signal=SIGINT -f java
+	ssh $(create_vm_ip $mw_id) pkill --signal=SIGTERM -f java
 done
 
 ### Compile middleware 

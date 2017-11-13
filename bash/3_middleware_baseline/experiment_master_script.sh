@@ -24,9 +24,6 @@ create_middleware_logs_dirname() {
 	echo "middleware_0"$1
 }
 
-create_middleware_dstat_filename() {
-	echo "middleware_dstat_0"$1".log"	
-}
 create_server_log_filename() {
 	echo "server_0"$1".log"
 }
@@ -236,10 +233,9 @@ do
 				do
 					middleware_vm_ip=$(create_vm_ip $mw_id)
 					middleware_logs_dirname=$(create_middleware_logs_dirname $mw_id)
-					middleware_dstat_filename=$(create_middleware_dstat_filename $mw_id)
 					ssh $nethz"@"$middleware_vm_ip pkill -f dstat
 					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/"
-					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_dstat_filename
+					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log"
 					ssh $nethz"@"$middleware_vm_ip rm -rf ~/asl-fall17-project/logs/*
 				done
 				sleep 4
@@ -392,15 +388,18 @@ do
 				
 				target_middleware_0_ip=$(create_vm_ip ${middlewares[0]})
 				target_middleware_1_ip=$(create_vm_ip ${middlewares[1]})
-				memtier_0_cmd="> dstat.log; > ping.log;
+				memtier_0_cmd="> dstat.log; > ping_0.log;
 							echo $(date +%Y%m%d_%H%M%S) > memtier_0.log;
-							echo $(date +%Y%m%d_%H%M%S) > ping.log;
+							echo $(date +%Y%m%d_%H%M%S) > ping_0.log;
 							nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
-							ping -Di 5 "$target_middleware_0_ip" -w "$single_experiment_length_sec" > ping.log &
+							ping -Di 5 "$target_middleware_0_ip" -w "$single_experiment_length_sec" > ping_0.log &
 							nohup memtier_benchmark -s "$target_middleware_0_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
 							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier_0.log 2>&1"
 
-				memtier_1_cmd="echo $(date +%Y%m%d_%H%M%S) > memtier_1.log;
+				memtier_1_cmd="> ping_1.log;
+							echo $(date +%Y%m%d_%H%M%S) > memtier_1.log;
+							echo $(date +%Y%m%d_%H%M%S) > ping_1.log;
+							ping -Di 5 "target_middleware_1_ip" -w "$single_experiment_length_sec" > ping_1.log &
 							nohup memtier_benchmark -s "$target_middleware_1_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
 							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier_1.log 2>&1"
 				
@@ -414,9 +413,7 @@ do
 
 				# Wait for experiment to finish, + 5 sec to account for delays
 				sleep $((single_experiment_length_sec + 5))
-				#######################################
-				### TODO Continue adapting script here!
-				#######################################
+				
 				# Terminate middlewares
 				for mw_id in ${middlewares[@]}
 				do
@@ -435,14 +432,14 @@ do
 				for client_id in ${clients[@]}
 				do
 					client_vm_ip=$(create_vm_ip $client_id)
-					client_log_filename=$(create_client_log_filename $client_id)
 					client_dstat_filename=$(create_client_dstat_filename $client_id)
-					client_ping_filename=$(create_client_ping_filename $client_id)
 					ssh $nethz"@"$client_vm_ip pkill -f dstat
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier.log") $client_log_filename
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_0.log") "client_01_0.log"
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_01_1.log"
 					rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping.log") $client_ping_filename
-					ssh $nethz"@"$client_vm_ip rm memtier.log
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_0.log") "client_ping_01_0.log"
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_1.log") "client_ping_01_1.log"
+					ssh $nethz"@"$client_vm_ip rm memtier_0.log memtier_1.log
 				done
 
 				# Copy over logs from middlewares. (Should only contain one log folder)
@@ -451,10 +448,9 @@ do
 				do
 					middleware_vm_ip=$(create_vm_ip $mw_id)
 					middleware_logs_dirname=$(create_middleware_logs_dirname $mw_id)
-					middleware_dstat_filename=$(create_middleware_dstat_filename $mw_id)
 					ssh $nethz"@"$middleware_vm_ip pkill -f dstat
 					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/"
-					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_dstat_filename
+					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log"
 					ssh $nethz"@"$middleware_vm_ip rm -rf ~/asl-fall17-project/logs/*
 				done
 				sleep 4

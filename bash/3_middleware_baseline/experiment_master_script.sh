@@ -89,11 +89,11 @@ servers=(6)
 
 ### Experiment parameters
 experiment=3_1_middleware_baseline_onemw
-num_repetitions=1 # for real experiment 3
-single_experiment_length_sec=10 # for real experiment 82
-params_vc_per_thread=(2) # for real experiment (1 2 4 8 16 32)
+num_repetitions=3
+single_experiment_length_sec=82
+params_vc_per_thread=(1 2 4 8 16 32)
 params_workload=(writeOnly readOnly)
-params_num_workers_per_mw=(8) # for real experiment (8 16 32 64)
+params_num_workers_per_mw=(8 16 32 64)
 num_threads=2
 
 ### We're using the private IPs to connect the servers with
@@ -294,11 +294,11 @@ servers=(6)
 
 ### Experiment parameters
 experiment=3_2_middleware_baseline_twomws
-num_repetitions=1 # for real experiment 3
-single_experiment_length_sec=10 # for real experiment 82
-params_vc_per_thread=(2) # for real experiment (1 2 4 8 16 32)
+num_repetitions=3
+single_experiment_length_sec=82
+params_vc_per_thread=(1 2 4 8 16 32)
 params_workload=(writeOnly readOnly)
-params_num_workers_per_mw=(8) # for real experiment (8 16 32 64)
+params_num_workers_per_mw=(8 16 32 64)
 num_threads=1
 
 ### We're using the private IPs to connect the servers with

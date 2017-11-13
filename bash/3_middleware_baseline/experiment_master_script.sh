@@ -390,24 +390,33 @@ do
 				echo "                Middlewares started"
 
 				
-				target_middleware_ip=$(create_vm_ip ${middlewares[0]})
-				memtier_cmd="> dstat.log; > ping.log;
-							echo $(date +%Y%m%d_%H%M%S) > memtier.log;
+				target_middleware_0_ip=$(create_vm_ip ${middlewares[0]})
+				target_middleware_1_ip=$(create_vm_ip ${middlewares[1]})
+				memtier_0_cmd="> dstat.log; > ping.log;
+							echo $(date +%Y%m%d_%H%M%S) > memtier_0.log;
 							echo $(date +%Y%m%d_%H%M%S) > ping.log;
 							nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
-							ping -Di 5 "$target_middleware_ip" -w "$single_experiment_length_sec" > ping.log &
-							nohup memtier_benchmark -s "$target_middleware_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
-							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier.log 2>&1"
-				for client_id in ${clients[@]}
-				do
-					echo "                Starting memtier on client" $client_id
-					client_vm_ip=$(create_vm_ip $client_id)
-					ssh $nethz"@"$client_vm_ip $memtier_cmd" &"
-				done
+							ping -Di 5 "$target_middleware_0_ip" -w "$single_experiment_length_sec" > ping.log &
+							nohup memtier_benchmark -s "$target_middleware_0_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
+							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier_0.log 2>&1"
+
+				memtier_1_cmd="echo $(date +%Y%m%d_%H%M%S) > memtier_1.log;
+							nohup memtier_benchmark -s "$target_middleware_1_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
+							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier_1.log 2>&1"
+				
+				echo "       " $memtier_0_cmd
+				echo "       " $memtier_1_cmd
+				client_id=${clients[0]}
+				echo "        Starting memtier on client" $client_id
+				client_vm_ip=$(create_vm_ip $client_id)
+				ssh $nethz"@"$client_vm_ip $memtier_0_cmd" &"
+				ssh $nethz"@"$client_vm_ip $memtier_1_cmd" &"
 
 				# Wait for experiment to finish, + 5 sec to account for delays
 				sleep $((single_experiment_length_sec + 5))
-
+				#######################################
+				### TODO Continue adapting script here!
+				#######################################
 				# Terminate middlewares
 				for mw_id in ${middlewares[@]}
 				do

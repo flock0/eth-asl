@@ -7,6 +7,7 @@ import ch.ethz.asl.net.MemcachedSocketHandler;
 
 public class Worker implements Runnable {
 	
+	private static final Integer LOG_INTERVAL = 100; // Take a sample by only storing every 100th request    
     private SocketChannel client;
 	private Request request;
 	
@@ -20,6 +21,16 @@ public class Worker implements Runnable {
         
     };        	
 
+    private static final ThreadLocal<Integer> logCounter = 
+            new ThreadLocal<Integer>(){
+         @Override
+         protected Integer initialValue(){
+             return new Integer(0);
+         }
+         
+         
+     };
+	
     public Worker(SocketChannel client, Request req){              
         this.client = client;
         this.request = req;
@@ -31,6 +42,11 @@ public class Worker implements Runnable {
     	RunMW.setQueueLength(request);
     	request.handle(sockets.get(), client);
     	request.setCompletedTime();
-    	request.writeLog();
+    	Integer counter = logCounter.get();
+    	if(counter % LOG_INTERVAL == 0) {
+    		request.writeLog();
+    		counter = 0;
+    	}
+    	counter += 1;
     }
 }

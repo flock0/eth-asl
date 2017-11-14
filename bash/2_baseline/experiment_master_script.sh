@@ -215,7 +215,6 @@ git add $zip_file
 git commit -m "Finished experiment $folder_name"
 git push
 
-rm $zip_file
 cd
 rm -rf ~/$folder_name
 
@@ -374,7 +373,6 @@ git add $zip_file
 git commit -m "Finished experiment $folder_name"
 git push
 
-rm $zip_file
 cd
 rm -rf ~/$folder_name
 

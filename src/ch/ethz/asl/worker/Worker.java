@@ -1,13 +1,14 @@
 package ch.ethz.asl.worker;
 
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.ThreadLocalRandom;
 
 import ch.ethz.asl.RunMW;
 import ch.ethz.asl.net.MemcachedSocketHandler;
 
 public class Worker implements Runnable {
 	
-	private static final Integer LOG_INTERVAL = 100; // Take a sample by only storing every 100th request    
+	private static final Integer LOG_INTERVAL = 100; // Take a sample by only storing every 100th request on average   
     private SocketChannel client;
 	private Request request;
 	
@@ -20,16 +21,6 @@ public class Worker implements Runnable {
         
         
     };        	
-
-    private static final ThreadLocal<Integer> logCounter = 
-            new ThreadLocal<Integer>(){
-         @Override
-         protected Integer initialValue(){
-             return new Integer(0);
-         }
-         
-         
-     };
 	
     public Worker(SocketChannel client, Request req){              
         this.client = client;
@@ -42,11 +33,8 @@ public class Worker implements Runnable {
     	RunMW.setQueueLength(request);
     	request.handle(sockets.get(), client);
     	request.setCompletedTime();
-    	Integer counter = logCounter.get();
-    	if(counter % LOG_INTERVAL == 0) {
+    	if(ThreadLocalRandom.current().nextInt(LOG_INTERVAL) == 0) {
     		request.writeLog();
-    		counter = 0;
     	}
-    	counter += 1;
     }
 }

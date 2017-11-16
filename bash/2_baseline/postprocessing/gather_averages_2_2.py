@@ -4,14 +4,23 @@ from gather_statistics_2_2 import gather_statistics
 
 def gather_averages(inputdir):
 
-    workloads=["writeOnly", "readOnly"]
+    concatenated_averages = []
+    workloads=['writeOnly', 'readOnly']
+    num_threads=2
+    num_clients=1
+
     for workload in workloads:
         gather_statistics(inputdir, workload, True)
 
         csv_file = pd.read_csv(os.path.join(inputdir, workload + '_exp2_2_aggregated.csv'))
-        grouped = csv_file.groupby(['rep', 'vc_per_thread'])
+        csv_file['num_clients'] = csv_file['vc_per_thread'] * num_threads * num_clients
+        grouped = csv_file.groupby(['rep', 'num_clients'])
         averages = grouped['sum_throughput', 'avg_responsetime'].mean()
-        print(averages)
+        averages['workload'] = workload
+        concatenated_averages.append(averages)
+
+    concatenated_averages = pd.concat(concatenated_averages)
+    return concatenated_averages
 
 
 if __name__ == '__main__':

@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import ch.ethz.asl.RunMW;
+import ch.ethz.asl.worker.HashingLoadBalancer;
 
 public class MemcachedSocketHandler {
 	
@@ -26,6 +27,7 @@ public class MemcachedSocketHandler {
 
 	public static void setMcAddresses(List<String> mcAddresses) {
 		numServers = mcAddresses.size();
+		HashingLoadBalancer.setNumServers(numServers);
 		for(int i = 0; i < numServers; i++)
 			MemcachedSocketHandler.mcAddresses.put(i, mcAddresses.get(i));
 		
@@ -169,11 +171,6 @@ public class MemcachedSocketHandler {
 
 	private boolean endsWithNewline(ByteBuffer buffer, int messageLength) {
 		return (char)buffer.get(messageLength - 2) == '\r' && (char)buffer.get(messageLength - 1) == '\n';
-	}
-
-
-	public int findTargetServer(String key) {
-		return Math.floorMod(key.hashCode(), numServers);  
 	}
 
 	public static int getNumServers() {

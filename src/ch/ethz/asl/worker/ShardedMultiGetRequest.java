@@ -34,7 +34,7 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		// TODO Split up keys to available servers
 		setRequestSize(readBuffer.limit());
 		readBuffer.clear();
-		startingServerIndex = memcachedSocketHandler.findTargetServer(keysString);
+		startingServerIndex = HashingLoadBalancer.findTargetServer(keysString);
 		int numServers = MemcachedSocketHandler.getNumServers();
 		
 		List<Integer> answerAssemblyOrder = new ArrayList<Integer>();

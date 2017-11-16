@@ -42,7 +42,7 @@ public class GetRequest extends Request {
 		parseMessage();
 		
 		// TODO Hash key to find server to handle
-		targetServerIndex = memcachedSocketHandler.findTargetServer(key);
+		targetServerIndex = HashingLoadBalancer.findTargetServer(key);
 		
 		// TODO Send getrequest to designated server
 		

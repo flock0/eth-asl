@@ -26,7 +26,7 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 		parseMessage();
 		
 		// TODO Hash key to find server to handle
-		targetServerIndex = memcachedSocketHandler.findTargetServer(keysString);
+		targetServerIndex = HashingLoadBalancer.findTargetServer(keysString);
 		
 		// TODO Send getrequest to designated server
 		try {

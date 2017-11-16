@@ -35,26 +35,11 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		setRequestSize(readBuffer.limit());
 		readBuffer.clear();
 		startingServerIndex = HashingLoadBalancer.findTargetServer(keysString);
-		int numServers = MemcachedSocketHandler.getNumServers();
 		
-		List<Integer> answerAssemblyOrder = new ArrayList<Integer>();
-		HashMap<Integer, List<String>> keySplits = new HashMap<>();
-		int maxKeysPerServer = (int) Math.ceil((double)keys.length / numServers);
+		Pair<HashMap<Integer, List<String>>, List<Integer>> pair = HashingLoadBalancer.assignKeysToServers(keys, startingServerIndex);
 		
-		int currentServer = startingServerIndex;
-		int keyPerServerCount = 0;
-		for(String key : keys) {
-			if(!keySplits.containsKey(currentServer)) {
-				answerAssemblyOrder.add(currentServer);
-				keySplits.put(currentServer, new ArrayList<>());
-			}
-			keySplits.get(currentServer).add(key);
-			
-			if(++keyPerServerCount == maxKeysPerServer) {
-				currentServer = (currentServer + 1) % numServers;
-				keyPerServerCount = 0;
-			}
-		}
+		HashMap<Integer, List<String>> keySplits = pair.left;
+		List<Integer> answerAssemblyOrder = pair.right;
 		
 		numOfTargetServers = answerAssemblyOrder.size();
 		// Construct separate multigets

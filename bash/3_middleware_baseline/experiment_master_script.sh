@@ -121,7 +121,7 @@ done
 
 ### Start up all instances of memcached
 memcached_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
-			   nohup memcached -p "$memcached_port" -v > memcached.log 2>&1 &"
+			   nohup memcached -p "$memcached_port" -t 1 -v > memcached.log 2>&1 &"
 for mc_id in ${servers[@]}
 do
 	ssh $(create_vm_ip $mc_id) $memcached_cmd
@@ -325,7 +325,7 @@ done
 
 ### Start up all instances of memcached
 memcached_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
-			   nohup memcached -p "$memcached_port" -v > memcached.log 2>&1 &"
+			   nohup memcached -p "$memcached_port" -t 1 -v > memcached.log 2>&1 &"
 for mc_id in ${servers[@]}
 do
 	ssh $(create_vm_ip $mc_id) $memcached_cmd

@@ -64,6 +64,7 @@ public class ClientsSocketsHandler implements Runnable {
 		logger.debug(String.format("Opening ServerSocket on %s:%d", myIp, myPort));
 		try {
 			
+			long previousArrivalTime = -1; //Store the arrival time of the previous request
 			clientReadBuffers = new HashMap<>();
 			// Selector: multiplexor of SelectableChannel objects
 			synchronized(this) {
@@ -150,10 +151,12 @@ public class ClientsSocketsHandler implements Runnable {
 								// TODO Check if the request is valid
 								Request req;
 								try {
-									long beforeFactoryTime = System.nanoTime();
+									long arrivalTime = System.nanoTime();
 									req = RequestFactory.tryParseClientRequest(readBuffer);
 									// If valid, forward the request to the workers.
-									req.setBeforeFactoryTime(beforeFactoryTime);
+									req.setPreviousArrivalTime(previousArrivalTime);
+									req.setArrivalTime(arrivalTime);
+									previousArrivalTime = arrivalTime;
 									enqueueChannel(client, req);
 									
 									

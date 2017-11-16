@@ -22,7 +22,8 @@ public abstract class Request {
 	public static final int MAX_DATABLOCK_SIZE = 1024;
 	
 	private long initializeClockTime;
-	private long beforeFactoryTime;
+	private long arrivalTime;
+	private long previousArrivalTime;
 	private long initializeTime;
 	private long enqueueTime;
 	private long dequeueTime;
@@ -77,7 +78,7 @@ public abstract class Request {
 	}
 
 	public void writeLog() {
-		requestLogger.debug(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", getRequestType(), getFirstTargetServer(), getNumOfTargetServers(), initializeClockTime, beforeFactoryTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, queueLength, numKeysRequested, numHits, requestSize, responseSize));
+		requestLogger.debug(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", getRequestType(), getFirstTargetServer(), getNumOfTargetServers(), initializeClockTime, previousArrivalTime, arrivalTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, queueLength, numKeysRequested, numHits, requestSize, responseSize));
 	}
 
 	public void setNumHits(int numHits) {
@@ -92,8 +93,13 @@ public abstract class Request {
 		this.responseSize = responseSize;
 	}
 
-	public void setBeforeFactoryTime(long beforeFactoryTime) {
-		this.beforeFactoryTime = beforeFactoryTime;
+	public void setArrivalTime(long arrivalTime) {
+		this.arrivalTime = arrivalTime;
+		
+	}
+
+	public void setPreviousArrivalTime(long previousArrivalTime) {
+		this.previousArrivalTime = previousArrivalTime;
 		
 	}
 }

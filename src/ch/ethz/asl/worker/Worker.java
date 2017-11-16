@@ -28,13 +28,12 @@ public class Worker implements Runnable {
     }
 
     public void run(){
-    	//ThreadContext.put("KEY", Thread.currentThread().getName());
+    	if(ThreadLocalRandom.current().nextInt(LOG_INTERVAL) != 0)
+    		request.dontLog();
     	request.setDequeueTime();
     	RunMW.setQueueLength(request);
     	request.handle(sockets.get(), client);
     	request.setCompletedTime();
-    	if(ThreadLocalRandom.current().nextInt(LOG_INTERVAL) == 0) {
-    		request.writeLog();
-    	}
+    	request.writeLog();
     }
 }

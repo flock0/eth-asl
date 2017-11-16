@@ -21,6 +21,7 @@ public abstract class Request {
 	 */
 	public static final int MAX_DATABLOCK_SIZE = 1024;
 	
+	private boolean shouldLog = true;
 	private long initializeClockTime;
 	private long arrivalTime;
 	private long previousArrivalTime;
@@ -52,54 +53,68 @@ public abstract class Request {
 	public abstract int getNumOfTargetServers();
 	
 	public void setEnqueueTime() {
-		enqueueTime = System.nanoTime();
+		if(shouldLog)
+			enqueueTime = System.nanoTime();
 	}
 	
 	public void setDequeueTime() {
-		dequeueTime = System.nanoTime();
+		if(shouldLog)
+			dequeueTime = System.nanoTime();
 	}
 
 	public void setBeforeSendTime() {
-		beforeSendTime = System.nanoTime();
+		if(shouldLog)
+			beforeSendTime = System.nanoTime();
 	}
 	
 	public void setAfterReceiveTime() {
-		afterReceiveTime = System.nanoTime();
+		if(shouldLog)
+			afterReceiveTime = System.nanoTime();
 	}
 	
 	public void setCompletedTime() {
-		completedTime = System.nanoTime();
-		
+		if(shouldLog)
+			completedTime = System.nanoTime();
 	}
 
 	public void setQueueLength(int queueLength) {
-		this.queueLength = queueLength; 
+		if(shouldLog)
+			this.queueLength = queueLength; 
 		
 	}
 
 	public void writeLog() {
-		requestLogger.debug(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", getRequestType(), getFirstTargetServer(), getNumOfTargetServers(), initializeClockTime, previousArrivalTime, arrivalTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, queueLength, numKeysRequested, numHits, requestSize, responseSize));
+		if(shouldLog)
+			requestLogger.debug(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", getRequestType(), getFirstTargetServer(), getNumOfTargetServers(), initializeClockTime, previousArrivalTime, arrivalTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, queueLength, numKeysRequested, numHits, requestSize, responseSize));
 	}
 
 	public void setNumHits(int numHits) {
-		this.numHits = numHits;
+		if(shouldLog)
+			this.numHits = numHits;
 	}
 
 	public void setRequestSize(int requestSize) {
-		this.requestSize = requestSize;
+		if(shouldLog)
+			this.requestSize = requestSize;
 	}
 
 	public void setResponseSize(int responseSize) {
-		this.responseSize = responseSize;
+		if(shouldLog)
+			this.responseSize = responseSize;
 	}
 
 	public void setArrivalTime(long arrivalTime) {
-		this.arrivalTime = arrivalTime;
+		if(shouldLog)
+			this.arrivalTime = arrivalTime;
 		
 	}
 
 	public void setPreviousArrivalTime(long previousArrivalTime) {
-		this.previousArrivalTime = previousArrivalTime;
-		
+		if(shouldLog)
+			this.previousArrivalTime = previousArrivalTime;
+	}
+	
+	public void dontLog() {
+		shouldLog = false;
 	}
 }

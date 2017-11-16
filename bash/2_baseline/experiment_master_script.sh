@@ -86,7 +86,7 @@ servers=(6)
 experiment=2_1_baseline_oneserver 
 num_repetitions=3
 single_experiment_length_sec=82
-params_vc_per_thread=(1 4 8 16 32 64 128)
+params_vc_per_thread=(1 4 8 16 32 64 128 256)
 params_workload=(writeOnly readOnly)
 num_threads=2
 

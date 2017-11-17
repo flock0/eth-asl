@@ -272,12 +272,6 @@ tar -zcvf $zip_file ./*
 mv $zip_file ~/ethz-asl-experiments/
 cd ~/ethz-asl-experiments
 
-# Commit experiment data to git repository
-git pull
-git add $zip_file
-git commit -m "Finished experiment $folder_name"
-git push
-
 cd
 rm -rf ~/$folder_name
 
@@ -485,12 +479,6 @@ cp ~/experiment.log ./master.log
 tar -zcvf $zip_file ./*
 mv $zip_file ~/ethz-asl-experiments/
 cd ~/ethz-asl-experiments
-
-# Commit experiment data to git repository
-git pull
-git add $zip_file
-git commit -m "Finished experiment $folder_name"
-git push
 
 cd
 rm -rf ~/$folder_name

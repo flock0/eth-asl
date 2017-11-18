@@ -17,7 +17,7 @@ import ch.ethz.asl.worker.Pair;
 public class HashingLoadBalancerTest {
 
 	Random rnd;
-	final int numIterations = 100000;
+	final int numIterations = 1000000;
 	@Before
 	public void setUp() throws Exception {
 		rnd = new Random();

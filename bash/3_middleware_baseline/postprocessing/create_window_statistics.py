@@ -9,5 +9,5 @@ def create_window_statistics(metrics, windowsize):
 
     mean_window = mean_data.rolling(windowsize, on='timestamp').mean()
     count_window = count_data.rolling(windowsize, on='timestamp').count().drop('timestamp', axis=1)
-
-    return pd.concat([mean_window,count_window], axis=1)
+    timekeeping = (metrics['initializeClockTime'] - metrics['initializeClockTime'].min()) / 1000
+    return pd.concat([mean_window,count_window, timekeeping], axis=1)

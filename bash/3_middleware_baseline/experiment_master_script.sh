@@ -229,9 +229,9 @@ do
 					client_dstat_filename=$(create_client_dstat_filename $client_id)
 					client_ping_filename=$(create_client_ping_filename $client_id)
 					ssh $nethz"@"$client_vm_ip pkill -f dstat
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier.log") $client_log_filename &
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename &
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping.log") $client_ping_filename &
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier.log") $client_log_filename
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping.log") $client_ping_filename
 					ssh $nethz"@"$client_vm_ip rm memtier.log
 				done
 
@@ -243,7 +243,7 @@ do
 					middleware_logs_dirname=$(create_middleware_logs_dirname $mw_id)
 					ssh $nethz"@"$middleware_vm_ip pkill -f dstat
 					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/"
-					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log" &
+					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log"
 					ssh $nethz"@"$middleware_vm_ip rm -rf ~/asl-fall17-project/logs/*
 				done
 
@@ -442,10 +442,10 @@ do
 					client_vm_ip=$(create_vm_ip $client_id)
 					client_dstat_filename=$(create_client_dstat_filename $client_id)
 					ssh $nethz"@"$client_vm_ip pkill -f dstat
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_0.log") "client_01_0.log" &
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_01_1.log" &
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename &
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_0.log") "client_ping_01_0.log" &
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_0.log") "client_01_0.log"
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_01_1.log"
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_0.log") "client_ping_01_0.log"
 					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_1.log") "client_ping_01_1.log"
 					ssh $nethz"@"$client_vm_ip rm memtier_0.log memtier_1.log &
 				done
@@ -457,8 +457,8 @@ do
 					middleware_vm_ip=$(create_vm_ip $mw_id)
 					middleware_logs_dirname=$(create_middleware_logs_dirname $mw_id)
 					ssh $nethz"@"$middleware_vm_ip pkill -f dstat
-					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/" &
-					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log" &
+					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/"
+					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log"
 					ssh $nethz"@"$middleware_vm_ip rm -rf ~/asl-fall17-project/logs/*
 				done
 

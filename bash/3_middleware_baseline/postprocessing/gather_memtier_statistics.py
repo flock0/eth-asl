@@ -16,7 +16,18 @@ def extract_client_logs(inputfile):
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
     _, error = process.communicate()
 
+    if (error != None):
+        print("Encountered error {} when extracting data".format(error))
+        exit(2)
+
     return pd.read_csv(extracted_file, delim_whitespace=True)
+
+def extract_total_numbers(inputfile):
+
+    for line in open(inputfile, 'r'):
+        if line.startswith("Totals"):
+            split_line = line.split()
+            return float(split_line[1]), float(split_line[2]), float(split_line[3])
 
 def extract_ping_logs(inputfile, startingClockTime):
     print('Extracting stats from ping log', inputfile)
@@ -28,6 +39,10 @@ def extract_ping_logs(inputfile, startingClockTime):
     bashCommand = "bash extract_single_pings.sh {} {}".format(inputfile, extracted_file)
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
     _, error = process.communicate()
+
+    if (error != None):
+        print("Encountered error {} when extracting pings".format(error))
+        exit(2)
 
     df = pd.read_csv(extracted_file, delim_whitespace=True)
     clockTime_regex = re.compile("(?<=\[)\d*(?=\.)")
@@ -46,3 +61,6 @@ def calculate_throughput_resptime(metrics):
     xput = metrics['throughput'].mean()
     resptime = metrics['responsetime'].mean()
     return (xput, resptime)
+
+def calculate_miss_rate(df):
+    return df['misses_persec'].sum() / df['total_opsec'].sum()

@@ -74,16 +74,22 @@ def get_worker_data(worker_config, matching_dirs, num_repetitions, middlewares, 
             all_mw_metrics_per_rep.append(mw_aggregated_metrics)
 
             all_logs_from_all_mts_list = []
+            totals_list = []
             for client_logfile in client_logfiles:
                 client_logfile_path = os.path.join(experiment_dir, str(rep), client_logfile)
                 client_logs = gmt.extract_client_logs(client_logfile_path)
+                total_hits_misses = gmt.extract_total_numbers(client_logfile_path)
+                totals_list.append(total_hits_misses)
                 all_logs_from_all_mts_list.append(client_logs)
 
+            totals_df = pd.DataFrame(data=totals_list, columns=['total_opsec', 'hits_persec', 'misses_persec'])
+            missrate = gmt.calculate_miss_rate(totals_df)
             client_logs = pd.concat(all_logs_from_all_mts_list)
             cut_client_metrics = cut_away_warmup_cooldown(client_logs, 'timestep', warmup_period_endtime, cooldown_period_starttime)
             mt_aggregate_logs = gmt.aggregate_all_client_logs(cut_client_metrics)
 
             mt_throughput_resp = gmt.calculate_throughput_resptime(mt_aggregate_logs)
+            mxk.tryset_mt_max(mt_throughput_resp[0], mt_throughput_resp[1], missrate, num_vc, worker_config, rep)
             all_mt_metrics_per_rep.append(mt_throughput_resp)
 
 

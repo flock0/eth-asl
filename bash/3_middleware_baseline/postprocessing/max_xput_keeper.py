@@ -30,9 +30,9 @@ class MaxXputKeeper:
             self.mt_max_xput = xput
             self.mt_max_avg_resptime = avg_resptime
             self.mt_max_missrate = missrate
-            self.mw_max_vc = vc
-            self.mw_max_worker = worker
-            self.mw_max_rep = rep
+            self.mt_max_vc = vc
+            self.mt_max_worker = worker
+            self.mt_max_rep = rep
 
     def print(self):
         print("Maximum observed middleware throughput: {}".format(self.mw_max_xput))

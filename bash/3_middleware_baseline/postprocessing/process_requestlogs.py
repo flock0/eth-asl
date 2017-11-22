@@ -27,17 +27,18 @@ def sort_by_clock(requests):
     return requests.sort_values(by='initializeClockTime')
 
 def extract_metrics(requests):
-    metrics = requests.loc[:, ['middleware', 'requestType', 'initializeClockTime', 'queueLength', 'requestSize', 'responseSize', 'thread']]
+    metrics = requests.loc[:, ['middleware', 'requestType', 'initializeClockTime', 'queueLength', 'requestSize', 'responseSize', 'thread', 'numHits', 'numKeysRequested']]
     metrics['queueTime_ms'] = (requests['dequeueTime'] - requests['enqueueTime']) / 1000000
     metrics['workerServiceTime_ms'] = (requests['completedTime'] - requests['dequeueTime']) / 1000000
     metrics['netthreadServiceTime_ms'] = (requests['enqueueTime'] - requests['arrivalTime']) / 1000000
     metrics['responseTime_us'] = (requests['completedTime'] - requests['arrivalTime']) / 1000
     metrics['responseTime_ms'] = metrics['responseTime_us'] / 1000
-    metrics['miss_rate'] = 1 - requests['numHits'] / requests['numKeysRequested']
     metrics['initializeClockTime'] = (metrics['initializeClockTime'] - metrics['initializeClockTime'].min()) / 1000
     return metrics
 
-def calculate_throughput_resptime(metrics):
+def calculate_aggregated_metrics(metrics):
     xput = metrics['initializeClockTime'].count() / (metrics['initializeClockTime'].max() - metrics['initializeClockTime'].min()) * log_interval
     resptime = metrics['responseTime_ms'].mean()
-    return (xput, resptime)
+    queuetime = metrics['queueTime_ms'].mean()
+    missrate = 1 - (metrics['numHits'].sum() / metrics['numKeysRequested'].sum())
+    return (xput, resptime, queuetime, missrate)

@@ -2,6 +2,8 @@ import os
 import re
 import pandas as pd
 
+log_interval = 20
+
 def concatenate_requestlogs(inputdir, prefix):
 
     print('Concatenating requestlogs in', inputdir)
@@ -31,5 +33,10 @@ def extract_metrics(requests):
     metrics['responseTime_us'] = (requests['completedTime'] - requests['arrivalTime']) / 1000
     metrics['responseTime_ms'] = metrics['responseTime_us'] / 1000
     metrics['miss_rate'] = 1 - requests['numHits'] / requests['numKeysRequested']
-
+    metrics['initializeClockTime'] = (metrics['initializeClockTime'] - metrics['initializeClockTime'].min()) / 1000
     return metrics
+
+def calculate_throughput_resptime(metrics):
+    xput = metrics['initializeClockTime'].count() / (metrics['initializeClockTime'].max() - metrics['initializeClockTime'].min()) * log_interval
+    resptime = metrics['responseTime_ms'].mean()
+    return (xput, resptime)

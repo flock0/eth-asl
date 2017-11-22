@@ -37,3 +37,8 @@ def extract_ping_logs(inputfile, startingClockTime):
 
     df['clockTime'] = df['clockTime'] - df['clockTime'].min()
     return df
+
+def calculate_throughput_resptime(metrics):
+    xput = metrics['throughput'].mean()
+    resptime = metrics['responsetime'].mean()
+    return (xput, resptime)

@@ -1,5 +1,5 @@
 import re
-import os
+import os, sys
 
 reps_regex = re.compile("\d*")
 
@@ -32,14 +32,14 @@ def get_and_validate_num_repetition(directories_to_check):
 def find_num_vc(workload_dir_path):
     basedir = os.path.basename(workload_dir_path)
     start_idx = basedir.find("_") + 1 # num of vc occures right after the underscore
-    end_idx = basedir.find("vc", beg=start_idx)
+    end_idx = basedir.find("vc", start_idx)
     num_vc = int(basedir[start_idx:end_idx])
     return num_vc
 
 def find_num_workers(workload_dir_path):
     basedir = os.path.basename(workload_dir_path)
-    start_idx = basedir.find("vc") + 1 # num of workers occures right after vc
-    end_idx = basedir.find("workers", beg=start_idx)
+    start_idx = basedir.find("vc") + 2 # num of workers occures right after vc
+    end_idx = basedir.find("workers", start_idx)
     num_workers = int(basedir[start_idx:end_idx])
     return num_workers
 
@@ -50,5 +50,15 @@ def find_worker_configurations(workload_directories):
         if num_workers not in all_worker_configurations:
             all_worker_configurations.append(find_num_workers(directory))
 
+    return all_worker_configurations
+
 def find_matching_worker_config_dirs(all_directories, worker_config):
-    return [rep_dirname for rep_dirname in all_directories if worker_config + "workers" in rep_dirname]
+    return [rep_dirname for rep_dirname in all_directories if str(worker_config) + "workers" in rep_dirname]
+
+def get_only_subdir(dirpath):
+    filter_dirs = filter(lambda x: os.path.isdir(os.path.join(dirpath, x)), os.listdir(dirpath))
+    subdirs = [os.path.join(dirpath, dirname) for dirname in filter_dirs]
+    if (len(subdirs) != 1):
+        print ("Found more or less than one subdirectories in {}".format(dirpath))
+        sys.exit(2)
+    return os.path.join(dirpath, subdirs[0])

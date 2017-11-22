@@ -175,6 +175,7 @@ do
 			for num_workers in ${params_num_workers_per_mw[@]}
 			do
 				echo "                Starting experiment with num_workers="$num_workers
+				echo $(date +"                Timestamp %H:%M:%S")
 				# Start middlewares
 
 			    for mw_id in ${middlewares[@]}
@@ -379,6 +380,7 @@ do
 			for num_workers in ${params_num_workers_per_mw[@]}
 			do
 				echo "                Starting experiment with num_workers="$num_workers
+				echo $(date +"                Timestamp %H:%M:%S")
 				# Start middlewares
 
 			    for mw_id in ${middlewares[@]}

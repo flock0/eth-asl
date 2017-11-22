@@ -38,6 +38,10 @@ def extract_ping_logs(inputfile, startingClockTime):
     df['clockTime'] = df['clockTime'] - df['clockTime'].min()
     return df
 
+def aggregate_all_client_logs(metrics):
+    return metrics.groupby(['timestep'], as_index=True).agg(
+        {'throughput': 'sum', 'responsetime': 'mean'})
+
 def calculate_throughput_resptime(metrics):
     xput = metrics['throughput'].mean()
     resptime = metrics['responsetime'].mean()

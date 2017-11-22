@@ -4,7 +4,7 @@ import pandas as pd
 
 log_interval = 20
 
-def concatenate_requestlogs(inputdir, prefix):
+def concatenate_requestlogs(inputdir, prefix, mw_dir):
 
     print('Concatenating requestlogs in', inputdir)
 
@@ -18,6 +18,7 @@ def concatenate_requestlogs(inputdir, prefix):
         if (file.startswith(prefix)):
             csv_file = pd.read_csv(os.path.join(inputdir, file))
             csv_file['thread'] = threadid_regex.findall(file)[0]
+            csv_file['middleware'] = mw_dir
             request_files_list.append(csv_file)
 
     return pd.concat(request_files_list)
@@ -26,7 +27,7 @@ def sort_by_clock(requests):
     return requests.sort_values(by='initializeClockTime')
 
 def extract_metrics(requests):
-    metrics = requests.loc[:, ['requestType', 'initializeClockTime', 'queueLength', 'requestSize', 'responseSize', 'thread']]
+    metrics = requests.loc[:, ['middleware', 'requestType', 'initializeClockTime', 'queueLength', 'requestSize', 'responseSize', 'thread']]
     metrics['queueTime_ms'] = (requests['dequeueTime'] - requests['enqueueTime']) / 1000000
     metrics['workerServiceTime_ms'] = (requests['completedTime'] - requests['dequeueTime']) / 1000000
     metrics['netthreadServiceTime_ms'] = (requests['enqueueTime'] - requests['arrivalTime']) / 1000000

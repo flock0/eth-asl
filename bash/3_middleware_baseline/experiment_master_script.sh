@@ -184,7 +184,7 @@ do
 			                        -s false -m "$(create_vm_ip ${servers[0]})":"$memcached_port" > /dev/null &"
 					ssh $(create_vm_ip $mw_id) $middleware_cmd
 				done
-				sleep 4
+				sleep 1
 				echo "                Middlewares started"
 
 				
@@ -204,14 +204,14 @@ do
 				done
 
 				# Wait for experiment to finish, + 5 sec to account for delays
-				sleep $((single_experiment_length_sec + 5))
+				sleep $((single_experiment_length_sec + 2))
 
 				# Terminate middlewares
 				for mw_id in ${middlewares[@]}
 				do
 					ssh $(create_vm_ip $mw_id) pkill --signal=SIGTERM -f java
 				done
-				sleep 4
+				sleep 2
 				echo "                Middlewares stopped"
 
 
@@ -228,9 +228,9 @@ do
 					client_dstat_filename=$(create_client_dstat_filename $client_id)
 					client_ping_filename=$(create_client_ping_filename $client_id)
 					ssh $nethz"@"$client_vm_ip pkill -f dstat
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier.log") $client_log_filename
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping.log") $client_ping_filename
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier.log") $client_log_filename &
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename &
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping.log") $client_ping_filename &
 					ssh $nethz"@"$client_vm_ip rm memtier.log
 				done
 
@@ -242,10 +242,9 @@ do
 					middleware_logs_dirname=$(create_middleware_logs_dirname $mw_id)
 					ssh $nethz"@"$middleware_vm_ip pkill -f dstat
 					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/"
-					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log"
+					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log" &
 					ssh $nethz"@"$middleware_vm_ip rm -rf ~/asl-fall17-project/logs/*
 				done
-				sleep 4
 
 	 			cd ../..
 	 			echo "        ========="
@@ -275,7 +274,7 @@ done
 # Zip all experiment files
 zip_file=$folder_name".tar.gz"
 cp ~/experiment.log ./master.log
-tar -zcvf $zip_file ./*
+tar -zcf $zip_file ./*
 mv $zip_file ~/ethz-asl-experiments/
 cd ~/ethz-asl-experiments
 
@@ -389,7 +388,7 @@ do
 			                        -s false -m "$(create_vm_ip ${servers[0]})":"$memcached_port" > /dev/null &"
 					ssh $(create_vm_ip $mw_id) $middleware_cmd
 				done
-				sleep 4
+				sleep 1
 				echo "                Middlewares started"
 
 				
@@ -419,14 +418,14 @@ do
 				ssh $nethz"@"$client_vm_ip $memtier_1_cmd" &"
 
 				# Wait for experiment to finish, + 5 sec to account for delays
-				sleep $((single_experiment_length_sec + 5))
+				sleep $((single_experiment_length_sec + 2))
 				
 				# Terminate middlewares
 				for mw_id in ${middlewares[@]}
 				do
 					ssh $(create_vm_ip $mw_id) pkill --signal=SIGTERM -f java
 				done
-				sleep 4
+				sleep 2
 				echo "                Middlewares stopped"
 
 
@@ -441,12 +440,12 @@ do
 					client_vm_ip=$(create_vm_ip $client_id)
 					client_dstat_filename=$(create_client_dstat_filename $client_id)
 					ssh $nethz"@"$client_vm_ip pkill -f dstat
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_0.log") "client_01_0.log"
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_01_1.log"
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_0.log") "client_ping_01_0.log"
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_0.log") "client_01_0.log" &
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_01_1.log" &
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename &
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_0.log") "client_ping_01_0.log" &
 					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_1.log") "client_ping_01_1.log"
-					ssh $nethz"@"$client_vm_ip rm memtier_0.log memtier_1.log
+					ssh $nethz"@"$client_vm_ip rm memtier_0.log memtier_1.log &
 				done
 
 				# Copy over logs from middlewares. (Should only contain one log folder)
@@ -456,11 +455,10 @@ do
 					middleware_vm_ip=$(create_vm_ip $mw_id)
 					middleware_logs_dirname=$(create_middleware_logs_dirname $mw_id)
 					ssh $nethz"@"$middleware_vm_ip pkill -f dstat
-					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/"
-					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log"
+					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/" &
+					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log" &
 					ssh $nethz"@"$middleware_vm_ip rm -rf ~/asl-fall17-project/logs/*
 				done
-				sleep 4
 
 	 			cd ../..
 	 			echo "        ========="
@@ -490,7 +488,7 @@ done
 # Zip all experiment files
 zip_file=$folder_name".tar.gz"
 cp ~/experiment.log ./master.log
-tar -zcvf $zip_file ./*
+tar -zcf $zip_file ./*
 mv $zip_file ~/ethz-asl-experiments/
 cd ~/ethz-asl-experiments
 

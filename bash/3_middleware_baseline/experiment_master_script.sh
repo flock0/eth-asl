@@ -145,6 +145,13 @@ done
 sleep 4
 echo "Middlewares compiled"
 
+for mc_id in ${servers[@]}
+do
+	memtier_fill_cmd="memtier_benchmark -s "$(create_vm_ip $mc_id)" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients=1 
+						--threads=1 --expiry-range=9999-10000 --data-size=1024 --ratio=1:0  --key-pattern=S:S > /dev/null 2>&1"
+	ssh $(create_vm_ip ${clients[0]}) $memtier_fill_cmd
+done
+echo "Prepopulated memcached servers"
 
 ### Now start with the actual experiments
 echo "========="
@@ -343,6 +350,13 @@ done
 sleep 4
 echo "Middlewares compiled"
 
+for mc_id in ${servers[@]}
+do
+	memtier_fill_cmd="memtier_benchmark -s "$(create_vm_ip $mc_id)" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients=1 
+						--threads=1 --expiry-range=9999-10000 --data-size=1024 --ratio=1:0  --key-pattern=S:S > /dev/null 2>&1"
+	ssh $(create_vm_ip ${clients[0]}) $memtier_fill_cmd
+done
+echo "Prepopulated memcached servers"
 
 ### Now start with the actual experiments
 echo "========="

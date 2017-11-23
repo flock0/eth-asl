@@ -185,7 +185,7 @@ do
 			                        -s false -m "$(create_vm_ip ${servers[0]})":"$memcached_port" > /dev/null &"
 					ssh $(create_vm_ip $mw_id) $middleware_cmd
 				done
-				sleep 1
+				sleep 4
 				echo "                Middlewares started"
 
 				
@@ -205,7 +205,7 @@ do
 				done
 
 				# Wait for experiment to finish, + 5 sec to account for delays
-				sleep $((single_experiment_length_sec + 2))
+				sleep $((single_experiment_length_sec + 4))
 
 				# Terminate middlewares
 				for mw_id in ${middlewares[@]}
@@ -390,7 +390,7 @@ do
 			                        -s false -m "$(create_vm_ip ${servers[0]})":"$memcached_port" > /dev/null &"
 					ssh $(create_vm_ip $mw_id) $middleware_cmd
 				done
-				sleep 1
+				sleep 4
 				echo "                Middlewares started"
 
 				
@@ -420,7 +420,7 @@ do
 				ssh $nethz"@"$client_vm_ip $memtier_1_cmd" &"
 
 				# Wait for experiment to finish, + 5 sec to account for delays
-				sleep $((single_experiment_length_sec + 2))
+				sleep $((single_experiment_length_sec + 4))
 				
 				# Terminate middlewares
 				for mw_id in ${middlewares[@]}

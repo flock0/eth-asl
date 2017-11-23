@@ -96,22 +96,23 @@ all_exp_vms=(1 2 3 4 5 6 7 8) # for real experiment (1 4 5 6)
 az configure --defaults group=$resource_group
 
 ######################
-### EXPERIMENT 4   ###
+### EXPERIMENT 5_1 ###
 ######################
 
-### Servers involved in experiment 4
+### Servers involved in experiment 5
 all_vms=(1 2 3 4 5 6 7 8)
 clients=(1 2 3)
 middlewares=(4 5)
 servers=(6 7 8)
 
 ### Experiment parameters
-experiment=4_write_throughput
+experiment=5_multigets
 num_repetitions=3
 single_experiment_length_sec=82
-params_vc_per_thread=(1 4 8 16 24 32 48 64) 
-params_workload=(writeOnly)
-params_num_workers_per_mw=(8 16 32 64)
+params_vc_per_thread=2
+params_issharded=true
+params_multiget_size=(1 3 6 9)
+params_num_workers_per_mw=64 #TODO Or use max throughput configuration
 num_threads=1
 
 ### We're using the private IPs to connect the servers with
@@ -163,101 +164,87 @@ echo "Prepopulated memcached servers"
 ### Now start with the actual experiments
 echo "========="
 echo "Starting experiment" $folder_name
-
-for workload in ${params_workload[@]}
+for rep in $(seq $num_repetitions)
 do
-	echo "    Starting experiment with" $workload "workload"
-	for rep in $(seq $num_repetitions)
+	echo "        Starting repetition" $rep
+	for multiget_size in ${params_multiget_size[@]}
 	do
-		echo "        Starting repetition" $rep
-		for vc_per_thread in ${params_vc_per_thread[@]}
+		echo "            Starting experiment with multiget_size="$multiget_size
+		echo $(date +"                Timestamp %H:%M:%S")
+		
+		ratio=1:$multiget_size
+
+		# Start middlewares
+	    for mw_id in ${middlewares[@]}
 		do
-			echo "            Starting experiment with vc_per_thread="$vc_per_thread
-			if [ $workload = "writeOnly" ]; then
-               ratio=1:0
-            elif [ $workload = "readOnly" ]; then
-				ratio=0:1
-			fi
-
-			for num_workers in ${params_num_workers_per_mw[@]}
-			do
-				echo "                Starting experiment with num_workers="$num_workers
-				echo $(date +"                Timestamp %H:%M:%S")
-				# Start middlewares
-
-			    for mw_id in ${middlewares[@]}
-				do
-					middleware_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & cd asl-fall17-project;
-			                        nohup java -jar bin/jar/ASL17_Middleware.jar -l "$(create_vm_ip $mw_id)" -p "$middleware_port" -t "$num_workers" 
-			                        -s false -m "$(create_vm_ip ${servers[0]})":"$memcached_port" "$(create_vm_ip ${servers[1]})":"$memcached_port" "$(create_vm_ip ${servers[2]})":"$memcached_port" > /dev/null &"
-					ssh $(create_vm_ip $mw_id) $middleware_cmd
-				done
-				sleep 4
-				echo "                Middlewares started"
-
-				
-				target_middleware_0_ip=$(create_vm_ip ${middlewares[0]})
-				target_middleware_1_ip=$(create_vm_ip ${middlewares[1]})
-				start_both_memtiers_command="> dstat.log; > ping_0.log;
-							echo $(date +%Y%m%d_%H%M%S) > memtier_0.log;
-							echo $(date +%Y%m%d_%H%M%S) > ping_0.log;
-							nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
-							ping -Di 1 "$target_middleware_0_ip" -w "$single_experiment_length_sec" > ping_0.log &
-							nohup memtier_benchmark -s "$target_middleware_0_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
-							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier_0.log 2>&1 & 
-							> ping_1.log;
-							echo $(date +%Y%m%d_%H%M%S) > memtier_1.log;
-							echo $(date +%Y%m%d_%H%M%S) > ping_1.log;
-							ping -Di 1 "$target_middleware_1_ip" -w "$single_experiment_length_sec" > ping_1.log &
-							nohup memtier_benchmark -s "$target_middleware_1_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
-							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier_1.log 2>&1 &"
-				
-				echo "        Starting memtier on clients"
-				parallel-ssh -i -O StrictHostKeyChecking=no -h $clients_host_file $start_both_memtiers_command
-				
-				# Wait for experiment to finish, + 5 sec to account for delays
-				sleep $((single_experiment_length_sec + 2))
-				
-				# Terminate middlewares
-				parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file pkill --signal=SIGTERM -f java
-				sleep 2
-				echo "                Middlewares stopped"
-
-
-	 			# Create folder
-	 			log_dir="./"$workload"_"$vc_per_thread"vc"$num_workers"workers/"$rep
-	 			mkdir -p $log_dir
-	 			cd $log_dir
-	 			echo "        Log dir=" $log_dir
-				# Copy over logs from memtiers
-				parallel-ssh -i -O StrictHostKeyChecking=no -h $clients_host_file pkill -f dstat
-				for client_id in ${clients[@]}
-				do
-					client_vm_ip=$(create_vm_ip $client_id)
-					client_dstat_filename=$(create_client_dstat_filename $client_id)
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_0.log") "client_0"$client_id"_0.log"
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_0"$client_id"_1.log"
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_0.log") "client_ping_0"$client_id"_0.log"
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_1.log") "client_ping_0"$client_id"_1.log"
-				done
-				parallel-ssh -i -O StrictHostKeyChecking=no -h $clients_host_file rm memtier_0.log memtier_1.log
-				# Copy over logs from middlewares. (Should only contain one log folder)
-				# Afterwards remove the log folder
-				parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file pkill -f dstat
-				for mw_id in ${middlewares[@]}
-				do
-					middleware_vm_ip=$(create_vm_ip $mw_id)
-					middleware_logs_dirname=$(create_middleware_logs_dirname $mw_id)
-					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/"
-					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log"
-				done
-				parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file rm -rf ~/asl-fall17-project/logs/*
-	 			cd ../..
-	 			echo "        ========="
-			done
-			
+			middleware_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & cd asl-fall17-project;
+	                        nohup java -jar bin/jar/ASL17_Middleware.jar -l "$(create_vm_ip $mw_id)" -p "$middleware_port" -t "$params_num_workers_per_mw" 
+	                        -s "$params_issharded" -m "$(create_vm_ip ${servers[0]})":"$memcached_port" "$(create_vm_ip ${servers[1]})":"$memcached_port" "$(create_vm_ip ${servers[2]})":"$memcached_port" > /dev/null &"
+			ssh $(create_vm_ip $mw_id) $middleware_cmd
 		done
+		sleep 4
+		echo "                Middlewares started"
+
+		
+		target_middleware_0_ip=$(create_vm_ip ${middlewares[0]})
+		target_middleware_1_ip=$(create_vm_ip ${middlewares[1]})
+		start_both_memtiers_command="> dstat.log; > ping_0.log;
+					echo $(date +%Y%m%d_%H%M%S) > memtier_0.log;
+					echo $(date +%Y%m%d_%H%M%S) > ping_0.log;
+					nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+					ping -Di 1 "$target_middleware_0_ip" -w "$single_experiment_length_sec" > ping_0.log &
+					nohup memtier_benchmark -s "$target_middleware_0_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$params_vc_per_thread" 
+					--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" --multi-key-get="$multiget_size" > memtier_0.log 2>&1 & 
+					> ping_1.log;
+					echo $(date +%Y%m%d_%H%M%S) > memtier_1.log;
+					echo $(date +%Y%m%d_%H%M%S) > ping_1.log;
+					ping -Di 1 "$target_middleware_1_ip" -w "$single_experiment_length_sec" > ping_1.log &
+					nohup memtier_benchmark -s "$target_middleware_1_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$params_vc_per_thread" 
+					--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" --multi-key-get="$multiget_size" > memtier_1.log 2>&1 &"
+		
+		echo "        Starting memtier on clients"
+		parallel-ssh -i -O StrictHostKeyChecking=no -h $clients_host_file $start_both_memtiers_command
+		
+		# Wait for experiment to finish, + 5 sec to account for delays
+		sleep $((single_experiment_length_sec + 4))
+		
+		# Terminate middlewares
+		parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file pkill --signal=SIGTERM -f java
+		sleep 2
+		echo "                Middlewares stopped"
+
+
+		# Create folder
+		log_dir="./"$multiget_size"multiget"$num_workers"workers/"$rep
+		mkdir -p $log_dir
+		cd $log_dir
+		echo "        Log dir=" $log_dir
+		# Copy over logs from memtiers
+		parallel-ssh -i -O StrictHostKeyChecking=no -h $clients_host_file pkill -f dstat
+		for client_id in ${clients[@]}
+		do
+			client_vm_ip=$(create_vm_ip $client_id)
+			client_dstat_filename=$(create_client_dstat_filename $client_id)
+			rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_0.log") "client_0"$client_id"_0.log"
+			rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_0"$client_id"_1.log"
+			rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
+			rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_0.log") "client_ping_0"$client_id"_0.log"
+			rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_1.log") "client_ping_0"$client_id"_1.log"
+		done
+		parallel-ssh -i -O StrictHostKeyChecking=no -h $clients_host_file rm memtier_0.log memtier_1.log
+		# Copy over logs from middlewares. (Should only contain one log folder)
+		# Afterwards remove the log folder
+		parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file pkill -f dstat
+		for mw_id in ${middlewares[@]}
+		do
+			middleware_vm_ip=$(create_vm_ip $mw_id)
+			middleware_logs_dirname=$(create_middleware_logs_dirname $mw_id)
+			rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/"
+			rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log"
+		done
+		parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file rm -rf ~/asl-fall17-project/logs/*
+			cd ../..
+			echo "        ========="
 	done
 done
 

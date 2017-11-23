@@ -194,7 +194,7 @@ do
 							echo $(date +%Y%m%d_%H%M%S) > memtier.log;
 							echo $(date +%Y%m%d_%H%M%S) > ping.log;
 							nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
-							ping -Di 5 "$target_middleware_ip" -w "$single_experiment_length_sec" > ping.log &
+							ping -Di 1 "$target_middleware_ip" -w "$single_experiment_length_sec" > ping.log &
 							nohup memtier_benchmark -s "$target_middleware_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
 							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier.log 2>&1"
 				for client_id in ${clients[@]}
@@ -400,7 +400,7 @@ do
 							echo $(date +%Y%m%d_%H%M%S) > memtier_0.log;
 							echo $(date +%Y%m%d_%H%M%S) > ping_0.log;
 							nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
-							ping -Di 5 "$target_middleware_0_ip" -w "$single_experiment_length_sec" > ping_0.log &
+							ping -Di 1 "$target_middleware_0_ip" -w "$single_experiment_length_sec" > ping_0.log &
 							nohup memtier_benchmark -s "$target_middleware_0_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
 							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier_0.log 2>&1"
 

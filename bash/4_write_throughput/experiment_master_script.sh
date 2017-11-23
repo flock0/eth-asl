@@ -33,22 +33,25 @@ create_server_dstat_filename() {
 }
 
 create_pssh_host_files() {
+	touch $clients_host_file
 	> $clients_host_file
 	for vm_id in ${clients[@]}
 	do
-		echo $nethz"@"$(create_vm_ip $vm_id) > $clients_host_file
+		echo $nethz"@"$(create_vm_ip $vm_id) >> $clients_host_file
 	done
 
+	touch $clients_host_file
 	> $middlewares_host_file
 	for vm_id in ${middlewares[@]}
 	do
-		echo $nethz"@"$(create_vm_ip $vm_id) > $middlewares_host_file
+		echo $nethz"@"$(create_vm_ip $vm_id) >> $middlewares_host_file
 	done
 
+	touch $clients_host_file
 	> $servers_host_file
 	for vm_id in ${servers[@]}
 	do
-		echo $nethz"@"$(create_vm_ip $vm_id) > $servers_host_file
+		echo $nethz"@"$(create_vm_ip $vm_id) >> $servers_host_file
 	done
 
 }
@@ -77,9 +80,9 @@ nethz=fchlan
 memcached_port=11211
 middleware_port=11211
 master=9
-clients_host_file = "~/client_hosts"
-middlewares_host_file = "~/middleware_hosts"
-servers_host_file = "~/server_hosts"
+clients_host_file=~/client_hosts
+middlewares_host_file=~/middleware_hosts
+servers_host_file=~/server_hosts
 
 ######################
 ### PRE-EXP SETUP  ###
@@ -111,7 +114,7 @@ middlewares=(4 5)
 servers=(6 7 8)
 
 ### Experiment parameters
-experiment=3_1_write_throughput
+experiment=4_write_throughput
 num_repetitions=1 #3
 single_experiment_length_sec=10 #82
 params_vc_per_thread=(32) #(1 4 8 16 24 32 48 64) 
@@ -129,7 +132,7 @@ do
 	i=$((i+1))
 done
 
-create_pssh_host_files()
+create_pssh_host_files
 
 ### Setup folder structure for logfiles
 timestamp=$(date +%Y-%m-%d_%H%M%S)
@@ -139,21 +142,21 @@ cd $folder_name
 
 
 ### Shutdown memcached that may be running on autostart
-pssh -h $servers_host_file "sudo service memcached stop; pkill -2f memcached"
+parallel-ssh -i -O StrictHostKeyChecking=no -h $servers_host_file "sudo service memcached stop; pkill -2f memcached"
 
 ### Start up all instances of memcached
-memcached_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+memcached_cmd="sudo service memcached stop; pkill -2f memcached; > dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
 			   nohup memcached -p "$memcached_port" -t 1 -v > memcached.log 2>&1 &"
-pssh -h $servers_host_file $memcached_cmd
+parallel-ssh -i -O StrictHostKeyChecking=no -h $servers_host_file $memcached_cmd
 sleep 4
 echo "Started memcached servers"
 
 ### Shutdown middleware instances that may be still running
-pssh -h $middlewares_host_file pkill --signal=SIGTERM -f java
+parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file pkill --signal=SIGTERM -f java
 
 ### Compile middleware 
 middleware_start_cmd="cd asl-fall17-project/; git checkout develop; git pull; ant clean; ant jar > build.log; rm -rf logs/*"
-pssh -h $middlewares_host_file $middleware_start_cmd
+parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file $middleware_start_cmd
 sleep 4
 echo "Middlewares compiled"
 
@@ -218,13 +221,13 @@ do
 							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" > memtier_1.log 2>&1 &"
 				
 				echo "        Starting memtier on clients"
-				pssh -h $clients_host_file $start_both_memtiers_command
+				parallel-ssh -i -O StrictHostKeyChecking=no -h $clients_host_file $start_both_memtiers_command
 				
 				# Wait for experiment to finish, + 5 sec to account for delays
 				sleep $((single_experiment_length_sec + 2))
 				
 				# Terminate middlewares
-				pssh -h $middlewares_host_file pkill --signal=SIGTERM -f java
+				parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file pkill --signal=SIGTERM -f java
 				sleep 2
 				echo "                Middlewares stopped"
 
@@ -235,21 +238,21 @@ do
 	 			cd $log_dir
 	 			echo "        Log dir=" $log_dir
 				# Copy over logs from memtiers
-				pssh -h $clients_host_file pkill -f dstat
+				parallel-ssh -i -O StrictHostKeyChecking=no -h $clients_host_file pkill -f dstat
 				for client_id in ${clients[@]}
 				do
 					client_vm_ip=$(create_vm_ip $client_id)
 					client_dstat_filename=$(create_client_dstat_filename $client_id)
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_0.log") "client_01_0.log"
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_01_1.log"
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_0.log") "client_0"$client_id"_0.log"
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_0"$client_id"_1.log"
 					rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_0.log") "client_ping_01_0.log"
-					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_1.log") "client_ping_01_1.log"
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_0.log") "client_ping_0"$client_id"_0.log"
+					rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_1.log") "client_ping_0"$client_id"_1.log"
 				done
-				pssh -h $clients_host_file rm memtier_0.log memtier_1.log
+				parallel-ssh -i -O StrictHostKeyChecking=no -h $clients_host_file rm memtier_0.log memtier_1.log
 				# Copy over logs from middlewares. (Should only contain one log folder)
 				# Afterwards remove the log folder
-				pssh -h $middlewares_host_file pkill -f dstat
+				parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file pkill -f dstat
 				for mw_id in ${middlewares[@]}
 				do
 					middleware_vm_ip=$(create_vm_ip $mw_id)
@@ -257,7 +260,7 @@ do
 					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/"
 					rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log"
 				done
-				pssh -h $middlewares_host_file rm -rf ~/asl-fall17-project/logs/*
+				parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file rm -rf ~/asl-fall17-project/logs/*
 	 			cd ../..
 	 			echo "        ========="
 			done
@@ -267,7 +270,7 @@ do
 done
 
 # Shutdown all memcached servers
-pssh -h $servers_host_file pkill -2f memcached; pkill -f dstat
+parallel-ssh -i -O StrictHostKeyChecking=no -h $servers_host_file pkill -2f memcached; pkill -f dstat
 # Copy over logs from memcached
 for mc_id in ${servers[@]}
 do
@@ -277,7 +280,7 @@ do
 	rsync -r $(echo $nethz"@"$server_vm_ip":~/memcached.log") ~/$folder_name/$server_log_filename
 	rsync -r $(echo $nethz"@"$server_vm_ip":~/dstat.log") ~/$folder_name/$server_dstat_filename
 done
-pssh -h $servers_host_file rm memcached.log
+parallel-ssh -i -O StrictHostKeyChecking=no -h $servers_host_file rm memcached.log
 
 # Zip all experiment files
 zip_file=$folder_name".tar.gz"

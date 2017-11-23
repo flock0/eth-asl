@@ -99,14 +99,14 @@ az configure --defaults group=$resource_group
 ### EXPERIMENT 5_1 ###
 ######################
 
-### Servers involved in experiment 5
+### Servers involved in experiment 5_1
 all_vms=(1 2 3 4 5 6 7 8)
 clients=(1 2 3)
 middlewares=(4 5)
 servers=(6 7 8)
 
 ### Experiment parameters
-experiment=5_multigets
+experiment=5_1_multigets
 num_repetitions=3
 single_experiment_length_sec=82
 params_vc_per_thread=2
@@ -215,7 +215,7 @@ do
 
 
 		# Create folder
-		log_dir="./"$multiget_size"multiget"$num_workers"workers/"$rep
+		log_dir="./"$multiget_size"multiget/"$rep
 		mkdir -p $log_dir
 		cd $log_dir
 		echo "        Log dir=" $log_dir

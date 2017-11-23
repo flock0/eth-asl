@@ -64,16 +64,6 @@ master=9
 ### Servers involved in the whole experiment
 all_exp_vms=(1 4 5 6) # for real experiment (1 4 5 6)
 
-# Booting up the VMs for this experiment
-if [ ! "$#" == 1 ] || [ ! $1 == "nostart" ]; then
-	start_all_vms
-	# Wait some time for all VMs to boot
-	echo "Sleeping for 120 sec to let VMs services boot up..."
-	sleep 60
-	echo "60 seconds remaining..."
-	sleep 60
-fi
-
 # Configuring the Azure resource group
 az configure --defaults group=$resource_group
 

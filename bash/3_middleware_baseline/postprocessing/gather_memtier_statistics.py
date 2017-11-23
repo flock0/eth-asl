@@ -3,7 +3,10 @@
 import subprocess
 import re
 import pandas as pd
+import numpy as np
+import math
 
+### Extracts the client logs from a single memtier log. For each timestep we get xput and responsetime
 def extract_client_logs(inputfile):
     print('Extracting stats from client log', inputfile)
 
@@ -22,6 +25,37 @@ def extract_client_logs(inputfile):
 
     return pd.read_csv(extracted_file, delim_whitespace=True)
 
+### Extracts the client logs from multiple memtier logs and aggregates them.
+### Throughput is aggregated by summing
+### Responsetime is aggregated by a weighted average
+def aggregate_over_clients(inputfiles):
+    concatenated = pd.concat([extract_client_logs(inputfile) for inputfile in inputfiles])
+    concatenated['product'] = concatenated['throughput'] * concatenated['responsetime']
+    grouped = concatenated.groupby('timestep')
+    aggregated = grouped.agg({'throughput': 'sum', 'product': 'sum'})
+    aggregated['responsetime'] = aggregated['product'] / aggregated['throughput']
+    aggregated.drop('product', axis=1, inplace=True)
+    return aggregated.reset_index()
+
+### Aggregates the timesteps from multiple reps
+### For both throughput and responsetime we calculate the mean and variance
+def aggregate_over_reps(rep_aggregates):
+    concatenated = pd.concat(rep_aggregates)
+    grouped = concatenated.groupby('timestep')
+    aggregated = grouped.agg([np.mean, np.var, 'count'])
+    aggregated[('throughput','var')] = aggregated[('throughput','var')] / aggregated[('throughput','count')]
+    aggregated[('responsetime', 'var')] = aggregated[('responsetime', 'var')] / aggregated[('responsetime', 'count')]
+    aggregated.drop([('throughput','count'), ('responsetime', 'count')], axis=1, inplace=True)
+    return aggregated
+
+### Aggregates over all timesteps
+### Takes a dataframe of throughput and variance, averaged by timesteps
+### Returns a single average throughput and std value
+def aggregate_over_timesteps(timestep_wise_averages):
+    avg = timestep_wise_averages.mean(axis=0)
+    avg[('throughput', 'std')] = math.sqrt(avg[('throughput', 'var')])
+    avg[('responsetime', 'std')] = math.sqrt(avg[('responsetime', 'var')])
+    return avg
 def extract_total_numbers(inputfile):
 
     for line in open(inputfile, 'r'):

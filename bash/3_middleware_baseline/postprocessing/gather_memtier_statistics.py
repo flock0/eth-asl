@@ -43,9 +43,9 @@ def aggregate_over_reps(rep_aggregates):
     concatenated = pd.concat(rep_aggregates)
     grouped = concatenated.groupby('timestep')
     aggregated = grouped.agg([np.mean, np.var, 'count'])
-    aggregated[('throughput','var')] = aggregated[('throughput','var')] / aggregated[('throughput','count')]
-    aggregated[('responsetime', 'var')] = aggregated[('responsetime', 'var')] / aggregated[('responsetime', 'count')]
-    aggregated.drop([('throughput','count'), ('responsetime', 'count')], axis=1, inplace=True)
+    for lvl1 in aggregated.columns.levels[0]:
+        aggregated.loc[:, (lvl1, 'var')] = aggregated.loc[:, (lvl1, 'var')] / aggregated.loc[:, (lvl1, 'count')]
+    aggregated.drop([(lvl1, 'count') for lvl1 in aggregated.columns.levels[0]], axis=1, inplace=True)
     return aggregated
 
 ### Aggregates over all timesteps
@@ -53,8 +53,8 @@ def aggregate_over_reps(rep_aggregates):
 ### Returns a single average throughput and std value
 def aggregate_over_timesteps(timestep_wise_averages):
     avg = timestep_wise_averages.mean(axis=0)
-    avg[('throughput', 'std')] = math.sqrt(avg[('throughput', 'var')])
-    avg[('responsetime', 'std')] = math.sqrt(avg[('responsetime', 'var')])
+    for lvl1 in avg.index.levels[0]:
+        avg[(lvl1, 'std')] = np.sqrt(avg[(lvl1, 'var')])
     return avg
 def extract_total_numbers(inputfile):
 

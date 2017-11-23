@@ -106,7 +106,7 @@ middlewares=(4 5)
 servers=(6 7 8)
 
 ### Experiment parameters
-experiment=5_1_multigets
+experiment=5_1_multigets_sharded
 num_repetitions=3
 single_experiment_length_sec=82
 params_vc_per_thread=2
@@ -215,7 +215,183 @@ do
 
 
 		# Create folder
-		log_dir="./"$multiget_size"multiget/"$rep
+		log_dir="./sharded_"$multiget_size"multiget/"$rep
+		mkdir -p $log_dir
+		cd $log_dir
+		echo "        Log dir=" $log_dir
+		# Copy over logs from memtiers
+		parallel-ssh -i -O StrictHostKeyChecking=no -h $clients_host_file pkill -f dstat
+		for client_id in ${clients[@]}
+		do
+			client_vm_ip=$(create_vm_ip $client_id)
+			client_dstat_filename=$(create_client_dstat_filename $client_id)
+			rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_0.log") "client_0"$client_id"_0.log"
+			rsync -r $(echo $nethz"@"$client_vm_ip":~/memtier_1.log") "client_0"$client_id"_1.log"
+			rsync -r $(echo $nethz"@"$client_vm_ip":~/dstat.log") $client_dstat_filename
+			rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_0.log") "client_ping_0"$client_id"_0.log"
+			rsync -r $(echo $nethz"@"$client_vm_ip":~/ping_1.log") "client_ping_0"$client_id"_1.log"
+		done
+		parallel-ssh -i -O StrictHostKeyChecking=no -h $clients_host_file rm memtier_0.log memtier_1.log
+		# Copy over logs from middlewares. (Should only contain one log folder)
+		# Afterwards remove the log folder
+		parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file pkill -f dstat
+		for mw_id in ${middlewares[@]}
+		do
+			middleware_vm_ip=$(create_vm_ip $mw_id)
+			middleware_logs_dirname=$(create_middleware_logs_dirname $mw_id)
+			rsync -r $(echo $nethz"@"$middleware_vm_ip":~/asl-fall17-project/logs/*") $middleware_logs_dirname"/"
+			rsync -r $(echo $nethz"@"$middleware_vm_ip":~/dstat.log") $middleware_logs_dirname"/dstat.log"
+		done
+		parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file rm -rf ~/asl-fall17-project/logs/*
+			cd ../..
+			echo "        ========="
+	done
+done
+
+# Shutdown all memcached servers
+parallel-ssh -i -O StrictHostKeyChecking=no -h $servers_host_file pkill -2f memcached; pkill -f dstat
+# Copy over logs from memcached
+for mc_id in ${servers[@]}
+do
+	server_vm_ip=$(create_vm_ip $mc_id)
+	server_log_filename=$(create_server_log_filename $mc_id)
+	server_dstat_filename=$(create_server_dstat_filename $mc_id)
+	rsync -r $(echo $nethz"@"$server_vm_ip":~/memcached.log") ~/$folder_name/$server_log_filename
+	rsync -r $(echo $nethz"@"$server_vm_ip":~/dstat.log") ~/$folder_name/$server_dstat_filename
+done
+parallel-ssh -i -O StrictHostKeyChecking=no -h $servers_host_file rm memcached.log
+
+# Zip all experiment files
+zip_file=$folder_name".tar.gz"
+cp ~/experiment.log ./master.log
+tar -zcf $zip_file ./*
+mv $zip_file ~/ethz-asl-experiments/
+cd ~/ethz-asl-experiments
+
+cd
+rm -rf ~/$folder_name
+
+######################
+### EXPERIMENT 5_2 ###
+######################
+
+### Servers involved in experiment 5_2
+all_vms=(1 2 3 4 5 6 7 8)
+clients=(1 2 3)
+middlewares=(4 5)
+servers=(6 7 8)
+
+### Experiment parameters
+experiment=5_2_multigets_nonsharded
+num_repetitions=3
+single_experiment_length_sec=82
+params_vc_per_thread=2
+params_issharded=false
+params_multiget_size=(1 3 6 9)
+params_num_workers_per_mw=64 #TODO Or use max throughput configuration
+num_threads=1
+
+### We're using the private IPs to connect the servers with
+### eachother as this is faster than using the public IP address.
+echo "Fetching private IPs"
+i=0
+for vm_id in ${all_vms[@]}
+do
+	private_ips[${all_vms[$i]}]=$(az vm show --name $vm_nameprefix$vm_id --query privateIps -d --out tsv)
+	i=$((i+1))
+done
+
+create_pssh_host_files
+
+### Setup folder structure for logfiles
+timestamp=$(date +%Y-%m-%d_%H%M%S)
+folder_name=$experiment"_"$timestamp
+mkdir $folder_name
+cd $folder_name
+
+
+### Shutdown memcached that may be running on autostart
+parallel-ssh -i -O StrictHostKeyChecking=no -h $servers_host_file "sudo service memcached stop; pkill -2f memcached"
+
+### Start up all instances of memcached
+memcached_cmd="sudo service memcached stop; pkill -2f memcached; > dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+			   nohup memcached -p "$memcached_port" -t 1 -v > memcached.log 2>&1 &"
+parallel-ssh -i -O StrictHostKeyChecking=no -h $servers_host_file $memcached_cmd
+sleep 4
+echo "Started memcached servers"
+
+### Shutdown middleware instances that may be still running
+parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file pkill --signal=SIGTERM -f java
+
+### Compile middleware 
+middleware_start_cmd="cd asl-fall17-project/; git checkout develop; git pull; ant clean; ant jar > build.log; rm -rf logs/*"
+parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file $middleware_start_cmd
+sleep 8
+echo "Middlewares compiled"
+
+for mc_id in ${servers[@]}
+do
+	memtier_fill_cmd="memtier_benchmark -s "$(create_vm_ip $mc_id)" -p "$memcached_port" -P memcache_text --key-maximum=10000 --clients=1 
+						--threads=1 --expiry-range=9999-10000 --data-size=1024 --ratio=1:0  --key-pattern=S:S > /dev/null 2>&1"
+	ssh $(create_vm_ip ${clients[0]}) $memtier_fill_cmd
+done
+echo "Prepopulated memcached servers"
+
+### Now start with the actual experiments
+echo "========="
+echo "Starting experiment" $folder_name
+for rep in $(seq $num_repetitions)
+do
+	echo "        Starting repetition" $rep
+	for multiget_size in ${params_multiget_size[@]}
+	do
+		echo "            Starting experiment with multiget_size="$multiget_size
+		echo $(date +"                Timestamp %H:%M:%S")
+		
+		ratio=1:$multiget_size
+
+		# Start middlewares
+	    for mw_id in ${middlewares[@]}
+		do
+			middleware_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & cd asl-fall17-project;
+	                        nohup java -jar bin/jar/ASL17_Middleware.jar -l "$(create_vm_ip $mw_id)" -p "$middleware_port" -t "$params_num_workers_per_mw" 
+	                        -s "$params_issharded" -m "$(create_vm_ip ${servers[0]})":"$memcached_port" "$(create_vm_ip ${servers[1]})":"$memcached_port" "$(create_vm_ip ${servers[2]})":"$memcached_port" > /dev/null &"
+			ssh $(create_vm_ip $mw_id) $middleware_cmd
+		done
+		sleep 4
+		echo "                Middlewares started"
+
+		
+		target_middleware_0_ip=$(create_vm_ip ${middlewares[0]})
+		target_middleware_1_ip=$(create_vm_ip ${middlewares[1]})
+		start_both_memtiers_command="> dstat.log; > ping_0.log;
+					echo $(date +%Y%m%d_%H%M%S) > memtier_0.log;
+					echo $(date +%Y%m%d_%H%M%S) > ping_0.log;
+					nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+					ping -Di 1 "$target_middleware_0_ip" -w "$single_experiment_length_sec" > ping_0.log &
+					nohup memtier_benchmark -s "$target_middleware_0_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$params_vc_per_thread" 
+					--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" --multi-key-get="$multiget_size" > memtier_0.log 2>&1 & 
+					> ping_1.log;
+					echo $(date +%Y%m%d_%H%M%S) > memtier_1.log;
+					echo $(date +%Y%m%d_%H%M%S) > ping_1.log;
+					ping -Di 1 "$target_middleware_1_ip" -w "$single_experiment_length_sec" > ping_1.log &
+					nohup memtier_benchmark -s "$target_middleware_1_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$params_vc_per_thread" 
+					--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=9999-10000 --data-size=1024 --ratio="$ratio" --multi-key-get="$multiget_size" > memtier_1.log 2>&1 &"
+		
+		echo "        Starting memtier on clients"
+		parallel-ssh -i -O StrictHostKeyChecking=no -h $clients_host_file $start_both_memtiers_command
+		
+		# Wait for experiment to finish, + 5 sec to account for delays
+		sleep $((single_experiment_length_sec + 4))
+		
+		# Terminate middlewares
+		parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file pkill --signal=SIGTERM -f java
+		sleep 2
+		echo "                Middlewares stopped"
+
+
+		# Create folder
+		log_dir="./nonsharded_"$multiget_size"multiget/"$rep
 		mkdir -p $log_dir
 		cd $log_dir
 		echo "        Log dir=" $log_dir

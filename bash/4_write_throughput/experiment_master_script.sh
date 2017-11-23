@@ -91,14 +91,6 @@ servers_host_file=~/server_hosts
 all_exp_vms=(1 2 3 4 5 6 7 8) # for real experiment (1 4 5 6)
 
 # Booting up the VMs for this experiment
-if [ ! "$#" == 1 ] || [ ! $1 == "nostart" ]; then
-	start_all_vms
-	# Wait some time for all VMs to boot
-	echo "Sleeping for 120 sec to let VMs services boot up..."
-	sleep 60
-	echo "60 seconds remaining..."
-	sleep 60
-fi
 
 # Configuring the Azure resource group
 az configure --defaults group=$resource_group
@@ -157,7 +149,7 @@ parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file pkill --si
 ### Compile middleware 
 middleware_start_cmd="cd asl-fall17-project/; git checkout develop; git pull; ant clean; ant jar > build.log; rm -rf logs/*"
 parallel-ssh -i -O StrictHostKeyChecking=no -h $middlewares_host_file $middleware_start_cmd
-sleep 4
+sleep 8
 echo "Middlewares compiled"
 
 for mc_id in ${servers[@]}
@@ -200,10 +192,10 @@ do
 			                        -s false -m "$(create_vm_ip ${servers[0]})":"$memcached_port" "$(create_vm_ip ${servers[1]})":"$memcached_port" "$(create_vm_ip ${servers[2]})":"$memcached_port" > /dev/null &"
 					ssh $(create_vm_ip $mw_id) $middleware_cmd
 				done
-				sleep 1
+				sleep 4
 				echo "                Middlewares started"
 
-				## CONTINUE WORK HERE
+				
 				target_middleware_0_ip=$(create_vm_ip ${middlewares[0]})
 				target_middleware_1_ip=$(create_vm_ip ${middlewares[1]})
 				start_both_memtiers_command="> dstat.log; > ping_0.log;

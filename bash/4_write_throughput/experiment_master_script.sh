@@ -112,11 +112,11 @@ servers=(6 7 8)
 
 ### Experiment parameters
 experiment=3_1_write_throughput
-num_repetitions=3
-single_experiment_length_sec=82
-params_vc_per_thread=(1 4 8 16 24 32 48 64) 
+num_repetitions=1 #3
+single_experiment_length_sec=10 #82
+params_vc_per_thread=(32) #(1 4 8 16 24 32 48 64) 
 params_workload=(writeOnly)
-params_num_workers_per_mw=(8 16 32 64)
+params_num_workers_per_mw=(32) #(8 16 32 64)
 num_threads=1
 
 ### We're using the private IPs to connect the servers with

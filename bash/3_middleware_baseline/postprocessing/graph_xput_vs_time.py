@@ -65,3 +65,20 @@ def plot_mt_xput_over_time(inputdir, worker_configuration, folder_prefix, rep, c
 
 def create_log_folder_path(inputdir, folder_prefix, rep, worker_config):
     return os.path.join(inputdir, "{}{}workers".format(folder_prefix, worker_config), str(rep))
+
+
+
+
+
+inputdir = "/home/flo/Downloads/exp3/third_exec/3_2_middleware_baseline_twomws_2017-11-23_234338"
+worker_configuration = [8,16,32,64]
+folder_prefix = "writeOnly_32vc"
+middlewares = ["middleware_04", "middleware_05"]
+client_logfiles = ["client_01_0.log", "client_01_1.log"]
+reps = [1,2,3]
+
+f, axes = plt.subplots(2,3, sharex=True, sharey=True)
+for rep in reps:
+    plot_mw_xput_over_time(inputdir, worker_configuration, folder_prefix, rep, middlewares, axes[0, rep-1])
+    plot_mt_xput_over_time(inputdir, worker_configuration, folder_prefix, rep, client_logfiles, axes[1, rep-1])
+plt.show()

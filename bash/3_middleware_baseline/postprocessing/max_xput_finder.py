@@ -48,7 +48,7 @@ def find_max_throughput(inputdir, workload, worker_configs, vc_configs, reps, mi
     print("missrate\t{}".format(missrate))
 
     # Now we extract throughput, responsetime, average queuetime and missrate from the middleware
-    middleware_dirs = [dirfunc.get_only_subdir(os.path.join(log_folder_path, mw_dir)) for mw_dir in middlewares]
+    middleware_dirs = [dirfuncs.get_only_subdir(os.path.join(log_folder_path, mw_dir)) for mw_dir in middlewares]
     concatenated_requests = [gmws.concatenate_requestlogs(middleware_dir) for middleware_dir in middleware_dirs]
     metrics = [gmws.extract_metrics(reqs) for reqs in concatenated_requests]
     cut_metrics = [cut.cut_away_warmup_cooldown(mets, warmup_period_endtime, cooldown_period_starttime) for mets in metrics]

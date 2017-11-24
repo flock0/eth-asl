@@ -1,14 +1,12 @@
 import os
 import gather_memtier_statistics as gmts
 import gather_middleware_statistics as gmws
-import directory_functions as dirfunc
-import max_xput_keeper
+import directory_functions as dirfuncs
 import cut_away_warmup_cooldown as cut
 import pandas as pd
 
 def find_max_throughput(inputdir, workload, worker_configs, vc_configs, reps, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime):
     unformatted_foldername= "{}_{}vc{}workers"
-    mxk = max_xput_keeper.MaxXputKeeper()
 
     config_throughput_maximums = []
     for vc in vc_configs:

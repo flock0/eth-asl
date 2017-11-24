@@ -1,4 +1,6 @@
 import os
+from operator import concat
+
 import pandas as pd
 from directory_functions import *
 from cut_away_warmup_cooldown import *
@@ -60,14 +62,16 @@ def get_worker_data(worker_config, matching_dirs, num_repetitions, middlewares, 
         for rep in range(1, num_repetitions + 1):
 
             middleware_dirs = [get_only_subdir(os.path.join(experiment_dir, str(rep), mw_dir)) for mw_dir in middlewares]
-            requests = pd.concat([gmws.concatenate_requestlogs(middleware_dir) for middleware_dir in middleware_dirs])
+            concatenated_requests = [gmws.concatenate_requestlogs(middleware_dir) for middleware_dir in middleware_dirs]
 
-            metrics = gmws.extract_metrics(requests)
+            metrics = [gmws.extract_metrics(reqs) for reqs in concatenated_requests]
 
-            cut_metrics = cut_away_warmup_cooldown(metrics, warmup_period_endtime, cooldown_period_starttime)
 
-            rep_metrics = gmws.aggregate_over_windows(cut_metrics)
+            cut_metrics = [cut_away_warmup_cooldown(mets, warmup_period_endtime, cooldown_period_starttime) for mets in metrics]
 
+            windows = [gmws.aggregate_over_windows(cut_mets) for cut_mets in cut_metrics]
+
+            rep_metrics = gmws.aggregate_over_middlewares(windows)
             # Calculate throughput/resptime number and add it to all_metrics_per_rep
             #mw_aggregated_metrics = calculate_aggregated_metrics(cut_metrics)
             #mxk.tryset_mw_max(mw_aggregated_metrics[0], mw_aggregated_metrics[1], mw_aggregated_metrics[2], mw_aggregated_metrics[3], num_vc, worker_config, rep)

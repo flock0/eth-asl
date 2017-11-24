@@ -57,14 +57,3 @@ def find_max_throughput(inputdir, workload, worker_configs, vc_configs, reps, mi
     single_window = rep_metrics.loc[max_configuration['timestep']]
 
     print(single_window.apply(lambda x: format(x, 'f')))
-
-inputdir = "/home/flo/Downloads/exp3/third_exec/3_1_middleware_baseline_onemw_2017-11-23_182327"
-workload = "writeOnly"
-worker_configs = [8, 16, 32, 64]
-vc_configs = [1, 4, 8, 16, 24, 32, 48, 64]
-reps = [1, 2, 3]
-middlewares = ["middleware_04"]
-client_logfiles = ["client_01.log"]
-warmup_period_endtime = 10
-cooldown_period_starttime = 72
-find_max_throughput(inputdir, workload, worker_configs, vc_configs, reps, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime)

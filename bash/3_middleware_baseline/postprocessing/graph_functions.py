@@ -16,8 +16,8 @@ def create_workload_graphs(inputdir, experiment_label,  workload, middlewares, c
 
     mxk = max_xput_keeper.MaxXputKeeper()
 
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
+    if not os.path.exists(os.path.join(outdir, experiment_label)):
+        os.makedirs(os.path.join(outdir, experiment_label))
 
     matching_directories = find_workload_dirs(inputdir, workload + dir_suffix_regex_string)
 
@@ -121,7 +121,7 @@ def plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir):
     ax.set_ylabel("Throughput (ops/sec)")
 
     #plt.show()
-    fig.savefig(os.path.join(outdir, '{}_mw_throughput_{}.png'.format(workload, experiment_label)), dpi=300)
+    fig.savefig(os.path.join(outdir, experiment_label, '{}_mw_throughput_{}.png'.format(workload, experiment_label)), dpi=300)
 
 
 
@@ -142,7 +142,7 @@ def plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir):
     ax.set_ylabel("Response Time (msec)")
 
     # plt.show()
-    fig.savefig(os.path.join(outdir, '{}_mw_responsetime_{}.png'.format(workload, experiment_label)), dpi=300)
+    fig.savefig(os.path.join(outdir, experiment_label, '{}_mw_responsetime_{}.png'.format(workload, experiment_label)), dpi=300)
 
 def plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload, outdir):
 
@@ -168,7 +168,7 @@ def plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload,
     ax.set_ylabel("Throughput (ops/sec)")
 
     # plt.show()
-    fig.savefig(os.path.join(outdir, '{}_mt_throughput_{}.png'.format(workload, experiment_label)), dpi=300)
+    fig.savefig(os.path.join(outdir, experiment_label, '{}_mt_throughput_{}.png'.format(workload, experiment_label)), dpi=300)
 
     fig, ax = plt.subplots()
     # ax.set_ylim([0, 50000])
@@ -189,4 +189,4 @@ def plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload,
     ax.set_ylabel("Response Time (msec)")
 
     # plt.show()
-    fig.savefig(os.path.join(outdir, '{}_mt_responsetime_{}.png'.format(workload, experiment_label)), dpi=300)
+    fig.savefig(os.path.join(outdir, experiment_label, '{}_mt_responsetime_{}.png'.format(workload, experiment_label)), dpi=300)

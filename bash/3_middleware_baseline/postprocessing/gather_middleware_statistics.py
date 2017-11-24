@@ -7,7 +7,7 @@ log_interval = 20
 
 ### Concatenates all CSV request logs into one big data framee
 ### The request CSV files are read from the inputdir
-def concatenate_requestlogs(inputdir, inputdir_basename):
+def concatenate_requestlogs(inputdir):
 
     print('Concatenating requestlogs in', inputdir)
 
@@ -21,7 +21,7 @@ def concatenate_requestlogs(inputdir, inputdir_basename):
         if (file.startswith("requests")):
             csv_file = pd.read_csv(os.path.join(inputdir, file))
             csv_file['thread'] = threadid_regex.findall(file)[0]
-            csv_file['middleware'] = inputdir_basename
+            csv_file['middleware'] = inputdir
             request_files_list.append(csv_file)
 
     return pd.concat(request_files_list)
@@ -44,27 +44,31 @@ def extract_metrics(requests):
 ### Aggregates the metrics over one-second windows and returns the means
 ### Assumes that the timestep is the index
 def aggregate_over_windows(metrics):
-    return metrics.groupby(lambda x: int(x)).agg('mean').rename_axis('timestep')
+    grouped = metrics.groupby(lambda x: int(x))
+    means = grouped.agg('mean')
+    means['throughput_mw'] = grouped['initializeClockTime'].count() * log_interval
+    return means.rename_axis('timestep')
+
+def aggregate_over_middlewares(metrics_list):
+    concatenated = pd.concat(metrics_list).reset_index()
+    grouped = concatenated.groupby(['timestep'], as_index=True)
+    aggregated = grouped.mean()
+    aggregated['throughput_mw'] = grouped.sum()['throughput_mw']
+    return aggregated
 
 ### Aggregates the timesteps from multiple reps
 ### For the metrics we calculate the mean and variance
 def aggregate_over_reps(rep_aggregates):
     concatenated = pd.concat(rep_aggregates)
     grouped = concatenated.groupby('timestep')
-    aggregated = grouped.agg([np.mean, np.var, 'count'])
-    for lvl1 in aggregated.columns.levels[0]:
-        aggregated.loc[:, (lvl1, 'var')] = aggregated.loc[:, (lvl1, 'var')] / aggregated.loc[:, (lvl1, 'count')]
-    aggregated.drop([(lvl1, 'count') for lvl1 in aggregated.columns.levels[0]], axis=1, inplace=True)
+    aggregated = grouped.agg('mean')
     return aggregated
 
 ### Aggregates over all timesteps
 ### Takes a dataframe of metrics averaged by timesteps
 ### Returns a single average throughput and std value
 def aggregate_over_timesteps(timestep_wise_averages):
-    avg = timestep_wise_averages.mean(axis=0)
-    for lvl1 in avg.index.levels[0]:
-        avg[(lvl1, 'std')] = np.sqrt(avg[(lvl1, 'var')])
-    return avg
+    return timestep_wise_averages.agg(['mean', 'std'])
 
 def calculate_aggregated_metrics(metrics):
     xput = metrics['initializeClockTime'].count() / (metrics['initializeClockTime'].max() - metrics['initializeClockTime'].min()) * log_interval

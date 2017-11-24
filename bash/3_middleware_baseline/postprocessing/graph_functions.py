@@ -1,13 +1,13 @@
 import os
 import pandas as pd
 from directory_functions import *
-from process_requestlogs import *
 from cut_away_warmup_cooldown import *
-import gather_memtier_statistics as gmt
+import gather_memtier_statistics as gmts
+import gather_middleware_statistics as gmws
 import matplotlib.pyplot as plt
 from cycler import cycler
 import max_xput_keeper
-def create_workload_graphs(inputdir, experiment_label,  workload, middlewares, client_logfiles, dir_suffix_regex_string, warmup_period_endtime, cooldown_period_starttime, outdir):
+def create_workload_graphs(inputdir, experiment_label,  workload, middlewares, client_logfiles, dir_suffix_regex_string, warmup_period_endtime, cooldown_period_starttime, outdir, num_threads):
     # e.g. dir_suffix_regex_string = "_\d*vc\d*workers"
 
     print('Input directory is "', inputdir)
@@ -23,11 +23,11 @@ def create_workload_graphs(inputdir, experiment_label,  workload, middlewares, c
 
     num_repetitions = get_and_validate_num_repetition(matching_directories)
 
-    loop_function(experiment_label, matching_directories, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, workload, mxk, outdir)
+    loop_function(experiment_label, matching_directories, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, workload, outdir, num_threads)
 
     mxk.print()
 
-def loop_function(experiment_label, all_directories, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, workload, mxk, outdir):
+def loop_function(experiment_label, all_directories, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, workload, outdir, num_threads):
 
     worker_configurations = find_worker_configurations(all_directories)
 
@@ -35,82 +35,71 @@ def loop_function(experiment_label, all_directories, num_repetitions, middleware
     all_worker_averages = []
     for worker_config in worker_configurations:
         matching_dirs = find_matching_worker_config_dirs(all_directories, worker_config)
-        single_worker_averages = get_worker_data(worker_config, matching_dirs, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, mxk)
+        single_worker_averages = get_worker_data(worker_config, matching_dirs, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, num_threads)
         single_worker_averages['workers'] = worker_config
         all_worker_averages.append(single_worker_averages)
 
     all_worker_averages = pd.concat(all_worker_averages)
-    sorted_worker_averages = all_worker_averages.sort_values(by='workers')
+    sorted_worker_averages = all_worker_averages.sort_values('num_clients')
 
-    plot_mw_xput_respTime_all_workers(all_worker_averages, experiment_label, workload, outdir)
-    plot_mt_xput_respTime_all_workers_wInteract(all_worker_averages, experiment_label, workload, outdir)
+    # Calculate interactive law values
+    avg = sorted_worker_averages.reset_index()
+    avg['interact_resptime'] = avg['num_clients'] / avg['throughput'] * 1000
+    avg['interact_throughput'] = avg['num_clients'] / avg['responsetime'] * 1000
+    #avg = avg.set_index(['workers', 'num_clients', 'index'])
 
-def get_worker_data(worker_config, matching_dirs, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, mxk):
+    plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir)
+    plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload, outdir)
+
+def get_worker_data(worker_config, matching_dirs, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, num_threads):
     all_metrics_per_vc = []
     for experiment_dir in matching_dirs:
         num_vc = find_num_vc(experiment_dir)
         all_mw_metrics_per_rep = []
         all_mt_metrics_per_rep = []
         for rep in range(1, num_repetitions + 1):
-            all_reqs_from_all_mws_list = []
-            for mw_dir in middlewares:
-                # Go down to the middleware directory and down the only directory
-                middleware_dir = get_only_subdir(os.path.join(experiment_dir, str(rep), mw_dir))
 
-                requests = concatenate_requestlogs(middleware_dir, "requests", mw_dir)
+            middleware_dirs = [get_only_subdir(os.path.join(experiment_dir, str(rep), mw_dir)) for mw_dir in middlewares]
+            requests = pd.concat([gmws.concatenate_requestlogs(middleware_dir) for middleware_dir in middleware_dirs])
 
-                all_reqs_from_all_mws_list.append(requests)
-            requests = pd.concat(all_reqs_from_all_mws_list)
-            sort_by_clock(requests)
+            metrics = gmws.extract_metrics(requests)
 
-            metrics = extract_metrics(requests)
-            metrics.reset_index()
+            cut_metrics = cut_away_warmup_cooldown(metrics, warmup_period_endtime, cooldown_period_starttime)
 
-            cut_metrics = cut_away_warmup_cooldown(metrics, 'initializeClockTime', warmup_period_endtime, cooldown_period_starttime)
+            rep_metrics = gmws.aggregate_over_windows(cut_metrics)
 
             # Calculate throughput/resptime number and add it to all_metrics_per_rep
-            mw_aggregated_metrics = calculate_aggregated_metrics(cut_metrics)
-            mxk.tryset_mw_max(mw_aggregated_metrics[0], mw_aggregated_metrics[1], mw_aggregated_metrics[2], mw_aggregated_metrics[3], num_vc, worker_config, rep)
-            all_mw_metrics_per_rep.append(mw_aggregated_metrics)
+            #mw_aggregated_metrics = calculate_aggregated_metrics(cut_metrics)
+            #mxk.tryset_mw_max(mw_aggregated_metrics[0], mw_aggregated_metrics[1], mw_aggregated_metrics[2], mw_aggregated_metrics[3], num_vc, worker_config, rep)
+            all_mw_metrics_per_rep.append(rep_metrics)
 
-            all_logs_from_all_mts_list = []
-            totals_list = []
-            for client_logfile in client_logfiles:
-                client_logfile_path = os.path.join(experiment_dir, str(rep), client_logfile)
-                client_logs = gmt.extract_client_logs(client_logfile_path)
-                total_hits_misses = gmt.extract_total_numbers(client_logfile_path)
-                totals_list.append(total_hits_misses)
-                all_logs_from_all_mts_list.append(client_logs)
 
-            totals_df = pd.DataFrame(data=totals_list, columns=['total_opsec', 'hits_persec', 'misses_persec'])
-            missrate = gmt.calculate_miss_rate(totals_df)
-            client_logs = pd.concat(all_logs_from_all_mts_list)
-            cut_client_metrics = cut_away_warmup_cooldown(client_logs, 'timestep', warmup_period_endtime, cooldown_period_starttime)
-            mt_aggregate_logs = gmt.aggregate_all_client_logs(cut_client_metrics)
+            client_logfile_paths = [os.path.join(experiment_dir, str(rep), client_logfile) for client_logfile in client_logfiles]
+            client_metrics = gmts.aggregate_over_clients(client_logfile_paths)
+            total_hits_misses = [gmts.extract_total_numbers(filepath) for filepath in client_logfile_paths]
+            totals_df = pd.DataFrame(data=total_hits_misses, columns=['total_opsec', 'hits_persec', 'misses_persec'])
+            missrate = gmts.calculate_miss_rate(totals_df)
 
-            mt_throughput_resp = gmt.calculate_throughput_resptime(mt_aggregate_logs)
-            mxk.tryset_mt_max(mt_throughput_resp[0], mt_throughput_resp[1], missrate, num_vc, worker_config, rep)
-            all_mt_metrics_per_rep.append(mt_throughput_resp)
+            cut_client_metrics = cut_away_warmup_cooldown(client_metrics, warmup_period_endtime, cooldown_period_starttime)
+
+            #mt_throughput_resp = gmt.calculate_throughput_resptime(mt_aggregate_logs)
+            #mxk.tryset_mt_max(mt_throughput_resp[0], mt_throughput_resp[1], missrate, num_vc, worker_config, rep)
+            all_mt_metrics_per_rep.append(cut_client_metrics)
 
 
         # We have three throughput/resptimes values now from the three repetitions
+        mw_agg_over_reps = gmws.aggregate_over_reps(all_mw_metrics_per_rep)
+        mw_averages = gmws.aggregate_over_timesteps(mw_agg_over_reps)
+        mt_agg_over_reps = gmts.aggregate_over_reps(all_mt_metrics_per_rep)
+        mt_averages = gmts.aggregate_over_timesteps(mt_agg_over_reps)
 
-        mw_metrics_per_vc= pd.DataFrame(data=all_mw_metrics_per_rep, columns=['throughput_mw_opsec', 'responseTime_mw_ms', 'queueTime_ms', 'missRate_mw'])
-        mt_metrics_per_vc = pd.DataFrame(data=all_mt_metrics_per_rep, columns=['throughput_mt_opsec', 'responseTime_mt_ms'])
-        metrics_per_vc = pd.concat([mw_metrics_per_vc, mt_metrics_per_vc], axis=1)
+        metrics_per_vc = pd.concat([mw_averages, mt_averages], axis=1)
         metrics_per_vc['vc_per_thread'] = num_vc
         all_metrics_per_vc.append(metrics_per_vc)
 
     all_metrics_for_worker = pd.concat(all_metrics_per_vc)
-    all_metrics_for_worker['num_clients'] = all_metrics_for_worker['vc_per_thread'] * 2
-    avg = all_metrics_for_worker.groupby(['num_clients'], as_index=True).agg(
-        {'throughput_mw_opsec': ['mean', 'std'], 'responseTime_mw_ms': ['mean', 'std'], 'throughput_mt_opsec': ['mean', 'std'], 'responseTime_mt_ms': ['mean', 'std']})
-    avg = avg.reset_index()
-    # Calculate throughput and responsetime using interactive responsetime laws
-    avg['interact_responsetime_mean'] = avg['num_clients'] / avg[('throughput_mt_opsec', 'mean')] * 1000
-    avg['interact_throughput_mean'] = avg['num_clients'] / avg[('responseTime_mt_ms', 'mean')] * 1000
-
-    return avg
+    all_metrics_for_worker['num_clients'] = all_metrics_for_worker['vc_per_thread'] * num_threads
+    return all_metrics_for_worker
 
 def plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir):
 
@@ -118,12 +107,14 @@ def plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir):
     # Throughput using interactive laws
     fig, ax = plt.subplots()
     #ax.set_ylim([0, 50000])
-    ax.set_xlim([0, 70])
+    ax.set_xlim([0, 150])
     ax.set_prop_cycle(color_cycler)
     for key, grp in avg.groupby(['workers']):
-        ax.errorbar(grp['num_clients'], grp[('throughput_mw_opsec', 'mean')], yerr=2 * grp[('throughput_mw_opsec', 'std')],
+        mean_values = grp[grp['index'] == 'mean'].reset_index()
+        std_values = grp[grp['index'] == 'std'].reset_index()
+        ax.errorbar(mean_values['num_clients'], mean_values['throughput_mw'], yerr=std_values['throughput_mw'],
                     label=key, marker='o', capsize=3)
-        plt.xticks(grp['num_clients'])
+        plt.xticks(mean_values['num_clients'])
         ax.legend(loc="upper left")
     ax.set_title("Experiment 3.1:\nThroughput (MW) vs. Number of clients\nfor different number of workers in the MW")
     ax.set_xlabel("Number of clients")
@@ -137,12 +128,14 @@ def plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir):
 
     fig, ax = plt.subplots()
     # ax.set_ylim([0, 50000])
-    ax.set_xlim([0, 70])
+    ax.set_xlim([0, 150])
     ax.set_prop_cycle(color_cycler)
     for key, grp in avg.groupby(['workers']):
-        ax.errorbar(grp['num_clients'], grp[('responseTime_mw_ms', 'mean')], yerr=2 * grp[('responseTime_mw_ms', 'std')],
+        mean_values = grp[grp['index'] == 'mean'].reset_index()
+        std_values = grp[grp['index'] == 'std'].reset_index()
+        ax.errorbar(mean_values['num_clients'], mean_values['responseTime_ms'], yerr=std_values['responseTime_ms'],
                     label=key, marker='o', capsize=3)
-        plt.xticks(grp['num_clients'])
+        plt.xticks(mean_values['num_clients'])
     ax.legend(loc="upper left")
     ax.set_title("Experiment 3.1:\nResponse Time (MW) vs. Number of clients\nfor different number of workers in the MW")
     ax.set_xlabel("Number of clients")
@@ -157,15 +150,17 @@ def plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload,
     # Throughput using interactive laws
     fig, ax = plt.subplots()
     # ax.set_ylim([0, 50000])
-    ax.set_xlim([0, 70])
+    ax.set_xlim([0, 150])
     ax.set_prop_cycle(color_cycler)
     for key, grp in avg.groupby(['workers']):
-        ax.errorbar(grp['num_clients'], grp[('throughput_mt_opsec', 'mean')],
-                    yerr=2 * grp[('throughput_mt_opsec', 'std')],
+        mean_values = grp[grp['index'] == 'mean'].reset_index()
+        std_values = grp[grp['index'] == 'std'].reset_index()
+        ax.errorbar(mean_values['num_clients'], mean_values['throughput'],
+                    yerr=std_values['throughput'],
                     label=key, marker='o', capsize=3)
-        ax.plot(grp['num_clients'], grp['interact_throughput_mean'], label="{} (interact)".format(key), marker='o',
+        ax.plot(mean_values['num_clients'], mean_values['interact_throughput'], label="{} (interact)".format(key), marker='o',
                 linestyle='--')
-        plt.xticks(grp['num_clients'])
+        plt.xticks(mean_values['num_clients'])
         ax.legend(loc="upper left")
     ax.set_title(
         "Experiment 3.1:\nThroughput (MT) vs. Number of clients\nfor different number of workers in the MW")
@@ -177,15 +172,16 @@ def plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload,
 
     fig, ax = plt.subplots()
     # ax.set_ylim([0, 50000])
-    ax.set_xlim([0, 70])
+    ax.set_xlim([0, 150])
     ax.set_prop_cycle(color_cycler)
     for key, grp in avg.groupby(['workers']):
-        ax.errorbar(grp['num_clients'], grp[('responseTime_mt_ms', 'mean')],
-                    yerr=2 * grp[('responseTime_mt_ms', 'std')],
+        mean_values = grp[grp['index'] == 'mean'].reset_index()
+        std_values = grp[grp['index'] == 'std'].reset_index()
+        ax.errorbar(mean_values['num_clients'],  mean_values['responsetime'], yerr=std_values['responsetime'],
                     label=key, marker='o', capsize=3)
-        ax.plot(grp['num_clients'], grp['interact_responsetime_mean'], label="{} (interact)".format(key), marker='o',
+        ax.plot(mean_values['num_clients'], mean_values['interact_resptime'], label="{} (interact)".format(key), marker='o',
                 linestyle='--')
-        plt.xticks(grp['num_clients'])
+        plt.xticks(mean_values['num_clients'])
     ax.legend(loc="upper left")
     ax.set_title(
         "Experiment 3.1:\nResponse Time (MT) vs. Number of clients\nfor different number of workers in the MW")

@@ -1,3 +1,3 @@
 
-def cut_away_warmup_cooldown(requests, timestepName, warmup_period_endtime, cooldown_period_starttime):
-    return requests[(requests[timestepName] > warmup_period_endtime) & (requests[timestepName] < cooldown_period_starttime)]
+def cut_away_warmup_cooldown(requests, warmup_period_endtime, cooldown_period_starttime):
+    return requests.loc[(requests.index >= warmup_period_endtime) & (requests.index <= cooldown_period_starttime)]

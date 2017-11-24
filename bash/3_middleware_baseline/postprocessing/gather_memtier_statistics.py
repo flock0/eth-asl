@@ -42,20 +42,14 @@ def aggregate_over_clients(inputfiles):
 def aggregate_over_reps(rep_aggregates):
     concatenated = pd.concat(rep_aggregates)
     grouped = concatenated.groupby('timestep')
-    aggregated = grouped.agg([np.mean, np.var, 'count'])
-    for lvl1 in aggregated.columns.levels[0]:
-        aggregated.loc[:, (lvl1, 'var')] = aggregated.loc[:, (lvl1, 'var')] / aggregated.loc[:, (lvl1, 'count')]
-    aggregated.drop([(lvl1, 'count') for lvl1 in aggregated.columns.levels[0]], axis=1, inplace=True)
+    aggregated = grouped.agg({'throughput': 'mean', 'responsetime': 'mean'})
     return aggregated
 
 ### Aggregates over all timesteps
 ### Takes a dataframe of throughput and variance, averaged by timesteps
 ### Returns a single average throughput and std value
 def aggregate_over_timesteps(timestep_wise_averages):
-    avg = timestep_wise_averages.mean(axis=0)
-    for lvl1 in avg.index.levels[0]:
-        avg[(lvl1, 'std')] = np.sqrt(avg[(lvl1, 'var')])
-    return avg
+    return timestep_wise_averages.agg(['mean', 'std'])
 def extract_total_numbers(inputfile):
 
     for line in open(inputfile, 'r'):

@@ -8,7 +8,7 @@ import ch.ethz.asl.net.MemcachedSocketHandler;
 
 public class Worker implements Runnable {
 	
-	private static final Integer LOG_INTERVAL = 20; // Take a sample by only storing every 20th request on average   
+	private static final Integer LOG_INTERVAL = 10; // Take a sample by only storing every 20th request on average   
     private SocketChannel client;
 	private Request request;
 	

@@ -3,7 +3,7 @@ import re
 import pandas as pd
 import numpy as np
 
-log_interval = 10
+log_interval = 5
 
 ### Concatenates all CSV request logs into one big data framee
 ### The request CSV files are read from the inputdir

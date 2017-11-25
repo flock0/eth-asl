@@ -1,5 +1,6 @@
 /bin/
 /logs/
 .idea
-*/__pycache__/*
+__pycache__
 *.png
+.ipynb_checkpoints

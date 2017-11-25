@@ -53,8 +53,8 @@ resource_group=fchlan
 vm_nameprefix=foraslvms
 vm_dns_suffix=.westeurope.cloudapp.azure.com
 nethz=fchlan
-memcached_port=11211
-middleware_port=11211
+memcached_port=12345
+middleware_port=12346
 master=9
 
 

@@ -13,7 +13,7 @@ def find_max_throughput(inputdir, workload, worker_configs, vc_configs, reps, mi
         for worker in worker_configs:
 
             foldername = unformatted_foldername.format(workload, vc, worker)
-            all_rep_windows = []
+            all_rep_aggregates = []
             for rep in reps:
 
                 log_folder_path = os.path.join(inputdir, foldername, str(rep))
@@ -21,30 +21,31 @@ def find_max_throughput(inputdir, workload, worker_configs, vc_configs, reps, mi
                 client_logfile_paths = [os.path.join(log_folder_path, client_logfile) for client_logfile in client_logfiles]
                 window = gmts.aggregate_over_clients(client_logfile_paths)
                 window = cut.cut_away_warmup_cooldown(window, warmup_period_endtime, cooldown_period_starttime)
-                window['rep'] = rep
-                all_rep_windows.append(window)
+                avg_throughput = window['throughput'].mean()
+                tup = (rep, avg_throughput)
+                all_rep_aggregates.append(tup)
 
-            reps_concatenated = pd.concat(all_rep_windows).reset_index(drop=True).set_index(['rep', 'timestep'])
+            reps_concatenated = pd.DataFrame(data=all_rep_aggregates, columns=['rep', 'throughput']).set_index('rep')
             idxmax = reps_concatenated['throughput'].idxmax()
-            config_throughput_maximums.append((vc, worker, idxmax[0], idxmax[1], reps_concatenated['throughput'].max()))
+            config_throughput_maximums.append((vc, worker, idxmax, reps_concatenated['throughput'].max()))
 
-    all_config_maxima = pd.DataFrame(data=config_throughput_maximums, columns=['vc', 'worker', 'rep', 'timestep', 'throughput'])
+    all_config_maxima = pd.DataFrame(data=config_throughput_maximums, columns=['vc', 'worker', 'rep', 'throughput'])
     print("Maximum {} throughput achieved at:".format(workload))
     max_configuration = all_config_maxima.iloc[all_config_maxima['throughput'].idxmax()]
     print(max_configuration)
 
     # Now that we got the maximum configuration, we can extract the response time
     # at that timestep and (unfortunately only the total missrate)
-    foldername = unformatted_foldername.format(workload, max_configuration['vc'], max_configuration['worker'])
-    log_folder_path = os.path.join(inputdir, foldername, str(max_configuration['rep']))
+    foldername = unformatted_foldername.format(workload, str(int(max_configuration['vc'])), str(int(max_configuration['worker'])))
+    log_folder_path = os.path.join(inputdir, foldername, str(int(max_configuration['rep'])))
     client_logfile_paths = [os.path.join(log_folder_path, client_logfile) for client_logfile in client_logfiles]
     window = gmts.aggregate_over_clients(client_logfile_paths)
-    responsetime = window[window['timestep'] == max_configuration['timestep']]['responsetime']
+    avg_responsetime = window['responsetime'].mean()
 
     total_hits_misses = [gmts.extract_total_numbers(filepath) for filepath in client_logfile_paths]
     totals_df = pd.DataFrame(data=total_hits_misses, columns=['total_opsec', 'hits_persec', 'misses_persec'])
     missrate = gmts.calculate_miss_rate(totals_df)
-    print ("responsetime\t{}".format(responsetime))
+    print ("responsetime\t{}".format(avg_responsetime))
     print("missrate\t{}".format(missrate))
 
     # Now we extract throughput, responsetime, average queuetime and missrate from the middleware
@@ -54,6 +55,6 @@ def find_max_throughput(inputdir, workload, worker_configs, vc_configs, reps, mi
     cut_metrics = [cut.cut_away_warmup_cooldown(mets, warmup_period_endtime, cooldown_period_starttime) for mets in metrics]
     windows = [gmws.aggregate_over_windows(cut_mets) for cut_mets in cut_metrics]
     rep_metrics = gmws.aggregate_over_middlewares(windows)
-    single_window = rep_metrics.loc[max_configuration['timestep']]
+    averages = rep_metrics.mean()
 
-    print(single_window.apply(lambda x: format(x, 'f')))
+    print(averages.apply(lambda x: format(x, 'f')))

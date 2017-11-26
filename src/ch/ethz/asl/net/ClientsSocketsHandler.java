@@ -159,7 +159,7 @@ public class ClientsSocketsHandler implements Runnable {
 									req = RequestFactory.tryParseClientRequest(readBuffer);
 									// If valid, forward the request to the workers.
 									req.setNumReads(receivalTimers.getNumReads(key));
-									req.setFirstReadTime(receivalTimers.getFirstReadTime(key););
+									req.setFirstReadTime(receivalTimers.getFirstReadTime(key));
 									receivalTimers.reset(key);
 									req.setPreviousArrivalTime(previousArrivalTime);
 									req.setArrivalTime(arrivalTime);

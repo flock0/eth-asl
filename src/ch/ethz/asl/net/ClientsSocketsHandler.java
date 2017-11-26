@@ -45,6 +45,7 @@ public class ClientsSocketsHandler implements Runnable {
 
 	private ExecutorService threadPool;
 	private Set<SelectableChannel> clientsToClose;
+	private ReceivalTimers receivalTimers;
 
 	private static final Logger logger = LogManager.getLogger(ClientsSocketsHandler.class);
 	
@@ -52,6 +53,7 @@ public class ClientsSocketsHandler implements Runnable {
 		this.myIp = myIp;
 		this.myPort = myPort;
 		this.threadPool = threadPool;
+		this.receivalTimers = new ReceivalTimers();
 	}
 	
 	@Override
@@ -125,14 +127,16 @@ public class ClientsSocketsHandler implements Runnable {
 						// Initialize a ByteBuffer for the new client
 						if(!clientReadBuffers.containsKey(key)) {
 							clientReadBuffers.put(key, ByteBuffer.allocate(Request.MAX_REQUEST_SIZE));
+							
 						}
-						
+						receivalTimers.readingFor(key);
 						// Make sure there's space in the buffer
 						
 						ByteBuffer readBuffer = clientReadBuffers.get(key);
 						if(!readBuffer.hasRemaining()) {
 							logger.debug("Request buffer is full, but there's more to read!");
 							throw new Exception("Request buffer is full, but there's more to read!");
+							
 						}
 						
 						// Read from the client into the client-specific buffer
@@ -154,12 +158,13 @@ public class ClientsSocketsHandler implements Runnable {
 									long arrivalTime = System.nanoTime();
 									req = RequestFactory.tryParseClientRequest(readBuffer);
 									// If valid, forward the request to the workers.
+									req.setNumReads(receivalTimers.getNumReads(key));
+									req.setFirstReadTime(receivalTimers.getFirstReadTime(key););
+									receivalTimers.reset(key);
 									req.setPreviousArrivalTime(previousArrivalTime);
 									req.setArrivalTime(arrivalTime);
 									previousArrivalTime = arrivalTime;
 									enqueueChannel(client, req);
-									
-									
 								} catch(FaultyRequestException ex) {
 									// TODO If not valid and never will be, send an error message to the client
 									readBuffer.clear();
@@ -263,6 +268,7 @@ public class ClientsSocketsHandler implements Runnable {
 
 	private void evictClientBuffer(SelectionKey key) {
 		clientReadBuffers.remove(key);
+		receivalTimers.reset(key);
 	}
 
 	public void closeClientSockets() {

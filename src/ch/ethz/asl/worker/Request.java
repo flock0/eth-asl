@@ -37,6 +37,10 @@ public abstract class Request {
 	private int requestSize;
 	private int responseSize;
 
+	private int numReads;
+
+	private long firstReadTime;
+
 	
 
 	protected Request() {
@@ -85,7 +89,7 @@ public abstract class Request {
 
 	public void writeLog() {
 		if(shouldLog)
-			requestLogger.debug(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", getRequestType(), getFirstTargetServer(), getNumOfTargetServers(), initializeClockTime, previousArrivalTime, arrivalTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, queueLength, numKeysRequested, numHits, requestSize, responseSize));
+			requestLogger.debug(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", getRequestType(), getFirstTargetServer(), getNumOfTargetServers(), initializeClockTime, numReads, firstReadTime, previousArrivalTime, arrivalTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, queueLength, numKeysRequested, numHits, requestSize, responseSize));
 	}
 
 	public void setNumHits(int numHits) {
@@ -116,5 +120,17 @@ public abstract class Request {
 	
 	public void dontLog() {
 		shouldLog = false;
+	}
+
+	public void setNumReads(int numReads) {
+		if(shouldLog)
+			this.numReads = numReads;
+		
+	}
+
+	public void setFirstReadTime(long firstReadTime) {
+		if(shouldLog)
+			this.firstReadTime = firstReadTime;
+		
 	}
 }

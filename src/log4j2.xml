@@ -14,7 +14,7 @@
             <Routes pattern="$${ctx:KEY}">             
                 <Route>
                     <File name="requests" fileName="${logdir}/requests_${ctx:KEY}.csv" immediateFlush="false">
-                        <PatternLayout pattern="%m%n" header="requestType,firstTargetServer,numOfTargetServers,initializeClockTime,previousArrivalTime,arrivalTime,initializeTime,enqueueTime,dequeueTime,beforeSendTime,afterReceiveTime,completedTime,queueLength,numKeysRequested,numHits,requestSize,responseSize%n"/>
+                        <PatternLayout pattern="%m%n" header="requestType,firstTargetServer,numOfTargetServers,initializeClockTime,numReads, firstReadTime, previousArrivalTime,arrivalTime,initializeTime,enqueueTime,dequeueTime,beforeSendTime,afterReceiveTime,completedTime,queueLength,numKeysRequested,numHits,requestSize,responseSize%n"/>
                     </File>
                 </Route>
             </Routes>

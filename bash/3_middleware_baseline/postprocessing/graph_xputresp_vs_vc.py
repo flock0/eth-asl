@@ -97,11 +97,11 @@ def get_worker_data(worker_config, matching_dirs, num_repetitions, middlewares, 
 
 def plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir):
 
-    color_cycler = cycler('color', ['#66c2a4', '#41ae76', '#238b45', '#005824'])
+    color_cycler = cycler('color', ['#ccece6', '#66c2a4', '#238b45', '#00441b'])
     # Throughput using interactive laws
     fig, ax = plt.subplots()
     ax.set_ylim([0, 27000])
-    ax.set_xlim([0, 150])
+    ax.set_xlim([0, 350])
     ax.set_prop_cycle(color_cycler)
     for key, grp in avg.groupby(['workers']):
         mean_values = grp[grp['index'] == 'mean'].reset_index()
@@ -109,7 +109,7 @@ def plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir):
         ax.errorbar(mean_values['num_clients'], mean_values['throughput_mw'], yerr=std_values['throughput_mw'],
                     label=key, marker='o', capsize=3)
         plt.xticks(mean_values['num_clients'])
-        ax.legend(loc="upper left")
+        ax.legend(loc="bottom right", fontsize="small")
     ax.set_title("Throughput (MW) vs. Number of clients\nfor differing worker count in the MW")
     ax.set_xlabel("Number of clients")
     ax.set_ylabel("Throughput (ops/sec)")
@@ -117,12 +117,10 @@ def plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir):
     #plt.show()
     fig.savefig(os.path.join(outdir, experiment_label, '{}_mw_throughput_{}.png'.format(workload, experiment_label)), dpi=300)
 
-
-
-
+    color_cycler = cycler('color', ['#fee391', '#fe9929', '#cc4c02', '#662506'])
     fig, ax = plt.subplots()
-    ax.set_ylim([0, 15])
-    ax.set_xlim([0, 150])
+    ax.set_ylim([0, 30])
+    ax.set_xlim([0, 350])
     ax.set_prop_cycle(color_cycler)
     for key, grp in avg.groupby(['workers']):
         mean_values = grp[grp['index'] == 'mean'].reset_index()
@@ -130,7 +128,7 @@ def plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir):
         ax.errorbar(mean_values['num_clients'], mean_values['responseTime_ms'], yerr=std_values['responseTime_ms'],
                     label=key, marker='o', capsize=3)
         plt.xticks(mean_values['num_clients'])
-    ax.legend(loc="upper left")
+    ax.legend(loc="upper left", fontsize="small")
     ax.set_title("Response Time (MW) vs. Number of clients\nfor differing worker count in the MW")
     ax.set_xlabel("Number of clients")
     ax.set_ylabel("Response Time (msec)")
@@ -140,11 +138,11 @@ def plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir):
 
 def plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload, outdir):
 
-    color_cycler = cycler('color', ['#66c2a4', '#66c2a4', '#41ae76', '#41ae76', '#238b45', '#238b45', '#005824', '#005824'])
+    color_cycler = cycler('color', ['#ccece6', '#ccece6', '#66c2a4', '#66c2a4', '#238b45', '#238b45', '#00441b', '#00441b'])
     # Throughput using interactive laws
     fig, ax = plt.subplots()
     ax.set_ylim([0, 27000])
-    ax.set_xlim([0, 150])
+    ax.set_xlim([0, 350])
     ax.set_prop_cycle(color_cycler)
     for key, grp in avg.groupby(['workers']):
         mean_values = grp[grp['index'] == 'mean'].reset_index()
@@ -155,7 +153,7 @@ def plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload,
         ax.plot(mean_values['num_clients'], mean_values['interact_throughput'], label="{} (i)".format(key), marker='o',
                 linestyle='--')
         plt.xticks(mean_values['num_clients'])
-        ax.legend(loc="upper left")
+        ax.legend(loc="bottom right", fontsize="small")
     ax.set_title("Throughput (MT) vs. Number of clients\nfor differing worker count in the MW")
     ax.set_xlabel("Number of clients")
     ax.set_ylabel("Throughput (ops/sec)")
@@ -163,9 +161,10 @@ def plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload,
     # plt.show()
     fig.savefig(os.path.join(outdir, experiment_label, '{}_mt_throughput_{}.png'.format(workload, experiment_label)), dpi=300)
 
+    color_cycler = cycler('color', ['#fee391', '#fee391', '#fe9929', '#fe9929', '#cc4c02', '#cc4c02', '#662506', '#662506'])
     fig, ax = plt.subplots()
-    ax.set_ylim([0, 15])
-    ax.set_xlim([0, 150])
+    ax.set_ylim([0, 30])
+    ax.set_xlim([0, 350])
     ax.set_prop_cycle(color_cycler)
     for key, grp in avg.groupby(['workers']):
         mean_values = grp[grp['index'] == 'mean'].reset_index()
@@ -175,7 +174,7 @@ def plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload,
         ax.plot(mean_values['num_clients'], mean_values['interact_resptime'], label="{} (i)".format(key), marker='o',
                 linestyle='--')
         plt.xticks(mean_values['num_clients'])
-    ax.legend(loc="upper left")
+    ax.legend(loc="upper left", fontsize="small")
     ax.set_title("Response Time (MT) vs. Number of clients\nfor differing worker count in the MW")
     ax.set_xlabel("Number of clients")
     ax.set_ylabel("Response Time (msec)")

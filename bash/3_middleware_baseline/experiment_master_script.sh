@@ -110,7 +110,7 @@ do
 done
 
 ### Start up all instances of memcached
-memcached_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+memcached_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 1 > /dev/null &
 			   nohup memcached -p "$memcached_port" -t 1 -v > memcached.log 2>&1 &"
 for mc_id in ${servers[@]}
 do
@@ -170,7 +170,7 @@ do
 
 			    for mw_id in ${middlewares[@]}
 				do
-					middleware_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & cd asl-fall17-project;
+					middleware_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 1 > /dev/null & cd asl-fall17-project;
 			                        nohup java -jar bin/jar/ASL17_Middleware.jar -l "$(create_vm_ip $mw_id)" -p "$middleware_port" -t "$num_workers" 
 			                        -s false -m "$(create_vm_ip ${servers[0]})":"$memcached_port" > /dev/null &"
 					ssh $(create_vm_ip $mw_id) $middleware_cmd
@@ -183,7 +183,7 @@ do
 				memtier_cmd="> dstat.log; > ping.log;
 							echo $(date +%Y%m%d_%H%M%S) > memtier.log;
 							echo $(date +%Y%m%d_%H%M%S) > ping.log;
-							nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+							nohup dstat -cdlmnyt --output dstat.log 1 > /dev/null &
 							ping -Di 1 "$target_middleware_ip" -w "$single_experiment_length_sec" > ping.log &
 							nohup memtier_benchmark -s "$target_middleware_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
 							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=86400-86401 --data-size=1024 --ratio="$ratio" > memtier.log 2>&1"
@@ -315,7 +315,7 @@ do
 done
 
 ### Start up all instances of memcached
-memcached_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+memcached_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 1 > /dev/null &
 			   nohup memcached -p "$memcached_port" -t 1 -v > memcached.log 2>&1 &"
 for mc_id in ${servers[@]}
 do
@@ -375,7 +375,7 @@ do
 
 			    for mw_id in ${middlewares[@]}
 				do
-					middleware_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & cd asl-fall17-project;
+					middleware_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 1 > /dev/null & cd asl-fall17-project;
 			                        nohup java -jar bin/jar/ASL17_Middleware.jar -l "$(create_vm_ip $mw_id)" -p "$middleware_port" -t "$num_workers" 
 			                        -s false -m "$(create_vm_ip ${servers[0]})":"$memcached_port" > /dev/null &"
 					ssh $(create_vm_ip $mw_id) $middleware_cmd
@@ -389,7 +389,7 @@ do
 				memtier_0_cmd="> dstat.log; > ping_0.log;
 							echo $(date +%Y%m%d_%H%M%S) > memtier_0.log;
 							echo $(date +%Y%m%d_%H%M%S) > ping_0.log;
-							nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+							nohup dstat -cdlmnyt --output dstat.log 1 > /dev/null &
 							ping -Di 1 "$target_middleware_0_ip" -w "$single_experiment_length_sec" > ping_0.log &
 							nohup memtier_benchmark -s "$target_middleware_0_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
 							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=86400-86401 --data-size=1024 --ratio="$ratio" > memtier_0.log 2>&1"
@@ -397,7 +397,7 @@ do
 				memtier_1_cmd="> ping_1.log;
 							echo $(date +%Y%m%d_%H%M%S) > memtier_1.log;
 							echo $(date +%Y%m%d_%H%M%S) > ping_1.log;
-							ping -Di 5 "$target_middleware_1_ip" -w "$single_experiment_length_sec" > ping_1.log &
+							ping -Di 1 "$target_middleware_1_ip" -w "$single_experiment_length_sec" > ping_1.log &
 							nohup memtier_benchmark -s "$target_middleware_1_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
 							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=86400-86401 --data-size=1024 --ratio="$ratio" > memtier_1.log 2>&1"
 				

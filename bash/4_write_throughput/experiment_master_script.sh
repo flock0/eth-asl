@@ -137,7 +137,7 @@ cd $folder_name
 parallel-ssh -i -O StrictHostKeyChecking=no -h $servers_host_file "sudo service memcached stop; pkill -2f memcached"
 
 ### Start up all instances of memcached
-memcached_cmd="sudo service memcached stop; pkill -2f memcached; > dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+memcached_cmd="sudo service memcached stop; pkill -2f memcached; > dstat.log; nohup dstat -cdlmnyt --output dstat.log 1 > /dev/null &
 			   nohup memcached -p "$memcached_port" -t 1 -v > memcached.log 2>&1 &"
 parallel-ssh -i -O StrictHostKeyChecking=no -h $servers_host_file $memcached_cmd
 sleep 4
@@ -187,7 +187,7 @@ do
 
 			    for mw_id in ${middlewares[@]}
 				do
-					middleware_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null & cd asl-fall17-project;
+					middleware_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 1 > /dev/null & cd asl-fall17-project;
 			                        nohup java -jar bin/jar/ASL17_Middleware.jar -l "$(create_vm_ip $mw_id)" -p "$middleware_port" -t "$num_workers" 
 			                        -s false -m "$(create_vm_ip ${servers[0]})":"$memcached_port" "$(create_vm_ip ${servers[1]})":"$memcached_port" "$(create_vm_ip ${servers[2]})":"$memcached_port" > /dev/null &"
 					ssh $(create_vm_ip $mw_id) $middleware_cmd
@@ -201,7 +201,7 @@ do
 				start_both_memtiers_command="> dstat.log; > ping_0.log;
 							echo $(date +%Y%m%d_%H%M%S) > memtier_0.log;
 							echo $(date +%Y%m%d_%H%M%S) > ping_0.log;
-							nohup dstat -cdlmnyt --output dstat.log 5 > /dev/null &
+							nohup dstat -cdlmnyt --output dstat.log 1 > /dev/null &
 							ping -Di 1 "$target_middleware_0_ip" -w "$single_experiment_length_sec" > ping_0.log &
 							nohup memtier_benchmark -s "$target_middleware_0_ip" -p "$middleware_port" -P memcache_text --key-maximum=10000 --clients="$vc_per_thread" 
 							--threads="$num_threads" --test-time="$single_experiment_length_sec" --expiry-range=86400-86401 --data-size=1024 --ratio="$ratio" > memtier_0.log 2>&1 & 

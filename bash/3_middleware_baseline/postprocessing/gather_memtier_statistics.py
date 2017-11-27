@@ -57,7 +57,7 @@ def extract_total_numbers(inputfile):
             split_line = line.split()
             return float(split_line[1]), float(split_line[2]), float(split_line[3])
 
-def extract_ping_logs(inputfile, startingClockTime):
+def extract_ping_logs(inputfile):
     print('Extracting stats from ping log', inputfile)
 
     extracted_file = inputfile + ".extracted"

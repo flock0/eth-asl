@@ -7,7 +7,7 @@ import directory_functions as dirfuncs
 import matplotlib.pyplot as plt
 from cycler import cycler
 
-def graph_responsetime_withPing(worker, vc, num_threads, workload, middlewares, ping_logfile, client_logfiles, reps, inputdir, outdir, experiment_label, xlim, ax):
+def graph_responsetime_withPing(worker, vc, num_threads, workload, middlewares, ping_logfile, client_logfiles, reps, inputdir, xlim, ax):
 
     all_mw_metrics_per_rep = []
     all_mt_metrics_per_rep = []
@@ -61,12 +61,12 @@ def graph_responsetime_withPing(worker, vc, num_threads, workload, middlewares, 
     stds = metrics.loc[
         'std', names]
     color_cycler = ['#bf812d', '#c7eae5', '#80cdc1', '#01665e', '#003c30', '#dfc27d','#bf812d']
-    means.plot(ax=ax, kind='barh', xerr=stds, color=color_cycler, fontsize='small')
+    means.plot(ax=ax, kind='barh', xerr=stds, color=color_cycler)
     ax.set_title("{}, {} clients, {} workers".format(workload, vc*num_threads, worker))
     ax.set_xlabel("Time (msec)")
     ax.set_xlim([0, xlim])
 
-def graph_responsetime(worker, vc, num_threads, workload, middlewares, client_logfiles, reps, inputdir, outdir, experiment_label, xlim):
+def graph_responsetime(worker, vc, num_threads, workload, middlewares, client_logfiles, reps, inputdir, xlim, ax):
 
     all_mw_metrics_per_rep = []
     all_mt_metrics_per_rep = []
@@ -113,7 +113,7 @@ def graph_responsetime(worker, vc, num_threads, workload, middlewares, client_lo
     stds = metrics.loc[
         'std', names]
     color_cycler = ['#bf812d', '#c7eae5', '#80cdc1', '#01665e', '#003c30','#bf812d']
-    means.plot(ax=ax, kind='barh', xerr=stds, color=color_cycler, fontsize='xs')
+    means.plot(ax=ax, kind='barh', xerr=stds, color=color_cycler)
     ax.set_title("{}, {} clients, {} workers".format(workload, vc*num_threads, worker))
     ax.set_xlabel("Time (msec)")
     ax.set_xlim([0, xlim])

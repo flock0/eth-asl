@@ -109,7 +109,7 @@ def plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir):
         ax.errorbar(mean_values['num_clients'], mean_values['throughput_mw'], yerr=std_values['throughput_mw'],
                     label=key, marker='o', capsize=3)
         plt.xticks(mean_values['num_clients'])
-        ax.legend(loc="bottom right", fontsize="small")
+        ax.legend(loc="lower right", fontsize="small")
     ax.set_title("Throughput (MW) vs. Number of clients\nfor differing worker count in the MW")
     ax.set_xlabel("Number of clients")
     ax.set_ylabel("Throughput (ops/sec)")
@@ -153,7 +153,7 @@ def plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload,
         ax.plot(mean_values['num_clients'], mean_values['interact_throughput'], label="{} (i)".format(key), marker='o',
                 linestyle='--')
         plt.xticks(mean_values['num_clients'])
-        ax.legend(loc="bottom right", fontsize="small")
+        ax.legend(loc="lower right", fontsize="small")
     ax.set_title("Throughput (MT) vs. Number of clients\nfor differing worker count in the MW")
     ax.set_xlabel("Number of clients")
     ax.set_ylabel("Throughput (ops/sec)")

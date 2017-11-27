@@ -35,6 +35,7 @@ def extract_metrics(requests):
     metrics['queueTime_ms'] = (requests['dequeueTime'] - requests['enqueueTime']) / 1000000
     metrics['workerServiceTime_ms'] = (requests['completedTime'] - requests['dequeueTime']) / 1000000
     metrics['netthreadServiceTime_ms'] = (requests['enqueueTime'] - requests['arrivalTime']) / 1000000
+    #metrics['readTime_ms'] = (requests['arrivalTime'] - requests['firstReadTime']) / 1000000
     metrics['responseTime_us'] = (requests['completedTime'] - requests['arrivalTime']) / 1000
     metrics['responseTime_ms'] = metrics['responseTime_us'] / 1000
     metrics['timestep'] = (metrics['initializeClockTime'] - metrics['initializeClockTime'].min()) / 1000
@@ -50,11 +51,16 @@ def aggregate_over_windows(metrics):
     return means.rename_axis('timestep')
 
 def aggregate_over_middlewares(metrics_list):
+    for i, mw in enumerate(metrics_list):
+        mw['mw'] = i
     concatenated = pd.concat(metrics_list).reset_index()
-    grouped = concatenated.groupby(['timestep'], as_index=True)
-    aggregated = grouped.mean()
-    aggregated['throughput_mw'] = grouped.sum()['throughput_mw']
-    return aggregated
+    cols = d = {key: value for (key, value) in enumerate(concatenated.columns)}
+    grouped = concatenated.groupby(['timestep'], as_index=False)
+    weighted_avg_list = [grouped.apply(lambda x: np.average(x[column], weights=x.throughput_mw)) for column in concatenated.columns]
+    weighted_averages = pd.concat(weighted_avg_list, axis=1)
+    weighted_averages.rename(cols, axis='columns', inplace=True)
+    weighted_averages['throughput_mw'] = grouped.sum()['throughput_mw']
+    return weighted_averages
 
 ### Aggregates the timesteps from multiple reps
 ### For the metrics we calculate the mean and variance

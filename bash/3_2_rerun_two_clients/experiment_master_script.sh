@@ -109,9 +109,9 @@ servers=(6)
 experiment=3_2_middleware_baseline_twomw_twomt
 num_repetitions=3
 single_experiment_length_sec=82
-params_vc_per_thread=(32) 
-params_workload=(writeOnly)
-params_num_workers_per_mw=(64)
+params_vc_per_thread=(1 8 16 32 64 96 128 160)
+params_workload=(writeOnly readOnly)
+params_num_workers_per_mw=(8 16 32 64)
 num_threads=1
 
 ### We're using the private IPs to connect the servers with

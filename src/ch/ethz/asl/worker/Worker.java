@@ -20,7 +20,16 @@ public class Worker implements Runnable {
         }
         
         
-    };        	
+    };     
+    private static final ThreadLocal<Long> afterLogWriteTime = 
+            new ThreadLocal<Long>(){
+         @Override
+         protected Long initialValue(){
+             return new Long(0);
+         }
+         
+         
+     };   
 	
     public Worker(SocketChannel client, Request req){              
         this.client = client;
@@ -34,6 +43,10 @@ public class Worker implements Runnable {
     	RunMW.setQueueLength(request);
     	request.handle(sockets.get(), client);
     	request.setCompletedTime();
+    	request.setLastAfterLogWriteTime(afterLogWriteTime.get());
     	request.writeLog();
+    	if (request.shouldLog())
+    		afterLogWriteTime.set(new Long(System.nanoTime()));
+    	
     }
 }

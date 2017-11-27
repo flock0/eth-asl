@@ -41,6 +41,8 @@ public abstract class Request {
 
 	private long firstReadTime;
 
+	private long lastAfterLogWrite;
+
 	
 
 	protected Request() {
@@ -57,65 +59,54 @@ public abstract class Request {
 	public abstract int getNumOfTargetServers();
 	
 	public void setEnqueueTime() {
-		if(shouldLog)
-			enqueueTime = System.nanoTime();
+		enqueueTime = System.nanoTime();
 	}
 	
 	public void setDequeueTime() {
-		if(shouldLog)
-			dequeueTime = System.nanoTime();
+		dequeueTime = System.nanoTime();
 	}
 
 	public void setBeforeSendTime() {
-		if(shouldLog)
-			beforeSendTime = System.nanoTime();
+		beforeSendTime = System.nanoTime();
 	}
 	
 	public void setAfterReceiveTime() {
-		if(shouldLog)
-			afterReceiveTime = System.nanoTime();
+		afterReceiveTime = System.nanoTime();
 	}
 	
 	public void setCompletedTime() {
-		if(shouldLog)
-			completedTime = System.nanoTime();
+		completedTime = System.nanoTime();
 	}
 
 	public void setQueueLength(int queueLength) {
-		if(shouldLog)
-			this.queueLength = queueLength; 
+		this.queueLength = queueLength; 
 		
 	}
 
 	public void writeLog() {
 		if(shouldLog)
-			requestLogger.debug(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", getRequestType(), getFirstTargetServer(), getNumOfTargetServers(), initializeClockTime, numReads, firstReadTime, previousArrivalTime, arrivalTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, queueLength, numKeysRequested, numHits, requestSize, responseSize));
+			requestLogger.debug(String.format("%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d", getRequestType(), getFirstTargetServer(), getNumOfTargetServers(), initializeClockTime, numReads, firstReadTime, previousArrivalTime, arrivalTime, initializeTime, enqueueTime, dequeueTime, beforeSendTime, afterReceiveTime, completedTime, lastAfterLogWrite, queueLength, numKeysRequested, numHits, requestSize, responseSize));
 	}
 
 	public void setNumHits(int numHits) {
-		if(shouldLog)
-			this.numHits = numHits;
+		this.numHits = numHits;
 	}
 
 	public void setRequestSize(int requestSize) {
-		if(shouldLog)
-			this.requestSize = requestSize;
+		this.requestSize = requestSize;
 	}
 
 	public void setResponseSize(int responseSize) {
-		if(shouldLog)
-			this.responseSize = responseSize;
+		this.responseSize = responseSize;
 	}
 
 	public void setArrivalTime(long arrivalTime) {
-		if(shouldLog)
-			this.arrivalTime = arrivalTime;
+		this.arrivalTime = arrivalTime;
 		
 	}
 
 	public void setPreviousArrivalTime(long previousArrivalTime) {
-		if(shouldLog)
-			this.previousArrivalTime = previousArrivalTime;
+		this.previousArrivalTime = previousArrivalTime;
 	}
 	
 	public void dontLog() {
@@ -123,14 +114,19 @@ public abstract class Request {
 	}
 
 	public void setNumReads(int numReads) {
-		if(shouldLog)
-			this.numReads = numReads;
+		this.numReads = numReads;
 		
 	}
 
 	public void setFirstReadTime(long firstReadTime) {
-		if(shouldLog)
-			this.firstReadTime = firstReadTime;
-		
+		this.firstReadTime = firstReadTime;
+	}
+	
+	public void setLastAfterLogWriteTime(long lastAfterLogWrite) {
+		this.lastAfterLogWrite = lastAfterLogWrite;
+	}
+
+	public boolean shouldLog() {
+		return shouldLog;
 	}
 }

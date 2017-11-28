@@ -5,7 +5,7 @@ import gather_memtier_statistics as gmts
 import cut_away_warmup_cooldown as cut
 import directory_functions as dirfuncs
 import matplotlib.pyplot as plt
-from cycler import cycler
+
 
 def graph_responsetime_withPing(worker, vc, num_threads, workload, middlewares, ping_logfile, client_logfiles, reps, inputdir, xlim, ax):
 

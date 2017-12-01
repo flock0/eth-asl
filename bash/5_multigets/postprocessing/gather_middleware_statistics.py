@@ -35,9 +35,8 @@ def extract_metrics(requests):
     metrics['queueTime_ms'] = (requests['dequeueTime'] - requests['enqueueTime']) / 1000000
     metrics['workerServiceTime_ms'] = (requests['completedTime'] - requests['dequeueTime']) / 1000000
     metrics['memcachedRTT_ms'] = (requests['afterReceiveTime'] - requests['beforeSendTime']) / 1000000
-    metrics['netthreadServiceTime_ms'] = (requests['enqueueTime'] - requests['firstReadTime']) / 1000000
-    metrics['readTime_ms'] = (requests['arrivalTime'] - requests['firstReadTime']) / 1000000
-    metrics['responseTime_us'] = (requests['completedTime'] - requests['firstReadTime']) / 1000
+    metrics['netthreadServiceTime_ms'] = (requests['enqueueTime'] - requests['arrivalTime']) / 1000000
+    metrics['responseTime_us'] = (requests['completedTime'] - requests['arrivalTime']) / 1000
     metrics['responseTime_ms'] = metrics['responseTime_us'] / 1000
     metrics['timestep'] = (metrics['initializeClockTime'] - metrics['initializeClockTime'].min()) / 1000
     metrics = metrics.set_index('timestep')

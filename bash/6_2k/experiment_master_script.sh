@@ -109,7 +109,7 @@ servers=(6 7 8)
 experiment=6_2k
 num_repetitions=3
 single_experiment_length_sec=82
-vc_per_thread = 32
+vc_per_thread=32
 params_workload=(writeOnly readOnly fiftyFifty)
 params_num_workers_per_mw=(8 32)
 params_num_middlewares=(1 2)
@@ -249,7 +249,7 @@ do
 
 
 		 			# Create folder
-		 			log_dir="./"$workload"_"$num_middlewares"vc"$num_memcached"mc"$num_workers"workers/"$rep
+		 			log_dir="./"$workload"_"$num_middlewares"mw"$num_memcached"mc"$num_workers"workers/"$rep
 		 			mkdir -p $log_dir
 		 			cd $log_dir
 		 			echo "        Log dir=" $log_dir

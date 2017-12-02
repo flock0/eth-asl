@@ -8,7 +8,7 @@ import gather_memtier_statistics as gmts
 import gather_middleware_statistics as gmws
 import matplotlib.pyplot as plt
 from cycler import cycler
-def create_workload_graphs(inputdir, experiment_label,  sharded, middlewares, client_logfiles, dir_suffix_regex_string, warmup_period_endtime, cooldown_period_starttime, outdir, num_threads, ylim_xput=27000, ylim_resp=30, xlim=350):
+def gather_data(inputdir, experiment_label,  sharded, middlewares, client_logfiles, dir_suffix_regex_string, warmup_period_endtime, cooldown_period_starttime, outdir, num_threads, ylim_xput=27000, ylim_resp=30, xlim=350):
     # e.g. dir_suffix_regex_string = "_\d*vc\d*workers"
 
     print('Input directory is ', inputdir)
@@ -23,22 +23,7 @@ def create_workload_graphs(inputdir, experiment_label,  sharded, middlewares, cl
 
     num_repetitions = get_and_validate_num_repetition(matching_directories)
 
-    loop_function(experiment_label, matching_directories, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, sharded, outdir, num_threads, ylim_xput, ylim_resp, xlim)
-
-
-def loop_function(experiment_label, all_directories, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, sharded, outdir, num_threads, ylim_xput, ylim_resp, xlim):
-
-    averages = get_data(all_directories, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, num_threads)
-    averages = averages.sort_values('multigetSize')
-
-    # Calculate interactive law values
-    avg = averages.reset_index()
-
-    #avg = avg.set_index(['workers', 'num_clients', 'index'])
-
-    plot_mw_xput_respTime_all_workers(avg, experiment_label, sharded, outdir, ylim_xput, ylim_resp, xlim)
-    #plot_mw_queueLength_all_workers(avg, experiment_label, sharded, outdir, xlim)
-    #plot_mw_memcachedRTT_all_workers(avg, experiment_label, sharded, outdir, xlim)
+    return get_data(matching_directories, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, num_threads)
 
 def get_data(matching_dirs, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, num_threads):
     all_metrics_per_multiget = []

@@ -19,6 +19,7 @@ def extract_client_logs(inputfile):
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
     _, error = process.communicate()
 
+
     if (error != None):
         print("Encountered error {} when extracting data".format(error))
         exit(2)

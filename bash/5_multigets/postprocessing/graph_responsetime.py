@@ -7,12 +7,12 @@ import directory_functions as dirfuncs
 import matplotlib.pyplot as plt
 
 
-def graph_responsetime_withPing(worker, vc, num_threads, workload, middlewares, ping_logfile, client_logfiles, reps, inputdir, xlim, ax):
+def graph_responsetime_withPing(multigets, sharded, middlewares, ping_logfile, client_logfiles, reps, inputdir, xlim, ax):
 
     all_mw_metrics_per_rep = []
     all_mt_metrics_per_rep = []
     for rep in reps:
-        run_dir = os.path.join(inputdir, "{}_{}vc{}workers".format(workload, vc, worker), str(rep))
+        run_dir = os.path.join(inputdir, "{}_{}multiget".format(sharded, multigets), str(rep))
 
         # Get Ping time
         ping_log_path = os.path.join(run_dir, ping_logfile)
@@ -62,16 +62,16 @@ def graph_responsetime_withPing(worker, vc, num_threads, workload, middlewares, 
         'std', names]
     color_cycler = ['#bf812d', '#c7eae5', '#80cdc1', '#01665e', '#003c30', '#dfc27d','#bf812d']
     means.plot(ax=ax, kind='barh', xerr=stds, color=color_cycler)
-    ax.set_title("{}, {} clients, {} workers".format(workload, vc*num_threads, worker))
+    ax.set_title("{}, {} multigets".format(sharded, multigets))
     ax.set_xlabel("Time (msec)")
     ax.set_xlim([0, xlim])
 
-def graph_responsetime(worker, vc, num_threads, workload, middlewares, client_logfiles, reps, inputdir, xlim, ax):
+def graph_responsetime(multigets, sharded, middlewares, client_logfiles, reps, inputdir, xlim, ax):
 
     all_mw_metrics_per_rep = []
     all_mt_metrics_per_rep = []
     for rep in reps:
-        run_dir = os.path.join(inputdir, "{}_{}vc{}workers".format(workload, vc, worker), str(rep))
+        run_dir = os.path.join(inputdir, "{}_{}multiget".format(sharded, multigets), str(rep))
 
         # Get MW response time
         middleware_dirs = [dirfuncs.get_only_subdir(os.path.join(run_dir, mw_dir)) for mw_dir in middlewares]
@@ -114,7 +114,7 @@ def graph_responsetime(worker, vc, num_threads, workload, middlewares, client_lo
         'std', names]
     color_cycler = ['#bf812d', '#c7eae5', '#80cdc1', '#01665e', '#003c30','#bf812d']
     means.plot(ax=ax, kind='barh', xerr=stds, color=color_cycler)
-    ax.set_title("{}, {} clients, {} workers".format(workload, vc*num_threads, worker))
+    ax.set_title("{}, {} multigets".format(sharded, multigets))
     ax.set_xlabel("Time (msec)")
     ax.set_xlim([0, xlim])
 

@@ -176,9 +176,11 @@ def plot_stacked_barchart(data, xtick_labels, ax, ylim, print_first_n_bars):
     workerPreProcessing = data['workerPreProcessingTime_ms']
     memcachedRTT = data['memcachedRTT_ms']
     workerPostProcessing = data['workerPostProcessingTime_ms']
+    memtierResponseTime = data['responsetime']
     x = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5]
     x = x[:print_first_n_bars]
     width = 0.35
+    memtierResponseTimeBar = ax.bar(x=x, width=width, height=memtierResponseTime, color='#fbb4ae')
     netthreadBar = ax.bar(x=x, width=width, height=netthread, color='#bc80bd')
     queuetimeBar = ax.bar(x=x, width=width, height=queuetime, bottom=netthread, color='#b3de69')
     workerPreBar = ax.bar(x=x, width=width, height=workerPreProcessing, bottom=netthread + queuetime, color='#fdb462')
@@ -186,8 +188,8 @@ def plot_stacked_barchart(data, xtick_labels, ax, ylim, print_first_n_bars):
                              color='#80b1d3')
     workerPostBar = ax.bar(x=x, width=width, height=workerPostProcessing,
                            bottom=netthread + queuetime + workerPreProcessing + memcachedRTT, color='#fb8072')
-    ax.legend((netthreadBar[0], queuetimeBar[0], workerPreBar[0], memcachedRTTBar[0], workerPostBar[0]),
-              ('Network Thread', 'Queue Time', 'Worker Preprocessing', 'Memcached RTT', 'Worker Postprocessing'),
+    ax.legend((netthreadBar[0], queuetimeBar[0], workerPreBar[0], memcachedRTTBar[0], workerPostBar[0], memtierResponseTimeBar[0]),
+              ('Network Thread', 'Queue Time', 'Worker Preprocessing', 'Memcached RTT', 'Worker Postprocessing', 'Latency MT->MW'),
               loc='upper left')
     ax.set_xlabel("Number of clients")
     ax.set_ylabel("Response Time (ms)")

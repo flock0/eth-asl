@@ -49,6 +49,7 @@ def loop_function(experiment_label, all_directories, num_repetitions, middleware
 
     plot_mw_xput_respTime_all_workers(avg, experiment_label, workload, outdir, ylim_xput, ylim_resp, xlim)
     plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload, outdir, ylim_xput, ylim_resp, xlim)
+    plot_mw_queueLength_all_workers(avg, experiment_label, workload, outdir, xlim)
 
 def get_worker_data(worker_config, matching_dirs, num_repetitions, middlewares, client_logfiles, warmup_period_endtime, cooldown_period_starttime, num_threads):
     all_metrics_per_vc = []
@@ -181,3 +182,27 @@ def plot_mt_xput_respTime_all_workers_wInteract(avg, experiment_label, workload,
 
     # plt.show()
     fig.savefig(os.path.join(outdir, experiment_label, '{}_mt_responsetime_{}.png'.format(workload, experiment_label)), dpi=300)
+
+def plot_mw_queueLength_all_workers(avg, experiment_label, workload, outdir, xlim):
+
+    color_cycler = cycler('color', ['#9ebcda', '#8c6bb1', '#88419d', '#4d004b'])
+    # Throughput using interactive laws
+    fig, ax = plt.subplots()
+    ax.set_ylim([0, 200])
+    ax.set_xlim([0, xlim])
+    ax.set_prop_cycle(color_cycler)
+    for key, grp in avg.groupby(['workers']):
+        mean_values = grp[grp['index'] == 'mean'].reset_index()
+        std_values = grp[grp['index'] == 'std'].reset_index()
+        ax.errorbar(mean_values['num_clients'], mean_values['queueLength'], yerr=std_values['queueLength'],
+                    label=key, marker='o', capsize=3)
+        plt.xticks(mean_values['num_clients'])
+        ax.legend(loc="best", fontsize="small")
+    ax.set_title("Queue Length vs. Number of clients\nfor differing worker count in the MW")
+    ax.set_xlabel("Number of clients")
+    ax.set_ylabel("Queue Length")
+
+    # plt.show()
+    fig.savefig(
+        os.path.join(outdir, experiment_label, '{}_mw_queuelength_{}.png'.format(workload, experiment_label)),
+        dpi=300)

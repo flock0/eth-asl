@@ -168,15 +168,16 @@ def get_responsetime_data(worker, vc_settings, num_threads, workload, middleware
     return all_metrics.loc[
         'mean', :]
 
-def plot_stacked_barchart(data, xtick_labels, ax, ylim):
+def plot_stacked_barchart(data, xtick_labels, ax, ylim, print_first_n_bars):
     data = data.sort_values('num_clients')
-
+    data = data.head(print_first_n_bars)
     netthread = data['netthreadServiceTime_ms']
     queuetime = data['queueTime_ms']
     workerPreProcessing = data['workerPreProcessingTime_ms']
     memcachedRTT = data['memcachedRTT_ms']
     workerPostProcessing = data['workerPostProcessingTime_ms']
     x = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5]
+    x = x[:print_first_n_bars]
     width = 0.35
     netthreadBar = ax.bar(x=x, width=width, height=netthread, color='#bc80bd')
     queuetimeBar = ax.bar(x=x, width=width, height=queuetime, bottom=netthread, color='#b3de69')
@@ -192,4 +193,4 @@ def plot_stacked_barchart(data, xtick_labels, ax, ylim):
     ax.set_ylabel("Response Time (ms)")
     ax.set_ylim([0, ylim])
     plt.xticks(x)
-    ax.set_xticklabels(xtick_labels)
+    ax.set_xticklabels(xtick_labels[:print_first_n_bars])

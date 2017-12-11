@@ -214,8 +214,8 @@ def plot_mw_memcachedRTT_all_workers(avg, experiment_label, workload, outdir, xl
     color_cycler = cycler('color', ['#a6bddb', '#74a9cf', '#0570b0', '#023858'])
     # Throughput using interactive laws
     fig, ax = plt.subplots()
-    #ax.set_ylim([0, 200])
-    #ax.set_xlim([0, xlim])
+    ax.set_ylim([0, 5.5])
+    ax.set_xlim([0, xlim])
     ax.set_prop_cycle(color_cycler)
     for key, grp in avg.groupby(['workers']):
         mean_values = grp[grp['index'] == 'mean'].reset_index()

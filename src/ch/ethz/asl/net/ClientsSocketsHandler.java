@@ -25,7 +25,8 @@ import ch.ethz.asl.worker.RequestFactory;
 import ch.ethz.asl.worker.Worker;
 
 /***
- * Thread that handles all network connections
+ * A thread that handles all network connections.
+ * That means accepting new client connections and handling the reading and parsing of requests
  * @author Florian Chlan
  */
 public class ClientsSocketsHandler implements Runnable {
@@ -152,12 +153,13 @@ public class ClientsSocketsHandler implements Runnable {
 								client.close();
 							}
 							else {
-								// TODO Check if the request is valid
 								Request req;
 								try {
 									long arrivalTime = System.nanoTime();
+									
+									// Try parsing the received data
 									req = RequestFactory.tryParseClientRequest(readBuffer);
-									// If valid, forward the request to the workers.
+									// If valid, take some statistics, then forward the request to the workers.
 									req.setNumReads(receivalTimers.getNumReads(key));
 									req.setFirstReadTime(receivalTimers.getFirstReadTime(key));
 									receivalTimers.reset(key);
@@ -166,11 +168,11 @@ public class ClientsSocketsHandler implements Runnable {
 									previousArrivalTime = arrivalTime;
 									enqueueChannel(client, req);
 								} catch(FaultyRequestException ex) {
-									// TODO If not valid and never will be, send an error message to the client
+									// If not valid and never will be, send an error message to the client
 									readBuffer.clear();
 									sendClientError(client, ex.getMessage());
 								} catch(IncompleteRequestException ex) {
-									// If the request is incomplete, continue reading from the last position
+									// If the request is incomplete, continue reading in future Selector.select() calls
 									readBuffer.limit(readBuffer.capacity());
 								}
 							}

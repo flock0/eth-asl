@@ -15,6 +15,9 @@ import ch.ethz.asl.worker.ContextSettingThreadFactory;
 import ch.ethz.asl.worker.Request;
 import ch.ethz.asl.net.ClientsSocketsHandler;
 
+/**
+ * This is the main class to start the middleware. It parses command line arguments and sets up the subcomponents of the system. *
+ */
 public class RunMW {
 
 	static int POOLTHREAD_KEEP_ALIVE_MS = 5000;
@@ -30,13 +33,7 @@ public class RunMW {
 	private static BlockingQueue<Runnable> channelQueue = null;
 	private static final Logger logger = LogManager.getLogger(RunMW.class);
 	private static volatile boolean shutdownRequested = false;
-	
-	/***
-	 * The maximum number of readable channels in the queue.
-	 * This is the de-facto maximum number of concurrent clients.
-	 */
-	static final int MAX_CHANNEL_QUEUE_CAPACITY = 4096;
-	
+
 	public static void main(String[] args) throws Exception {
 
 		// -----------------------------------------------------------------------------
@@ -162,10 +159,12 @@ public class RunMW {
 		if(!shutdownRequested) {
 			shutdownRequested = true;
 			logger.info("Shutting down middleware...");
+			// First stop accepting new connections
 			if(sockHandler != null) sockHandler.shutdown();
 			if(threadPool != null) {
 				threadPool.shutdown();
 				try {
+					// Terminate all threads in the thread pool
 					boolean isTerminated = threadPool.awaitTermination(THREADPOOL_AWAIT_TERMINATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 					if(!isTerminated) {
 						List<Runnable> droppedTasks = threadPool.shutdownNow();
@@ -177,11 +176,15 @@ public class RunMW {
 					logger.error(String.format("Interrupt while waiting for threadpool termination: %s", ex.getMessage()));
 				}
 			}
+			//Finally close all client connections
 			if(sockHandler != null) sockHandler.closeClientSockets();
 			logger.info("Shutdown completed");
 		}
 	}
-
+	
+	/**
+	 * Used for logging the queue length
+	 */
 	public static void setQueueLength(Request request) {
 		request.setQueueLength(channelQueue.size());
 	}

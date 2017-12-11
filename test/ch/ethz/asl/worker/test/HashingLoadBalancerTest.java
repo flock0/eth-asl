@@ -1,8 +1,5 @@
 package ch.ethz.asl.worker.test;
 
-import static org.junit.Assert.*;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -125,28 +122,8 @@ public class HashingLoadBalancerTest {
 		return sb.toString();
 	}
 
-	private String createTestKey(int maxKey) {
-		return createTestKey("", maxKey);
-	}
-	
 	private String createTestKey(String prefix, int maxKey) {
 		return String.format("%s%d", prefix, rnd.nextInt(maxKey));
-	}
-	
-	private String createRandomStringTestKeys(int maxStringLength) {
-		String charset = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLUMNOPQRSTUVWXYZ";
-		int desiredStringLength = 1 + rnd.nextInt(maxStringLength);
-		return generateString(charset, desiredStringLength);
-	}
-	// Taken from https://stackoverflow.com/questions/2863852/how-to-generate-a-random-string-in-java#2863888
-	private String generateString(String characters, int length)
-	{
-	    char[] text = new char[length];
-	    for (int i = 0; i < length; i++)
-	    {
-	        text[i] = characters.charAt(rnd.nextInt(characters.length()));
-	    }
-	    return new String(text);
 	}
 	
 

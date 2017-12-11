@@ -7,6 +7,12 @@ import org.apache.logging.log4j.Logger;
 
 import ch.ethz.asl.net.MemcachedSocketHandler;
 
+/**
+ * An abstract Request class. Concrete implementations will dictate how the request is processed.
+ * This class also holds logging information.
+ * @author Florian Chlan
+ *
+ */
 public abstract class Request {
 	
 	private static final Logger requestLogger = LogManager.getLogger("request_logger");

@@ -13,6 +13,12 @@ import org.apache.logging.log4j.Logger;
 import ch.ethz.asl.RunMW;
 import ch.ethz.asl.worker.HashingLoadBalancer;
 
+/**
+ * Responsible for keeping connections to all the memcached servers and sending and receiving message from them.
+ * This class will be instantiated once per thread.
+ * @author Florian Chlan
+ *
+ */
 public class MemcachedSocketHandler {
 	
 	private static final int SERVER_BUFFER_MAX_BYTES_SIZE = 11000; //Maximum size of the answer to a request
@@ -35,6 +41,9 @@ public class MemcachedSocketHandler {
 	}
 	
 	
+	/**
+	 * Opens up connections to all memcached servers.
+	 */
 	public MemcachedSocketHandler() {
 		try {
 			for(int i = 0; i < numServers; i++) {
@@ -54,6 +63,9 @@ public class MemcachedSocketHandler {
 		}
 	}
 
+	/**
+	 * Sends the same message to all memcached servers.
+	 */
 	public void sendToAll(ByteBuffer commandBuffer) throws IOException {
 		for(int i = 0; i < numServers; i++) {
 			SocketChannel server = channels.get(i);
@@ -66,6 +78,9 @@ public class MemcachedSocketHandler {
 		
 	}
 
+	/**
+	 * Sends a message to a single server identified by an index.
+	 */
 	public void sendToSingleServer(ByteBuffer commandBuffer, int targetServerIndex) throws IOException {
 		SocketChannel server = channels.get(targetServerIndex);
 		do {
@@ -73,6 +88,10 @@ public class MemcachedSocketHandler {
 		} while(commandBuffer.hasRemaining());
 	}
 	
+	/**
+	 * Waits for and reads all responses from all memcached servers.
+	 * Also checks whether the responses are valid memcached responses.
+	 */
 	public HashMap<Integer, ByteBuffer> waitForAllResponses() {
 		try {
 			for(int i = 0; i < channels.size(); i++) {
@@ -101,6 +120,10 @@ public class MemcachedSocketHandler {
 		return serverBuffers;
 	}
 	
+	/**
+	 * Waits and reads from a single server identified by an index.
+	 * Also checks whether the response is a valid memcached responses.
+	 */
 	public ByteBuffer waitForSingleResponse(int targetServerIndex) {
 		
 		SocketChannel server = channels.get(targetServerIndex);
@@ -127,6 +150,9 @@ public class MemcachedSocketHandler {
 		return buffer;
 	}
 	
+	/**
+	 * Checks whether a response received is valid
+	 */
 	private boolean receivedValidResponse(ByteBuffer buffer) {
 		/* The following answers are expected:
 		 * ERROR\r\n
@@ -183,6 +209,9 @@ public class MemcachedSocketHandler {
 	}
 
 
+	/**
+	 * Closes the connection to the memcached servers
+	 */
 	public void shutdown() {
 		logger.debug(String.format("Shutting down memcached sockets in %s", Thread.currentThread().getName()));
 		for(int i = 0; i < numServers; i++) {

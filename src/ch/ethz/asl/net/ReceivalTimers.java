@@ -3,6 +3,13 @@ package ch.ethz.asl.net;
 import java.nio.channels.SelectionKey;
 import java.util.HashMap;
 
+/**
+ * A class used for keeping track of how often the network thread had to read from
+ * a channel to receive a complete message.
+ * Also keeps track of the 'first contact' of a request.
+ * @author Florian Chlan
+ *
+ */
 public class ReceivalTimers {
 
 	private HashMap<SelectionKey, Integer> numReadsMap = new HashMap<>();

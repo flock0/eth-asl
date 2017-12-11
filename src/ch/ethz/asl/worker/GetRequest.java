@@ -10,6 +10,11 @@ import org.apache.logging.log4j.Logger;
 import ch.ethz.asl.RunMW;
 import ch.ethz.asl.net.MemcachedSocketHandler;
 
+/**
+ * Contains a GET request with a single key.
+ * @author Florian Chlan
+ *
+ */
 public class GetRequest extends Request {
 
 	private static final Logger logger = LogManager.getLogger(GetRequest.class);
@@ -41,10 +46,10 @@ public class GetRequest extends Request {
 		
 		parseMessage();
 		
-		// TODO Hash key to find server to handle
+		// Hash key to find server to handle
 		targetServerIndex = HashingLoadBalancer.findTargetServer(key);
 		
-		// TODO Send getrequest to designated server
+		// Send GET request to designated server
 		
 		setRequestSize(readBuffer.limit());
 		setBeforeSendTime();

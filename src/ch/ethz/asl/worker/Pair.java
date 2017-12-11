@@ -1,6 +1,10 @@
 package ch.ethz.asl.worker;
 
-// Taken from https://stackoverflow.com/questions/521171/a-java-collection-of-value-pairs-tuples
+/**
+ * A Pair class used for returning two values from a Java function.
+ * 
+ * Taken from https://stackoverflow.com/questions/521171/a-java-collection-of-value-pairs-tuples
+ */
 public class Pair<L,R> {
 
 	  public final L left;

@@ -5,6 +5,12 @@ import java.util.List;
 
 import ch.ethz.asl.RunMW;
 
+/**
+ * A factory for parsing messages from the client and instantiating request objects.
+ * Also used for constructing MultiGETs when sharding is turned on.
+ * @author Florian Chlan
+ *
+ */
 public class RequestFactory {
 
 	/***

@@ -6,6 +6,14 @@ import java.util.concurrent.ThreadLocalRandom;
 import ch.ethz.asl.RunMW;
 import ch.ethz.asl.net.MemcachedSocketHandler;
 
+/**
+ * A Runnable implementation that is passed on to the thread pool.
+ * It encapsulates the request object.
+ * 
+ * Also here we decide at random whether the request should be logged (and we log it in the end).
+ * @author Florian Chlan
+ *
+ */
 public class Worker implements Runnable {
 	
 	private static final Integer LOG_INTERVAL = 20; // Take a sample by only storing every 20th request on average   

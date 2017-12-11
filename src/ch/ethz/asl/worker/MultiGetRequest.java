@@ -9,6 +9,11 @@ import org.apache.logging.log4j.Logger;
 
 import ch.ethz.asl.RunMW;
 
+/**
+ * Contains a GET request with a more than one key.
+ * @author Florian Chlan
+ *
+ */
 public abstract class MultiGetRequest extends Request {
 
 	ByteBuffer readBuffer;

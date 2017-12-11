@@ -9,6 +9,11 @@ import org.apache.logging.log4j.Logger;
 
 import ch.ethz.asl.net.MemcachedSocketHandler;
 
+/**
+ * Contains a SET request.
+ * @author Florian Chlan
+ *
+ */
 public class SetRequest extends Request {
 
 	private static final Logger logger = LogManager.getLogger(SetRequest.class);
@@ -74,7 +79,6 @@ public class SetRequest extends Request {
 			logger.error(errMsg);
 			errorOccured = true;
 			error = errMsg;
-			//TODO Not sure if we should abort here.
 		} finally {
 			setAfterReceiveTime();
 		}

@@ -10,6 +10,11 @@ import org.apache.logging.log4j.Logger;
 import ch.ethz.asl.RunMW;
 import ch.ethz.asl.net.MemcachedSocketHandler;
 
+/**
+ * Contains a GET request with a single key that should be processed without sharding.
+ * @author Florian Chlan
+ *
+ */
 public class NonShardedMultiGetRequest extends MultiGetRequest {
 
 	private static final Logger logger = LogManager.getLogger(NonShardedMultiGetRequest.class);
@@ -25,10 +30,10 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 		
 		parseMessage();
 		
-		// TODO Hash key to find server to handle
+		// Hash key to find server to handle
 		targetServerIndex = HashingLoadBalancer.findTargetServer(keysString);
 		
-		// TODO Send getrequest to designated server
+		// Send GET request to designated server
 		try {
 			setRequestSize(readBuffer.limit());
 			setBeforeSendTime();
@@ -41,14 +46,14 @@ public class NonShardedMultiGetRequest extends MultiGetRequest {
 			readBuffer.clear();
 		}
 		
-		// TODO read from designated server
+		// read from designated server
 		ByteBuffer response = memcachedSocketHandler.waitForSingleResponse(targetServerIndex);
 		setAfterReceiveTime();
 		
 		setResponseSize(response.limit());
 		gatherCacheHitStatistic(response);
 		try {
-			// TODO Forward answerbuffer to client
+			// Forward answerbuffer to client
 			sendResponseToClient(client, response);
 			
 		} catch (IOException ex) {

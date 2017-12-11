@@ -3,7 +3,6 @@ package ch.ethz.asl.worker;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -13,6 +12,11 @@ import org.apache.logging.log4j.Logger;
 import ch.ethz.asl.RunMW;
 import ch.ethz.asl.net.MemcachedSocketHandler;
 
+/**
+ * Contains a GET request with a single key that should be processed using sharding.
+ * @author Florian Chlan
+ *
+ */
 public class ShardedMultiGetRequest extends MultiGetRequest {
 
 	private static final Logger logger = LogManager.getLogger(ShardedMultiGetRequest.class);
@@ -31,26 +35,27 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		parseMessage();
 		this.keys = splitUpKeys(keysString);
 		
-		// TODO Split up keys to available servers
 		setRequestSize(readBuffer.limit());
 		readBuffer.clear();
+		// Find the primary server
 		startingServerIndex = HashingLoadBalancer.findTargetServer(keysString);
 		
+		// Split up the request among the available serverse in a fair manner
 		Pair<HashMap<Integer, List<String>>, List<Integer>> pair = HashingLoadBalancer.assignKeysToServers(keys, startingServerIndex);
 		
 		HashMap<Integer, List<String>> keySplits = pair.left;
 		List<Integer> answerAssemblyOrder = pair.right;
 		
 		numOfTargetServers = answerAssemblyOrder.size();
-		// Construct separate multigets
 		HashMap<Integer, ByteBuffer> serverBuffers = null;
 		try {
 			serverBuffers = memcachedSocketHandler.getServerBuffers();
 			setBeforeSendTime();
+			// Construct separate MultiGETs
 			for(int serverIndex : answerAssemblyOrder) {
 				ByteBuffer buffer = RequestFactory.constructMultiGetRequest(keySplits.get(serverIndex), serverBuffers.get(serverIndex));
 				
-				// Send multigets to the servers
+				// Send MultiGETs to the servers
 				memcachedSocketHandler.sendToSingleServer(buffer, serverIndex);
 				buffer.clear();
 			}
@@ -71,7 +76,8 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 			// Wait for answers from those servers we sent stuff to!
 			ByteBuffer responseBuffer = memcachedSocketHandler.waitForSingleResponse(serverIndex);
 			
-			// If this is the first iteration, we save this buffer and append the answers from the other servers to it
+			// If this is the first iteration, we use this buffer for the final response.
+			// We save this buffer and append the answers from the other servers to it
 			if(firstIteration) {
 				finalResponseBuffer = responseBuffer;
 			}
@@ -104,12 +110,14 @@ public class ShardedMultiGetRequest extends MultiGetRequest {
 		
 		try {
 			if(!errorOccured) {
+				// Send the final response if no error occured
 				finalResponseBuffer.flip();
 				setResponseSize(finalResponseBuffer.limit());
 				gatherCacheHitStatistic(finalResponseBuffer);
 				sendFinalResponse(client, finalResponseBuffer);
 			}
 			else {
+				// Send one of the error message if an error occured
 				setResponseSize(error.length());
 				sendErrorMessage(client, error);
 			}

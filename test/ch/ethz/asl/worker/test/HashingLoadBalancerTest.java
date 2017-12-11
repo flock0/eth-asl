@@ -25,8 +25,8 @@ public class HashingLoadBalancerTest {
 	}
 
 	@Test
-	public void testSingleKeysWithSuffix() {
-		System.out.println("testSingleKeysWithSuffix");
+	public void testSingleKeysWithPrefix() {
+		System.out.println("testSingleKeysWithPrefix");
 		HashingLoadBalancer.setNumServers(3);
 
 		HashMap<Integer, Integer> hits = new HashMap<>();
@@ -65,8 +65,8 @@ public class HashingLoadBalancerTest {
 	}
 	
 	@Test
-	public void testMultiGetsWithSuffix() {
-		System.out.println("testMultiGetsWithSuffix");
+	public void testMultiGetsWithPrefix() {
+		System.out.println("testMultiGetsWithPrefix");
 		HashingLoadBalancer.setNumServers(3);
 
 		HashMap<Integer, Integer> hits = new HashMap<>();
@@ -85,8 +85,8 @@ public class HashingLoadBalancerTest {
 	}
 	
 	@Test
-	public void testShardedServerAssignmentWithSuffix() {
-		System.out.println("testShardedServerAssignmentWithSuffix");
+	public void testShardedServerAssignmentWithPrefix() {
+		System.out.println("testShardedServerAssignmentWithPrefix");
 		HashingLoadBalancer.setNumServers(3);
 
 		HashMap<Integer, Integer> hits = new HashMap<>();

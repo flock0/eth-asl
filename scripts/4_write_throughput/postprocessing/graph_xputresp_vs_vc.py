@@ -69,6 +69,7 @@ def get_worker_data(worker_config, matching_dirs, num_repetitions, middlewares, 
             cut_metrics = [cut_away_warmup_cooldown(mets, warmup_period_endtime, cooldown_period_starttime) for mets in metrics]
 
             windows = [gmws.aggregate_over_windows(cut_mets) for cut_mets in cut_metrics]
+            windows = [win[:-1] for win in windows]
 
             rep_metrics = gmws.aggregate_over_middlewares(windows)
 

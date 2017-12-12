@@ -188,7 +188,7 @@ do
 			    for mw_id in ${middlewares[@]}
 				do
 					middleware_cmd="> dstat.log; nohup dstat -cdlmnyt --output dstat.log 1 > /dev/null & cd asl-fall17-project;
-			                        nohup java -jar bin/jar/ASL17_Middleware.jar -l "$(create_vm_ip $mw_id)" -p "$middleware_port" -t "$num_workers" 
+			                        nohup java -jar dist/middleware-fchlan.jar -l "$(create_vm_ip $mw_id)" -p "$middleware_port" -t "$num_workers" 
 			                        -s false -m "$(create_vm_ip ${servers[0]})":"$memcached_port" > /dev/null &"
 					ssh $(create_vm_ip $mw_id) $middleware_cmd
 				done

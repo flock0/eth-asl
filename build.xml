@@ -1,10 +1,11 @@
  
 <project>
 
-    <property name="jarfile" value="ASL17_Middleware.jar"/>
-    <property name="build.dir" value="bin/classes"/>
+    <property name="jarfile" value="middleware-fchlan.jar"/>
+    <property name="build.dir" value="build"/>
     <property name="src.dir" value="src"/>
 	<property name="lib.dir" value="lib"/>
+    <property name="dist.dir" location="dist"/>
     <!-- Add log4j2 jars -->
     <path id="classpath">
         <fileset dir="${lib.dir}">
@@ -13,7 +14,7 @@
         </fileset>
     </path>
     <target name="clean">
-        <delete dir="bin"/>
+        <delete dir="${build.dir}"/>
     </target>
 
     <target name="compile">
@@ -27,23 +28,19 @@
     </target>
 
     <target name="jar" depends="compile">
-        <mkdir dir="bin/jar"/>
+        <mkdir dir="${dist.dir}"/>
 
         <manifestclasspath property="manifest.classpath" jarfile="${jarfile}">
             <classpath refid="classpath"/>
         </manifestclasspath>
 
-        <jar destfile="bin/jar/${jarfile}" basedir="${build.dir}">
+        <jar destfile="${dist.dir}/${jarfile}" basedir="${build.dir}">
             <manifest>
                 <attribute name="Main-Class" value="ch.ethz.asl.RunMW"/>
                 <attribute name="Class-Path" value="${manifest.classpath}"/>
             </manifest>
         	<zipgroupfileset dir="${lib.dir}" includes="**/*.jar" />
         </jar>
-    </target>
-
-    <target name="run" depends="jar">
-        <java jar="bin/jar/${jarfile}" fork="true"/>
     </target>
 
 </project>

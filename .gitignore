@@ -1,4 +1,6 @@
 /bin/
+/build/
+/dist/
 /logs/
 .idea
 __pycache__
